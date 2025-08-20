@@ -169,7 +169,7 @@ export default function PatientPortal() {
                       8/15/2024 at 2:00 PM
                     </p>
                   </div>
-                  <Badge className="bg-blue-100 text-blue-800">confirmed</Badge>
+                  <Badge className="bg-blue-600 text-white">confirmed</Badge>
                 </div>
               </div>
               <div className="p-4 bg-white border rounded-lg">
@@ -184,6 +184,9 @@ export default function PatientPortal() {
                   <Badge variant="outline">scheduled</Badge>
                 </div>
               </div>
+              <Button variant="outline" className="w-full mt-4">
+                Schedule New Appointment
+              </Button>
             </CardContent>
           </Card>
         </div>

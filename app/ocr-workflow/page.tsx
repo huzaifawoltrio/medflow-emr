@@ -1,25 +1,41 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect, Fragment } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { UploadCloud } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  UploadCloud,
+  CheckCircle2,
+  AlertTriangle,
+  Pencil,
+  User,
+  MapPin,
+  Shield,
+  Phone,
+} from "lucide-react";
 
-const Stepper = ({ currentStep }: { currentStep: number }) => {
+const Stepper = ({ currentStep }) => {
   const steps = ["Upload", "Processing", "Validation", "Complete"];
 
   return (
-    <div className="flex items-center justify-between w-full max-w-md mx-auto">
+    <div className="flex items-center justify-between w-full max-w-2xl mx-auto">
       {steps.map((step, index) => (
-        <>
-          <div key={index} className="flex flex-col items-center">
+        <Fragment key={index}>
+          <div className="flex flex-col items-center text-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
                 index + 1 <= currentStep
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-500"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-500 border-gray-300"
               }`}
             >
-              {index + 1}
+              {index + 1 <= currentStep ? (
+                <CheckCircle2 size={16} />
+              ) : (
+                index + 1
+              )}
             </div>
             <p
               className={`mt-2 text-xs font-medium ${
@@ -31,23 +47,226 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
           </div>
           {index < steps.length - 1 && (
             <div
-              className={`flex-1 h-0.5 ${
-                index + 1 < currentStep ? "bg-blue-600" : "bg-gray-200"
+              className={`flex-1 h-0.5 mx-4 ${
+                index + 1 < currentStep ? "bg-blue-600" : "bg-gray-300"
               }`}
             />
           )}
-        </>
+        </Fragment>
       ))}
     </div>
   );
 };
 
+const ProcessingScreen = ({ fileName, fileSize }) => {
+  const [progress, setProgress] = useState([
+    { text: "Document uploaded successfully", done: false },
+    { text: "OCR text extraction completed", done: false },
+    { text: "AI data extraction in progress...", done: false },
+  ]);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(
+        () =>
+          setProgress((p) =>
+            p.map((item, i) => (i === 0 ? { ...item, done: true } : item))
+          ),
+        500
+      ),
+      setTimeout(
+        () =>
+          setProgress((p) =>
+            p.map((item, i) => (i === 1 ? { ...item, done: true } : item))
+          ),
+        1500
+      ),
+      setTimeout(
+        () =>
+          setProgress((p) =>
+            p.map((item, i) => (i === 2 ? { ...item, done: true } : item))
+          ),
+        2500
+      ),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  return (
+    <div className="text-center p-12 bg-white rounded-lg shadow-sm">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      <h2 className="mt-4 text-xl font-semibold text-gray-900">
+        Processing Document
+      </h2>
+      <p className="mt-1 text-sm text-gray-600">
+        AI is analyzing your document and extracting patient information...
+      </p>
+      <div className="mt-6 text-left inline-block">
+        {progress.map((item, index) => (
+          <div key={index} className="flex items-center space-x-2 mt-2">
+            {item.done ? (
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            ) : (
+              <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-gray-400"></div>
+            )}
+            <span
+              className={`text-sm ${
+                item.done ? "text-gray-800" : "text-gray-500"
+              }`}
+            >
+              {item.text}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-8 p-3 bg-gray-100 rounded-lg text-sm text-gray-700">
+        Processing: {fileName} | Size: {fileSize}
+      </div>
+    </div>
+  );
+};
+
+const ConfidenceBadge = ({ score }) => {
+  const getColor = () => {
+    if (score >= 90) return "border-green-500 text-green-600";
+    if (score >= 70) return "border-yellow-500 text-yellow-600";
+    return "border-red-500 text-red-600";
+  };
+  return (
+    <span
+      className={`text-xs font-medium px-2 py-0.5 rounded-md border bg-white ${getColor()}`}
+    >
+      {score}%
+    </span>
+  );
+};
+
+const EditableField = ({ label, value, confidence, warning }) => (
+  <div className="p-3 border rounded-lg bg-white shadow-sm">
+    <div className="flex justify-between items-center mb-1">
+      <div className="flex items-center space-x-2">
+        <Label className="text-sm text-gray-600">{label}</Label>
+        {confidence && <ConfidenceBadge score={confidence} />}
+      </div>
+      <Pencil className="h-4 w-4 text-gray-400 cursor-pointer hover:text-gray-600" />
+    </div>
+    <Input
+      defaultValue={value}
+      className="text-base font-medium border-none bg-transparent p-0 h-auto focus-visible:ring-0"
+    />
+    {warning && <p className="text-xs text-yellow-600 mt-1">{warning}</p>}
+  </div>
+);
+
+const ValidationForm = () => (
+  <div>
+    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start space-x-3 mb-6">
+      <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-blue-800">
+        Please review and verify the extracted information below. Fields with
+        lower confidence scores may require manual correction.
+      </p>
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="font-semibold text-lg flex items-center">
+          <User className="mr-2 h-5 w-5 text-blue-600" /> Personal Information
+        </h3>
+        <div className="space-y-3">
+          <EditableField label="First Name" value="John" confidence={98} />
+          <EditableField label="Last Name" value="Doe" confidence={95} />
+          <EditableField
+            label="Date of Birth"
+            value="1985-03-15"
+            confidence={90}
+          />
+          <EditableField
+            label="Social Security"
+            value="***-**-1234"
+            confidence={95}
+          />
+          <EditableField
+            label="Phone Number"
+            value="(555) 123-4567"
+            confidence={75}
+            warning="Phone number format should be verified"
+          />
+          <EditableField
+            label="Email Address"
+            value="john.doe@email.com"
+            confidence={85}
+          />
+        </div>
+      </div>
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="font-semibold text-lg flex items-center">
+          <MapPin className="mr-2 h-5 w-5 text-blue-600" /> Address Information
+        </h3>
+        <div className="space-y-3">
+          <EditableField
+            label="Street Address"
+            value="123 Main Street"
+            confidence={85}
+          />
+          <EditableField label="City" value="Springfield" confidence={92} />
+          <EditableField label="State" value="IL" confidence={99} />
+          <EditableField
+            label="ZIP Code"
+            value="62701"
+            confidence={68}
+            warning="ZIP code appears to be standard format"
+          />
+        </div>
+      </div>
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="font-semibold text-lg flex items-center">
+          <Shield className="mr-2 h-5 w-5 text-blue-600" /> Insurance
+          Information
+        </h3>
+        <div className="space-y-3">
+          <EditableField
+            label="Insurance Provider"
+            value="Blue Cross Blue Shield"
+            confidence={92}
+          />
+          <EditableField
+            label="Policy Number"
+            value="BC123456789"
+            confidence={88}
+          />
+          <EditableField label="Group Number" value="GRP001" confidence={82} />
+        </div>
+      </div>
+      <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
+        <h3 className="font-semibold text-lg flex items-center">
+          <Phone className="mr-2 h-5 w-5 text-blue-600" /> Emergency Contact
+        </h3>
+        <div className="space-y-3">
+          <EditableField
+            label="Emergency Contact"
+            value="Jane Doe"
+            confidence={78}
+          />
+          <EditableField
+            label="Emergency Phone"
+            value="(555) 987-6543"
+            confidence={72}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function OCRWorkflow() {
   const [file, setFile] = useState(null);
+  const [status, setStatus] = useState("upload"); // upload, processing, validation
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setStatus("processing");
+      setTimeout(() => setStatus("validation"), 4000); // Simulate processing time
     }
   };
 
@@ -56,6 +275,8 @@ export default function OCRWorkflow() {
     e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      setStatus("processing");
+      setTimeout(() => setStatus("validation"), 4000); // Simulate processing time
     }
   };
 
@@ -64,9 +285,22 @@ export default function OCRWorkflow() {
     e.stopPropagation();
   };
 
+  const getCurrentStep = () => {
+    switch (status) {
+      case "upload":
+        return 1;
+      case "processing":
+        return 2;
+      case "validation":
+        return 3;
+      default:
+        return 1;
+    }
+  };
+
   return (
     <MainLayout>
-      <div className="p-8 bg-white min-h-screen">
+      <div className="p-8 bg-gray-50 min-h-screen">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -77,65 +311,68 @@ export default function OCRWorkflow() {
 
         {/* Stepper */}
         <div className="mb-10">
-          <Stepper currentStep={1} />
+          <Stepper currentStep={getCurrentStep()} />
         </div>
 
-        {/* Upload Section */}
-        <div className="text-center mb-8">
-          <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-          <h2 className="mt-2 text-lg font-semibold text-gray-900">
-            Upload Patient Document
-          </h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Upload a scanned patient face sheet, insurance card, or intake form
-            for automatic data extraction.
-          </p>
-        </div>
-
-        {/* Drag and Drop Area */}
-        <div
-          className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-gray-50"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <div className="flex flex-col items-center">
-            <UploadCloud className="h-8 w-8 text-gray-500 mb-2" />
-            <input
-              type="file"
-              id="file-upload"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".jpg,.jpeg,.png,.pdf"
-            />
-            <label
-              htmlFor="file-upload"
-              className="font-semibold text-blue-600 cursor-pointer hover:underline"
-            >
-              Choose file or drag and drop
-            </label>
-            <p className="text-xs text-gray-500 mt-1">
-              Supports: JPG, PNG, PDF (Max 10MB)
-            </p>
-            {file && (
-              <p className="mt-4 text-sm font-medium text-gray-700">
-                Selected file: {file.name}
+        {status === "upload" && (
+          <>
+            <div className="text-center mb-8">
+              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+              <h2 className="mt-2 text-lg font-semibold text-gray-900">
+                Upload Patient Document
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Upload a scanned patient face sheet, insurance card, or intake
+                form for automatic data extraction.
               </p>
-            )}
-          </div>
-        </div>
+            </div>
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-white"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              <div className="flex flex-col items-center">
+                <UploadCloud className="h-8 w-8 text-gray-500 mb-2" />
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept=".jpg,.jpeg,.png,.pdf"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="font-semibold text-blue-600 cursor-pointer hover:underline"
+                >
+                  Choose file or drag and drop
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supports: JPG, PNG, PDF (Max 10MB)
+                </p>
+              </div>
+            </div>
+            <div className="mt-8">
+              <h3 className="font-semibold text-gray-800">
+                Supported Document Types:
+              </h3>
+              <ul className="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
+                <li>Patient face sheets and intake forms</li>
+                <li>Insurance cards (front and back)</li>
+                <li>Medical history forms</li>
+                <li>Registration documents</li>
+              </ul>
+            </div>
+          </>
+        )}
 
-        {/* Supported Document Types */}
-        <div className="mt-8">
-          <h3 className="font-semibold text-gray-800">
-            Supported Document Types:
-          </h3>
-          <ul className="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
-            <li>Patient face sheets and intake forms</li>
-            <li>Insurance cards (front and back)</li>
-            <li>Medical history forms</li>
-            <li>Registration documents</li>
-          </ul>
-        </div>
+        {status === "processing" && file && (
+          <ProcessingScreen
+            fileName={file.name}
+            fileSize={`${(file.size / 1024 / 1024).toFixed(2)} MB`}
+          />
+        )}
+
+        {status === "validation" && <ValidationForm />}
       </div>
     </MainLayout>
   );

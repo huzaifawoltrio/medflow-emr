@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,11 @@ import {
   Upload,
   FileText,
   Star,
-  MoreHorizontal,
-  View,
   Download,
   Trash2,
   List,
   LayoutGrid,
+  Eye,
 } from "lucide-react";
 
 // Placeholder data for documents
@@ -27,7 +27,7 @@ const documents = [
     size: "2.4 MB",
     description:
       "Initial psychiatric evaluation with comprehensive mental status exam.",
-    tags: ["assessment", "intake", "depression", "+1"],
+    tags: ["assessment", "intake", "depression", "anxiety"],
     isStarred: true,
     iconColor: "text-red-500",
   },
@@ -38,9 +38,9 @@ const documents = [
     date: "8/12/2024",
     size: "1.2 MB",
     description: "Complete blood count results.",
-    tags: ["lab", "blood-work", "cbc", "+1"],
+    tags: ["lab", "blood-work", "cbc", "routine"],
     isStarred: false,
-    iconColor: "text-yellow-500",
+    iconColor: "text-green-500",
   },
   {
     id: 3,
@@ -60,7 +60,7 @@ const documents = [
     date: "8/09/2024",
     size: "802 KB",
     description: "Therapy session progress note showing improvement.",
-    tags: ["progress", "therapy", "session", "+1"],
+    tags: ["progress", "therapy", "session", "improvement"],
     isStarred: false,
     iconColor: "text-blue-500",
   },
@@ -86,44 +86,82 @@ const filterTags = [
 ];
 
 const DocumentCard = ({ doc }) => (
-  <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
-    <CardContent className="p-4">
+  <Card className="rounded-lg border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <CardContent className="p-4 flex flex-col flex-grow">
       <div className="flex justify-between items-start">
         <FileText className={`h-6 w-6 ${doc.iconColor}`} />
-        <div className="flex items-center space-x-2">
-          <Star
-            className={`h-5 w-5 ${
-              doc.isStarred ? "text-yellow-400 fill-current" : "text-gray-300"
-            }`}
-          />
-          <MoreHorizontal className="h-5 w-5 text-gray-400" />
+        {doc.isStarred && (
+          <Star className="h-5 w-5 text-yellow-400 fill-current" />
+        )}
+      </div>
+      <div className="flex-grow mt-4">
+        <h3 className="font-medium text-gray-800 truncate hover:underline cursor-pointer">
+          {doc.name}
+        </h3>
+        <div className="text-xs text-gray-500 mt-3 space-y-1">
+          <p>{doc.patient}</p>
+          <p>{doc.date}</p>
+          <p>{doc.size}</p>
+        </div>
+        <p className="text-sm text-gray-600 mt-4 truncate">{doc.description}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {doc.tags.map((tag, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5"
+            >
+              {tag}
+            </Badge>
+          ))}
         </div>
       </div>
-      <h3 className="font-semibold mt-3 text-gray-800">{doc.name}</h3>
-      <p className="text-xs text-gray-500 mt-1">
+      <div className="flex items-center mt-5 border-t pt-2">
+        <div className="flex-1"></div> {/* Spacer */}
+        <div className="flex-1 flex justify-center">
+          <Eye className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+        </div>
+        <div className="flex-1 flex justify-end space-x-4">
+          <Download className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+          <Trash2 className="h-5 w-5 text-gray-500 hover:text-red-500 cursor-pointer" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const DocumentRow = ({ doc }) => (
+  <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center space-x-4">
+    <FileText className={`h-8 w-8 flex-shrink-0 ${doc.iconColor}`} />
+    <div className="flex-grow">
+      <div className="flex items-center space-x-2">
+        <h3 className="font-semibold text-gray-800">{doc.name}</h3>
+        {doc.isStarred && (
+          <Star className="h-4 w-4 text-yellow-400 fill-current" />
+        )}
+      </div>
+      <p className="text-sm text-gray-500">
         {doc.patient} • {doc.date} • {doc.size}
       </p>
-      <p className="text-sm text-gray-600 mt-2">{doc.description}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <p className="text-sm text-gray-600 truncate mt-1">{doc.description}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
         {doc.tags.map((tag, index) => (
-          <Badge key={index} variant="secondary" className="text-xs">
+          <Badge
+            key={index}
+            variant="secondary"
+            className="text-xs bg-gray-100 text-gray-600"
+          >
             {tag}
           </Badge>
         ))}
       </div>
-      <div className="flex justify-end items-center mt-4 space-x-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <View className="h-4 w-4 mr-1" /> View
-        </Button>
-        <Download className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
-        <Trash2 className="h-5 w-5 text-gray-400 hover:text-red-500 cursor-pointer" />
-      </div>
-    </CardContent>
-  </Card>
+    </div>
+    <div className="flex items-center space-x-3">
+      <Eye className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+      <Download className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+      <Trash2 className="h-5 w-5 text-gray-500 hover:text-red-500 cursor-pointer" />
+    </div>
+  </div>
 );
 
 export default function FileManagement() {
@@ -152,17 +190,17 @@ export default function FileManagement() {
 
         {/* Search and Filter Section */}
         <div className="py-6">
-          <div className="flex justify-between items-center">
+          <div className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center mb-4">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
                 placeholder="Search documents by name, patient, or content..."
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 bg-transparent w-full focus:outline-none"
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" className="text-sm">
+              <Button variant="outline" className="text-sm border-gray-200">
                 All Folders
               </Button>
               <div className="flex items-center border rounded-lg">
@@ -192,7 +230,7 @@ export default function FileManagement() {
                 <Badge
                   key={index}
                   variant="outline"
-                  className="cursor-pointer hover:bg-gray-100"
+                  className="cursor-pointer hover:bg-gray-100 bg-white"
                 >
                   {tag}
                 </Badge>
@@ -201,18 +239,20 @@ export default function FileManagement() {
           </div>
         </div>
 
-        {/* Documents Grid */}
-        <div
-          className={`grid ${
-            view === "grid"
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              : ""
-          } gap-6`}
-        >
-          {documents.map((doc) => (
-            <DocumentCard key={doc.id} doc={doc} />
-          ))}
-        </div>
+        {/* Documents Display */}
+        {view === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {documents.map((doc) => (
+              <DocumentCard key={doc.id} doc={doc} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {documents.map((doc) => (
+              <DocumentRow key={doc.id} doc={doc} />
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );

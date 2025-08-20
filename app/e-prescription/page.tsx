@@ -1,13 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, Eye, RefreshCw, Pill, User, Calendar, MapPin } from "lucide-react"
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Search,
+  Plus,
+  Eye,
+  RefreshCw,
+  Pill,
+  User,
+  Calendar,
+  MapPin,
+  AlertTriangle,
+  Send,
+} from "lucide-react";
 
 const prescriptions = [
   {
@@ -49,7 +76,7 @@ const prescriptions = [
     lastFilled: "8/10/2024",
     status: "filled",
   },
-]
+];
 
 const commonMedications = [
   {
@@ -77,56 +104,175 @@ const commonMedications = [
     category: "Antipsychotic",
     available: "0.5mg, 1mg, 2mg, 3mg, 4mg",
   },
-]
+];
 
 export default function EPrescription() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status) => {
     switch (status) {
       case "sent":
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">sent</Badge>
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            sent
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">pending</Badge>
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            pending
+          </Badge>
+        );
       case "filled":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">filled</Badge>
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            filled
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline">{status}</Badge>;
     }
-  }
+  };
 
-  const getCategoryBadge = (category: string) => {
+  const getCategoryBadge = (category) => {
     switch (category) {
       case "Antidepressant":
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Antidepressant</Badge>
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            Antidepressant
+          </Badge>
+        );
       case "Anxiolytic":
-        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Anxiolytic</Badge>
+        return (
+          <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+            Anxiolytic
+          </Badge>
+        );
       case "Antipsychotic":
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Antipsychotic</Badge>
+        return (
+          <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+            Antipsychotic
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{category}</Badge>
+        return <Badge variant="outline">{category}</Badge>;
     }
-  }
+  };
 
   const filteredPrescriptions = prescriptions.filter((prescription) => {
     const matchesSearch =
       prescription.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prescription.medication.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || prescription.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+      prescription.medication.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || prescription.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <MainLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">e-Prescription</h1>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="mr-2 h-4 w-4" />
-            New Prescription
-          </Button>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            e-Prescription
+          </h1>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="mr-2 h-4 w-4" />
+                New Prescription
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Write New Prescription</DialogTitle>
+              </DialogHeader>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-blue-600" />
+                <p className="text-sm text-blue-800">
+                  All prescriptions are securely transmitted to pharmacies and
+                  logged in patient records.
+                </p>
+              </div>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="patient">Patient</label>
+                    <Select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select patient" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="john-doe">John Doe</SelectItem>
+                        <SelectItem value="sarah-johnson">
+                          Sarah Johnson
+                        </SelectItem>
+                        <SelectItem value="mike-wilson">Mike Wilson</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="pharmacy">Pharmacy</label>
+                    <Select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select pharmacy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cvs">CVS Pharmacy</SelectItem>
+                        <SelectItem value="walgreens">Walgreens</SelectItem>
+                        <SelectItem value="rite-aid">Rite Aid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="medication">Medication</label>
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Search and select medication" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonMedications.map((med) => (
+                        <SelectItem key={med.name} value={med.name}>
+                          {med.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="dosage">Dosage Instructions</label>
+                  <Input
+                    id="dosage"
+                    placeholder="e.g., Take 1 tablet daily with food"
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="notes">Notes (Optional)</label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Additional instructions for pharmacist"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Send to Pharmacy
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search and Filters */}
@@ -165,10 +311,14 @@ export default function EPrescription() {
                     </div>
                     <div>
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-medium text-gray-900">{prescription.patient}</h3>
+                        <h3 className="font-medium text-gray-900">
+                          {prescription.patient}
+                        </h3>
                         {getStatusBadge(prescription.status)}
                       </div>
-                      <p className="text-sm text-gray-600">{prescription.patientId}</p>
+                      <p className="text-sm text-gray-600">
+                        {prescription.patientId}
+                      </p>
                     </div>
                   </div>
                   <div className="flex space-x-2">
@@ -185,37 +335,55 @@ export default function EPrescription() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Medication</h4>
-                    <p className="text-sm text-gray-700 font-medium">{prescription.medication}</p>
-                    <p className="text-xs text-gray-600">{prescription.dosage}</p>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">
+                      Medication
+                    </h4>
+                    <p className="text-sm text-gray-700 font-medium">
+                      {prescription.medication}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {prescription.dosage}
+                    </p>
                     <div className="flex items-center space-x-4 mt-2">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3 text-gray-400" />
-                        <span className="text-xs text-gray-600">Prescribed: {prescription.prescribed}</span>
+                        <span className="text-xs text-gray-600">
+                          Prescribed: {prescription.prescribed}
+                        </span>
                       </div>
                       {prescription.lastFilled && (
                         <div className="flex items-center space-x-1">
-                          <span className="text-xs text-gray-600">Last filled: {prescription.lastFilled}</span>
+                          <span className="text-xs text-gray-600">
+                            Last filled: {prescription.lastFilled}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Quantity & Refills</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">
+                      Quantity & Refills
+                    </h4>
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Qty:</span> {prescription.quantity}
+                      <span className="font-medium">Qty:</span>{" "}
+                      {prescription.quantity}
                     </p>
                     <p className="text-sm text-gray-700">
-                      <span className="font-medium">Refills:</span> {prescription.refills}
+                      <span className="font-medium">Refills:</span>{" "}
+                      {prescription.refills}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Pharmacy</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">
+                      Pharmacy
+                    </h4>
                     <div className="flex items-start space-x-1">
                       <MapPin className="h-3 w-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-gray-700">{prescription.pharmacy}</p>
+                      <p className="text-sm text-gray-700">
+                        {prescription.pharmacy}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -240,11 +408,14 @@ export default function EPrescription() {
                   className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">{medication.name}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {medication.name}
+                    </h4>
                     {getCategoryBadge(medication.category)}
                   </div>
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">Available:</span> {medication.available}
+                    <span className="font-medium">Available:</span>{" "}
+                    {medication.available}
                   </p>
                 </div>
               ))}
@@ -253,5 +424,5 @@ export default function EPrescription() {
         </Card>
       </div>
     </MainLayout>
-  )
+  );
 }

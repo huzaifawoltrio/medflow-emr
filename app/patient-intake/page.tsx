@@ -137,7 +137,7 @@ export default function PatientIntake() {
             value={formData.gender}
             onValueChange={(value) => handleInputChange("gender", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +195,7 @@ export default function PatientIntake() {
             value={formData.state}
             onValueChange={(value) => handleInputChange("state", value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
@@ -320,7 +320,7 @@ export default function PatientIntake() {
               handleInputChange("relationshipToPatient", value)
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select relationship" />
             </SelectTrigger>
             <SelectContent>
@@ -453,7 +453,7 @@ export default function PatientIntake() {
           <RadioGroup
             value={formData.smokingStatus}
             onValueChange={(value) => handleInputChange("smokingStatus", value)}
-            className="flex space-x-4"
+            className="space-y-2"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="never" id="never" />
@@ -476,7 +476,7 @@ export default function PatientIntake() {
             onValueChange={(value) =>
               handleInputChange("alcoholConsumption", value)
             }
-            className="flex space-x-4"
+            className="space-y-2"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="none" id="none-alcohol" />
@@ -499,7 +499,7 @@ export default function PatientIntake() {
             onValueChange={(value) =>
               handleInputChange("exerciseFrequency", value)
             }
-            className="flex space-x-4"
+            className="space-y-2"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="none" id="none-exercise" />
@@ -556,7 +556,7 @@ export default function PatientIntake() {
           value={formData.symptomDuration}
           onValueChange={(value) => handleInputChange("symptomDuration", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select duration" />
           </SelectTrigger>
           <SelectContent>
@@ -582,7 +582,7 @@ export default function PatientIntake() {
                 }
                 className={`w-8 h-8 rounded-md border text-sm font-medium transition-colors ${
                   formData.painLevel === (i + 1).toString()
-                    ? "bg-red-600 text-white border-red-600"
+                    ? "bg-red-500 text-white border-red-500"
                     : "bg-white text-gray-700 border-gray-300 hover:border-red-400"
                 }`}
               >
@@ -623,7 +623,7 @@ export default function PatientIntake() {
         </Button>
         <Button
           onClick={() => markSectionComplete("concerns")}
-          className="bg-green-600 hover:bg-green-700"
+          className="bg-blue-600 hover:bg-blue-700"
         >
           Complete Forms
         </Button>
@@ -669,10 +669,10 @@ export default function PatientIntake() {
         </div>
 
         <div className="mb-8">
-          <Progress value={completionPercentage} className="h-2" />
+          <Progress value={completionPercentage} className="h-1" />
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mb-8 bg-white p-1 rounded-lg shadow-sm">
+        <div className="grid grid-cols-4 gap-2 mb-8 bg-gray-100 p-1 rounded-lg">
           {sections.map((section) => {
             const Icon = section.icon;
             const isActive = activeSection === section.id;
@@ -682,8 +682,8 @@ export default function PatientIntake() {
                 onClick={() => setActiveSection(section.id)}
                 className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-500 hover:bg-gray-50"
+                    ? "bg-white shadow-sm text-blue-600"
+                    : "text-gray-500 hover:bg-gray-200"
                 }`}
               >
                 <Icon
