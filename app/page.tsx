@@ -1,313 +1,298 @@
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+"use client";
+
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Calendar,
   MessageSquare,
+  Upload,
+  CreditCard,
+  Bell,
+  FileText,
+  CheckCircle,
+  Download,
+  Eye,
+  AlertTriangle,
   Pill,
   DollarSign,
-  FileText,
+  Search,
+  Link as LinkIcon,
+  CheckCircle2,
+  CalendarCheck,
   ScanLine,
-  Clock,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react"
+} from "lucide-react";
+
+// A helper component for Quick Action items
+const QuickActionButton = ({ icon: Icon, label, colorClass }) => (
+  <div className="flex flex-col items-center justify-center p-4 space-y-2 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow cursor-pointer">
+    <Icon className={`h-6 w-6 ${colorClass}`} />
+    <span className="text-sm font-medium text-gray-700">{label}</span>
+  </div>
+);
 
 export default function Dashboard() {
   return (
     <MainLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Good morning, Dr. Johnson</h1>
-            <p className="text-gray-600 mt-1">Here's what's happening with your practice today</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Good morning, Dr. Johnson
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Here's what's happening with your practice today
+            </p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Calendar className="mr-2 h-4 w-4" />
-            Quick Action
-          </Button>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search patients..."
+                className="pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+              />
+            </div>
+            <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-5 py-2.5">
+              + Quick Action
+            </Button>
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-900">Today's Appointments</CardTitle>
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Calendar className="h-4 w-4 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-blue-50 border-none rounded-2xl shadow-sm p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-blue-800">
+                  Today's Appointments
+                </CardTitle>
+                <div className="text-3xl font-bold text-blue-900 mt-2">12</div>
+                <p className="text-xs text-blue-700 mt-1">+2 from yesterday</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-900">12</div>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                <p className="text-xs text-blue-700">+2 from yesterday</p>
+              <div className="p-3 bg-blue-600 rounded-lg">
+                <Calendar className="h-6 w-6 text-white" />
               </div>
-              <Progress value={75} className="mt-3 h-2" />
-              <p className="text-xs text-blue-600 mt-1">75% capacity</p>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-900">Active Messages</CardTitle>
-              <div className="p-2 bg-green-600 rounded-lg">
-                <MessageSquare className="h-4 w-4 text-white" />
+          <Card className="bg-green-50 border-none rounded-2xl shadow-sm p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-green-800">
+                  Active Messages
+                </CardTitle>
+                <div className="text-3xl font-bold text-green-900 mt-2">7</div>
+                <p className="text-xs text-green-700 mt-1">3 high priority</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-900">7</div>
-              <div className="flex items-center mt-2">
-                <AlertTriangle className="h-3 w-3 text-orange-600 mr-1" />
-                <p className="text-xs text-green-700">3 high priority</p>
+              <div className="p-3 bg-green-600 rounded-lg">
+                <MessageSquare className="h-6 w-6 text-white" />
               </div>
-              <div className="flex space-x-1 mt-3">
-                <div className="flex-1 h-2 bg-green-600 rounded"></div>
-                <div className="flex-1 h-2 bg-green-600 rounded"></div>
-                <div className="flex-1 h-2 bg-green-600 rounded"></div>
-                <div className="flex-1 h-2 bg-orange-400 rounded"></div>
-                <div className="flex-1 h-2 bg-red-400 rounded"></div>
-              </div>
-              <p className="text-xs text-green-600 mt-1">2 urgent responses needed</p>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-900">Pending Prescriptions</CardTitle>
-              <div className="p-2 bg-purple-600 rounded-lg">
-                <Pill className="h-4 w-4 text-white" />
+          <Card className="bg-purple-50 border-none rounded-2xl shadow-sm p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-purple-800">
+                  Pending Prescriptions
+                </CardTitle>
+                <div className="text-3xl font-bold text-purple-900 mt-2">3</div>
+                <p className="text-xs text-purple-700 mt-1">
+                  Awaiting approval
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-900">3</div>
-              <div className="flex items-center mt-2">
-                <Clock className="h-3 w-3 text-purple-600 mr-1" />
-                <p className="text-xs text-purple-700">Awaiting approval</p>
+              <div className="p-3 bg-purple-600 rounded-lg">
+                <Pill className="h-6 w-6 text-white" />
               </div>
-              <div className="flex items-center justify-between mt-3">
-                <Badge variant="outline" className="text-xs">
-                  2 Refills
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  1 New
-                </Badge>
-              </div>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-red-100 border-orange-200 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-orange-900">Outstanding Bills</CardTitle>
-              <div className="p-2 bg-orange-600 rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
+          <Card className="bg-orange-50 border-none rounded-2xl shadow-sm p-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-orange-800">
+                  Outstanding Bills
+                </CardTitle>
+                <div className="text-3xl font-bold text-orange-900 mt-2">
+                  $2,840
+                </div>
+                <p className="text-xs text-orange-700 mt-1">5 overdue</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-900">$2,840</div>
-              <div className="flex items-center mt-2">
-                <AlertTriangle className="h-3 w-3 text-red-600 mr-1" />
-                <p className="text-xs text-orange-700">5 overdue</p>
+              <div className="p-3 bg-orange-600 rounded-lg">
+                <DollarSign className="h-6 w-6 text-white" />
               </div>
-              <Progress value={65} className="mt-3 h-2" />
-              <p className="text-xs text-orange-600 mt-1">65% collection rate</p>
-            </CardContent>
+            </div>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions */}
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <span>Quick Actions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  className="h-24 flex flex-col items-center justify-center space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors bg-transparent"
-                >
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <span className="text-sm font-medium">Schedule</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-24 flex flex-col items-center justify-center space-y-2 hover:bg-green-50 hover:border-green-300 transition-colors bg-transparent"
-                >
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <FileText className="h-5 w-5 text-green-600" />
-                  </div>
-                  <span className="text-sm font-medium">New Note</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-24 flex flex-col items-center justify-center space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors bg-transparent"
-                >
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Pill className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <span className="text-sm font-medium">Prescribe</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-24 flex flex-col items-center justify-center space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors bg-transparent"
-                >
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <ScanLine className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <span className="text-sm font-medium">Scan Doc</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Today's Schedule section */}
-          <Card className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Today's Schedule</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                View Full Schedule
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">JD</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-900">John Doe</p>
-                    <p className="text-xs text-gray-600">Follow-up • 9:00 AM</p>
-                  </div>
-                </div>
-                <Badge className="bg-blue-600 text-white">Next</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">SJ</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-900">Sarah Johnson</p>
-                    <p className="text-xs text-gray-600">Initial Consult • 10:30 AM</p>
-                  </div>
-                </div>
-                <Badge variant="outline">Scheduled</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">MW</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm text-gray-900">Mike Wilson</p>
-                    <p className="text-xs text-gray-600">Therapy Session • 2:00 PM</p>
-                  </div>
-                </div>
-                <Badge variant="outline">Scheduled</Badge>
-              </div>
-
-              <div className="text-center pt-2">
-                <Button variant="link" className="text-sm text-blue-600 hover:text-blue-700">
-                  View All Appointments
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Priority Messages section */}
-          <div className="space-y-6">
-            <Card className="shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Quick Actions */}
+            <Card className="rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle>Priority Messages</CardTitle>
+                <CardTitle className="text-xl font-semibold">
+                  Quick Actions
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge variant="destructive" className="text-xs">
-                      Urgent
-                    </Badge>
-                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                      Patient Portal
-                    </Badge>
-                  </div>
-                  <p className="font-medium text-sm text-gray-900">Mike Wilson</p>
-                  <p className="text-xs text-gray-600 mt-1">Experiencing severe side effects from new medication</p>
-                  <p className="text-xs text-gray-400 mt-2">5 minutes ago</p>
-                </div>
-
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge className="text-xs bg-yellow-500 hover:bg-yellow-600">Follow-up</Badge>
-                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                      Staff Message
-                    </Badge>
-                  </div>
-                  <p className="font-medium text-sm text-gray-900">Nurse Janet</p>
-                  <p className="text-xs text-gray-600 mt-1">Lab results ready for John Doe's review</p>
-                  <p className="text-xs text-gray-400 mt-2">30 minutes ago</p>
-                </div>
-
-                <div className="text-center pt-2">
-                  <Button variant="link" className="text-sm text-blue-600 hover:text-blue-700">
-                    View All Messages
-                  </Button>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-4 gap-6">
+                  <QuickActionButton
+                    icon={Calendar}
+                    label="Schedule"
+                    colorClass="text-blue-600"
+                  />
+                  <QuickActionButton
+                    icon={FileText}
+                    label="New Note"
+                    colorClass="text-green-600"
+                  />
+                  <QuickActionButton
+                    icon={LinkIcon}
+                    label="Prescribe"
+                    colorClass="text-purple-600"
+                  />
+                  <QuickActionButton
+                    icon={ScanLine}
+                    label="Scan Doc"
+                    colorClass="text-orange-600"
+                  />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Added Recent Activity section */}
-            <Card className="shadow-sm">
+            {/* Recent Activity */}
+            <Card className="rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle className="text-xl font-semibold">
+                  Recent Activity
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-1" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Lab results reviewed</p>
-                    <p className="text-xs text-gray-600">John Doe - CBC panel normal values</p>
-                    <p className="text-xs text-gray-400">2 minutes ago</p>
+                    <p className="font-medium">Lab results reviewed</p>
+                    <p className="text-sm text-gray-500">
+                      John Doe • CBC panel normal values
+                    </p>
                   </div>
+                  <p className="text-xs text-gray-400">2 minutes ago</p>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                  <CalendarCheck className="h-5 w-5 text-blue-500 mt-1" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Appointment confirmed</p>
-                    <p className="text-xs text-gray-600">Sarah Johnson scheduled for today 10:30 AM</p>
-                    <p className="text-xs text-gray-400">15 minutes ago</p>
+                    <p className="font-medium">Appointment confirmed</p>
+                    <p className="text-sm text-gray-500">
+                      Sarah Johnson scheduled for today 10:30 AM
+                    </p>
                   </div>
+                  <p className="text-xs text-gray-400">15 minutes ago</p>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                  <Pill className="h-5 w-5 text-purple-500 mt-1" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Prescription sent</p>
-                    <p className="text-xs text-gray-600">Mike Wilson - Fluoxetine 20mg</p>
-                    <p className="text-xs text-gray-400">1 hour ago</p>
+                    <p className="font-medium">New message from Dr. Smith</p>
+                    <p className="text-sm text-gray-500">
+                      Mike Wilson • Fluoxetine 20mg
+                    </p>
                   </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Document uploaded</p>
-                    <p className="text-xs text-gray-600">Insurance card scanned for Sarah Johnson</p>
-                    <p className="text-xs text-gray-400">2 hours ago</p>
-                  </div>
+                  <p className="text-xs text-gray-400">1 hour ago</p>
                 </div>
               </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-8">
+            {/* Today's Schedule */}
+            <Card className="rounded-xl shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-xl font-semibold">
+                  Today's Schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-blue-50 border-l-4 border-blue-600 rounded-lg flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">John Doe</p>
+                    <p className="text-sm text-gray-500">Follow-up • 9:00 AM</p>
+                  </div>
+                  <Badge className="bg-blue-600 hover:bg-blue-700">Next</Badge>
+                </div>
+                <div className="p-4 bg-white border-l-4 border-gray-200 rounded-lg">
+                  <p className="font-semibold">Sarah Johnson</p>
+                  <p className="text-sm text-gray-500">
+                    Initial Consult • 10:30 AM
+                  </p>
+                </div>
+                <div className="p-4 bg-white border-l-4 border-gray-200 rounded-lg">
+                  <p className="font-semibold">Mike Wilson</p>
+                  <p className="text-sm text-gray-500">
+                    Therapy Session • 2:00 PM
+                  </p>
+                </div>
+              </CardContent>
+              <div className="p-4 border-t border-gray-200">
+                <Button variant="outline" className="w-full bg-white">
+                  View Full Schedule
+                </Button>
+              </div>
+            </Card>
+
+            {/* Priority Messages */}
+            <Card className="rounded-xl shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">
+                  Priority Messages
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Badge
+                      variant="outline"
+                      className="bg-red-100 text-red-700 border-red-200"
+                    >
+                      Urgent
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      Patient Portal
+                    </span>
+                  </div>
+                  <p className="font-semibold text-gray-900">Mike Wilson</p>
+                  <p className="text-sm text-gray-600">
+                    Experiencing severe side effects from new medication
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">5 minutes ago</p>
+                </div>
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Badge
+                      variant="outline"
+                      className="bg-yellow-100 text-yellow-800 border-yellow-200"
+                    >
+                      Follow-up
+                    </Badge>
+                    <span className="text-xs text-gray-500">Staff Message</span>
+                  </div>
+                  <p className="font-semibold text-gray-900">Nurse Janet</p>
+                  <p className="text-sm text-gray-600">
+                    Lab results ready for John Doe's review
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">30 minutes ago</p>
+                </div>
+              </CardContent>
+              <div className="p-4 border-t border-gray-200">
+                <Button variant="outline" className="w-full bg-white">
+                  View All Messages
+                </Button>
+              </div>
             </Card>
           </div>
         </div>
       </div>
     </MainLayout>
-  )
+  );
 }

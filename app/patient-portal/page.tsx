@@ -1,243 +1,474 @@
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, MessageSquare, Upload, CreditCard, Bell, FileText, CheckCircle } from "lucide-react"
+"use client";
+
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Calendar,
+  MessageSquare,
+  Upload,
+  CreditCard,
+  Bell,
+  FileText,
+  CheckCircle,
+  Download,
+  Eye,
+  AlertTriangle,
+} from "lucide-react";
 
 export default function PatientPortal() {
-  return (
-    <MainLayout>
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Patient Portal</h1>
-            <p className="text-gray-600">Welcome back, John Doe</p>
-          </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 flex items-center">
-            <Bell className="mr-2 h-4 w-4" />
-            Notifications
-          </Button>
-        </div>
+  const [activeTab, setActiveTab] = useState("overview");
 
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg w-fit">
-          <Button variant="ghost" className="bg-white shadow-sm">
-            Overview
-          </Button>
-          <Button variant="ghost">Appointments</Button>
-          <Button variant="ghost">Medical Records</Button>
-          <Button variant="ghost">Messages</Button>
-          <Button variant="ghost">Billing</Button>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  const renderOverview = () => (
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
           {/* Quick Actions */}
-          <Card>
+          <Card className="rounded-xl shadow-sm">
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="text-xl font-semibold">
+                Quick Actions
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <Button
                   variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors bg-transparent"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                 >
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium">Schedule Appointment</span>
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                  <span className="text-sm font-medium">
+                    Schedule Appointment
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2 hover:bg-green-50 hover:border-green-300 transition-colors bg-transparent"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                 >
-                  <MessageSquare className="h-5 w-5 text-green-600" />
+                  <MessageSquare className="h-6 w-6 text-green-600" />
                   <span className="text-sm font-medium">Send Message</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors bg-transparent"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                 >
-                  <Upload className="h-5 w-5 text-purple-600" />
+                  <Upload className="h-6 w-6 text-purple-600" />
                   <span className="text-sm font-medium">Upload Document</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors bg-transparent"
+                  className="h-24 flex flex-col items-center justify-center space-y-2"
                 >
-                  <CreditCard className="h-5 w-5 text-orange-600" />
+                  <CreditCard className="h-6 w-6 text-orange-600" />
                   <span className="text-sm font-medium">Pay Bill</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* My Information */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>My Information</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                Update Information
-              </Button>
+          {/* Recent Activity */}
+          <Card className="rounded-xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                Recent Activity
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src="/placeholder.svg?height=48&width=48" alt="John Doe" />
-                  <AvatarFallback>JD</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-gray-900">John Doe</p>
-                  <p className="text-sm text-gray-600">Patient ID: P001</p>
+              <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                <FileText className="h-5 w-5 text-blue-500 mt-1" />
+                <div className="flex-1">
+                  <p className="font-medium">Lab results are ready</p>
+                  <p className="text-sm text-gray-500">
+                    CBC panel completed - Aug 10, 2024
+                  </p>
                 </div>
+                <Button variant="ghost" size="sm">
+                  View
+                </Button>
               </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Name</span>
-                  <span className="font-medium">John Doe</span>
+              <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                <div className="flex-1">
+                  <p className="font-medium">Appointment confirmed</p>
+                  <p className="text-sm text-gray-500">
+                    Dr. Smith - Aug 15, 2:00 PM
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Patient ID</span>
-                  <span className="font-medium">P001</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date of Birth</span>
-                  <span className="font-medium">3/15/1985</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Phone</span>
-                  <span className="font-medium">(555) 123-4567</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Email</span>
-                  <span className="font-medium">john.doe@email.com</span>
-                </div>
+                <Button variant="ghost" size="sm">
+                  Details
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Upcoming Appointments */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Upcoming Appointments</CardTitle>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                Schedule New Appointment
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-sm">Dr. Smith</p>
-                  <Badge className="bg-blue-600 text-white">confirmed</Badge>
+              <div className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                <MessageSquare className="h-5 w-5 text-purple-500 mt-1" />
+                <div className="flex-1">
+                  <p className="font-medium">New message from Dr. Smith</p>
+                  <p className="text-sm text-gray-500">
+                    Regarding your recent visit
+                  </p>
                 </div>
-                <p className="text-xs text-gray-600">Follow-up</p>
-                <p className="text-xs text-gray-600">8/15/2024 at 2:00 PM</p>
-              </div>
-
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-sm">Dr. Brown</p>
-                  <Badge variant="outline">scheduled</Badge>
-                </div>
-                <p className="text-xs text-gray-600">Therapy Session</p>
-                <p className="text-xs text-gray-600">8/22/2024 at 10:30 AM</p>
+                <Button variant="ghost" size="sm">
+                  Read
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <Card>
+        <div className="space-y-8">
+          {/* My Information */}
+          <Card className="rounded-xl shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="text-xl font-semibold">
+                My Information
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">Lab results are ready</p>
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      View
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-600">CBC panel completed • Aug 10, 2024</p>
-                </div>
+            <CardContent className="space-y-3 text-sm">
+              <div>
+                <span className="text-gray-500">Name</span>
+                <p className="font-medium">John Doe</p>
               </div>
-
-              <div className="flex items-start space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">Appointment confirmed</p>
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      Details
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-600">Dr. Smith • Aug 15, 2:00 PM</p>
-                </div>
+              <div>
+                <span className="text-gray-500">Patient ID</span>
+                <p className="font-medium">P001</p>
               </div>
-
-              <div className="flex items-start space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <MessageSquare className="h-4 w-4 text-purple-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">New message from Dr. Smith</p>
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                      Read
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-600">Regarding your recent visit</p>
-                </div>
+              <div>
+                <span className="text-gray-500">Date of Birth</span>
+                <p className="font-medium">3/15/1985</p>
               </div>
+              <div>
+                <span className="text-gray-500">Phone</span>
+                <p className="font-medium">(555) 123-4567</p>
+              </div>
+              <div>
+                <span className="text-gray-500">Email</span>
+                <p className="font-medium">john.doe@email.com</p>
+              </div>
+              <Button variant="outline" className="w-full mt-4">
+                Update Information
+              </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Upcoming Appointments */}
+          <Card className="rounded-xl shadow-sm">
             <CardHeader>
-              <CardTitle>Health Summary</CardTitle>
+              <CardTitle className="text-xl font-semibold">
+                Upcoming Appointments
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <p className="font-medium text-green-900">All Clear</p>
+              <div className="p-4 bg-white border rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">Dr. Smith</p>
+                    <p className="text-sm text-gray-500">Follow-up</p>
+                    <p className="text-sm text-gray-500">
+                      8/15/2024 at 2:00 PM
+                    </p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800">confirmed</Badge>
                 </div>
-                <p className="text-sm text-green-700">
-                  Your recent lab results show normal values across all tested parameters.
-                </p>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Blood Pressure</span>
-                  <span className="text-sm font-medium">120/80 mmHg</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Heart Rate</span>
-                  <span className="text-sm font-medium">72 bpm</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Weight</span>
-                  <span className="text-sm font-medium">165 lbs</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Last Visit</span>
-                  <span className="text-sm font-medium">Aug 10, 2024</span>
+              <div className="p-4 bg-white border rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">Dr. Brown</p>
+                    <p className="text-sm text-gray-500">Therapy Session</p>
+                    <p className="text-sm text-gray-500">
+                      8/22/2024 at 10:30 AM
+                    </p>
+                  </div>
+                  <Badge variant="outline">scheduled</Badge>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+    </>
+  );
+
+  const renderAppointments = () => (
+    <Card className="rounded-xl shadow-sm">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="text-xl font-semibold">My Appointments</CardTitle>
+        <Button className="bg-blue-600 hover:bg-blue-700">Schedule New</Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div>
+            <p className="font-semibold">Dr. Smith</p>
+            <p className="text-sm text-gray-500">Follow-up</p>
+            <p className="text-sm text-gray-500">8/15/2024 at 2:00 PM</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge className="bg-blue-100 text-blue-800">confirmed</Badge>
+            <Button variant="ghost" size="sm">
+              Reschedule
+            </Button>
+            <Button variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </div>
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div>
+            <p className="font-semibold">Dr. Brown</p>
+            <p className="text-sm text-gray-500">Therapy Session</p>
+            <p className="text-sm text-gray-500">8/22/2024 at 10:30 AM</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline">scheduled</Badge>
+            <Button variant="ghost" size="sm">
+              Reschedule
+            </Button>
+            <Button variant="ghost" size="sm">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderMedicalRecords = () => (
+    <Card className="rounded-xl shadow-sm">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="text-xl font-semibold">Medical Records</CardTitle>
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <Upload className="mr-2 h-4 w-4" /> Upload Document
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <FileText className="h-6 w-6 text-blue-500" />
+            <div>
+              <p className="font-semibold">Lab Results - CBC</p>
+              <p className="text-sm text-gray-500">Lab Report • 8/10/2024</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <Eye className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Download className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <FileText className="h-6 w-6 text-blue-500" />
+            <div>
+              <p className="font-semibold">Progress Note - Session 5</p>
+              <p className="text-sm text-gray-500">Clinical Note • 8/8/2024</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <Eye className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Download className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <FileText className="h-6 w-6 text-blue-500" />
+            <div>
+              <p className="font-semibold">Prescription - Medication Update</p>
+              <p className="text-sm text-gray-500">Prescription • 8/5/2024</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <Eye className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Download className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderMessages = () => (
+    <Card className="rounded-xl shadow-sm">
+      <CardHeader className="flex flex-row justify-between items-center">
+        <CardTitle className="text-xl font-semibold">Messages</CardTitle>
+        <Button className="bg-blue-600 hover:bg-blue-700">New Message</Button>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="p-4 border rounded-lg flex justify-between items-center bg-blue-50 border-blue-200">
+          <div>
+            <p className="font-semibold">Dr. Smith</p>
+            <p className="text-sm text-gray-600">Lab Results Available</p>
+            <a href="#" className="text-sm text-blue-600 hover:underline">
+              Read Message
+            </a>
+          </div>
+          <div className="text-right">
+            <Badge className="mb-1">New</Badge>
+            <p className="text-xs text-gray-500">8/12/2024</p>
+          </div>
+        </div>
+        <div className="p-4 border rounded-lg flex justify-between items-center">
+          <div>
+            <p className="font-semibold">Billing Department</p>
+            <p className="text-sm text-gray-600">Payment Reminder</p>
+            <a href="#" className="text-sm text-blue-600 hover:underline">
+              Read Message
+            </a>
+          </div>
+          <p className="text-xs text-gray-500">8/10/2024</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderBilling = () => (
+    <div className="space-y-6">
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-3">
+        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+        <p className="text-sm text-yellow-800">
+          You have an outstanding balance of $150.00. Please review and pay your
+          bills below.
+        </p>
+      </div>
+      <Card className="rounded-xl shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">
+            Billing & Payments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="p-4 border rounded-lg flex justify-between items-center">
+              <div>
+                <p className="font-semibold">Office Visit - Dr. Smith</p>
+                <p className="text-sm text-gray-500">Date: Aug 2, 2024</p>
+                <p className="text-sm text-gray-500">
+                  Service: Follow-up consultation
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-lg">$150.00</p>
+                <Badge variant="destructive">Due</Badge>
+              </div>
+            </div>
+            <div className="p-4 border rounded-lg flex justify-between items-center">
+              <div>
+                <p className="font-semibold">Lab Work - CBC Panel</p>
+                <p className="text-sm text-gray-500">Date: Jul 28, 2024</p>
+                <p className="text-sm text-gray-500">Service: Blood work</p>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-lg">$85.00</p>
+                <Badge className="bg-green-100 text-green-800">Paid</Badge>
+              </div>
+            </div>
+          </div>
+          <Button className="w-full mt-6 bg-blue-600 hover:bg-blue-700">
+            Pay Outstanding Balance ($150.00)
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return renderOverview();
+      case "appointments":
+        return renderAppointments();
+      case "records":
+        return renderMedicalRecords();
+      case "messages":
+        return renderMessages();
+      case "billing":
+        return renderBilling();
+      default:
+        return renderOverview();
+    }
+  };
+
+  return (
+    <MainLayout>
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Patient Portal</h1>
+            <p className="text-gray-600 mt-1">Welcome back, John Doe</p>
+          </div>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Bell className="mr-2 h-4 w-4" /> Notifications
+          </Button>
+        </div>
+
+        <div className="mb-8 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-6">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "overview"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab("appointments")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "appointments"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab("records")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "records"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Medical Records
+            </button>
+            <button
+              onClick={() => setActiveTab("messages")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "messages"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Messages
+            </button>
+            <button
+              onClick={() => setActiveTab("billing")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "billing"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Billing
+            </button>
+          </nav>
+        </div>
+
+        {renderContent()}
+      </div>
     </MainLayout>
-  )
+  );
 }

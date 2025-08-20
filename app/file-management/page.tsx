@@ -1,14 +1,23 @@
-"use client"
+"use client";
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Search,
+  Upload,
+  FileText,
+  Star,
+  MoreHorizontal,
+  View,
+  Download,
+  Trash2,
+  List,
+  LayoutGrid,
+} from "lucide-react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, Search, Eye, Download, Trash2, FileText, ImageIcon, File, Star } from "lucide-react"
-
+// Placeholder data for documents
 const documents = [
   {
     id: 1,
@@ -16,10 +25,11 @@ const documents = [
     patient: "John Doe",
     date: "8/10/2024",
     size: "2.4 MB",
-    type: "pdf",
-    description: "Initial psychiatric evaluation with comprehensive mental status exam",
-    tags: ["assessment", "intake", "depression"],
-    starred: true,
+    description:
+      "Initial psychiatric evaluation with comprehensive mental status exam.",
+    tags: ["assessment", "intake", "depression", "+1"],
+    isStarred: true,
+    iconColor: "text-red-500",
   },
   {
     id: 2,
@@ -27,10 +37,10 @@ const documents = [
     patient: "Sarah Johnson",
     date: "8/12/2024",
     size: "1.2 MB",
-    type: "pdf",
-    description: "Complete blood count results",
-    tags: ["lab", "blood-work", "cbc"],
-    starred: false,
+    description: "Complete blood count results.",
+    tags: ["lab", "blood-work", "cbc", "+1"],
+    isStarred: false,
+    iconColor: "text-yellow-500",
   },
   {
     id: 3,
@@ -38,24 +48,25 @@ const documents = [
     patient: "Mike Wilson",
     date: "8/11/2024",
     size: "856 KB",
-    type: "image",
-    description: "Front side of insurance card",
+    description: "Front side of insurance card.",
     tags: ["insurance", "card", "verification"],
-    starred: false,
+    isStarred: false,
+    iconColor: "text-blue-500",
   },
   {
     id: 4,
-    name: "Progress_Note_Session_5.pdf",
+    name: "Progress_Notes_Session_5.pdf",
     patient: "John Doe",
-    date: "8/9/2024",
-    size: "892 KB",
-    type: "pdf",
-    description: "Therapy session progress note showing improvement",
-    tags: ["progress", "therapy", "session"],
-    starred: false,
+    date: "8/09/2024",
+    size: "802 KB",
+    description: "Therapy session progress note showing improvement.",
+    tags: ["progress", "therapy", "session", "+1"],
+    isStarred: false,
+    iconColor: "text-blue-500",
   },
-]
+];
 
+// Tags for filtering
 const filterTags = [
   "assessment",
   "intake",
@@ -72,178 +83,137 @@ const filterTags = [
   "therapy",
   "session",
   "improvement",
-]
+];
+
+const DocumentCard = ({ doc }) => (
+  <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
+    <CardContent className="p-4">
+      <div className="flex justify-between items-start">
+        <FileText className={`h-6 w-6 ${doc.iconColor}`} />
+        <div className="flex items-center space-x-2">
+          <Star
+            className={`h-5 w-5 ${
+              doc.isStarred ? "text-yellow-400 fill-current" : "text-gray-300"
+            }`}
+          />
+          <MoreHorizontal className="h-5 w-5 text-gray-400" />
+        </div>
+      </div>
+      <h3 className="font-semibold mt-3 text-gray-800">{doc.name}</h3>
+      <p className="text-xs text-gray-500 mt-1">
+        {doc.patient} • {doc.date} • {doc.size}
+      </p>
+      <p className="text-sm text-gray-600 mt-2">{doc.description}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {doc.tags.map((tag, index) => (
+          <Badge key={index} variant="secondary" className="text-xs">
+            {tag}
+          </Badge>
+        ))}
+      </div>
+      <div className="flex justify-end items-center mt-4 space-x-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-gray-600 hover:text-gray-800"
+        >
+          <View className="h-4 w-4 mr-1" /> View
+        </Button>
+        <Download className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-pointer" />
+        <Trash2 className="h-5 w-5 text-gray-400 hover:text-red-500 cursor-pointer" />
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default function FileManagement() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
-
-  const filteredDocuments = documents.filter((doc) => {
-    const matchesSearch =
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.patient.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => doc.tags.includes(tag))
-
-    return matchesSearch && matchesTags
-  })
-
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case "pdf":
-        return <FileText className="h-8 w-8 text-red-500" />
-      case "image":
-        return <ImageIcon className="h-8 w-8 text-blue-500" />
-      default:
-        return <File className="h-8 w-8 text-gray-500" />
-    }
-  }
+  const [view, setView] = useState("grid"); // 'grid' or 'list'
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">File Management</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Document
-        </Button>
-      </div>
+    <MainLayout>
+      <div className="p-8 bg-gray-50 min-h-screen">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">File Management</h1>
+          <Button className="bg-blue-600 hover:bg-blue-700 rounded-lg">
+            <Upload className="h-4 w-4 mr-2" /> Upload Document
+          </Button>
+        </div>
 
-      <Tabs defaultValue="documents" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="structured">Structured Folders</TabsTrigger>
-        </TabsList>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-200">
+          <button className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+            Documents
+          </button>
+          <button className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700">
+            Structured Folders
+          </button>
+        </div>
 
-        <TabsContent value="documents" className="space-y-6">
-          {/* Search and Filters */}
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
+        {/* Search and Filter Section */}
+        <div className="py-6">
+          <div className="flex justify-between items-center">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
                 placeholder="Search documents by name, patient, or content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">Filter by tags:</p>
-                <div className="flex flex-wrap gap-2">
-                  {filterTags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      className="cursor-pointer hover:bg-blue-100"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Select value="all" onValueChange={() => {}}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="All Folders" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Folders</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="flex border rounded-md">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                  >
-                    Grid
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                  >
-                    List
-                  </Button>
-                </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" className="text-sm">
+                All Folders
+              </Button>
+              <div className="flex items-center border rounded-lg">
+                <Button
+                  variant={view === "grid" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => setView("grid")}
+                >
+                  <LayoutGrid className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant={view === "list" ? "secondary" : "ghost"}
+                  size="icon"
+                  onClick={() => setView("list")}
+                >
+                  <List className="h-5 w-5" />
+                </Button>
               </div>
             </div>
           </div>
-
-          {/* Documents Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredDocuments.map((doc) => (
-              <Card key={doc.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-2">
-                      {getFileIcon(doc.type)}
-                      {doc.starred && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-sm text-gray-900 line-clamp-2">{doc.name}</h3>
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p className="flex items-center gap-1">
-                        <span>👤</span> {doc.patient}
-                      </p>
-                      <p className="flex items-center gap-1">
-                        <span>📅</span> {doc.date}
-                      </p>
-                      <p>{doc.size}</p>
-                    </div>
-                    <p className="text-xs text-gray-600 line-clamp-2">{doc.description}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {doc.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {doc.tags.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{doc.tags.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="flex justify-center gap-2 pt-2 border-t">
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="mt-4">
+            <span className="text-sm font-medium text-gray-700 mr-3">
+              Filter by tags:
+            </span>
+            <div className="inline-flex flex-wrap gap-2">
+              {filterTags.map((tag, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-gray-100"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="structured">
-          <div className="text-center py-12 text-gray-500">
-            <File className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p>Structured folders view coming soon</p>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
+        {/* Documents Grid */}
+        <div
+          className={`grid ${
+            view === "grid"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+              : ""
+          } gap-6`}
+        >
+          {documents.map((doc) => (
+            <DocumentCard key={doc.id} doc={doc} />
+          ))}
+        </div>
+      </div>
+    </MainLayout>
+  );
 }

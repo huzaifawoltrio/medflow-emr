@@ -1,7 +1,7 @@
-"use client"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   Calendar,
   FileText,
@@ -14,7 +14,7 @@ import {
   ScanLine,
   LayoutDashboard,
   UserCircle,
-} from "lucide-react"
+} from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -26,12 +26,12 @@ const navigation = [
   { name: "e-Prescription", href: "/prescriptions", icon: Pill },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Clinical Notes", href: "/clinical-notes", icon: ClipboardList },
-  { name: "File Management", href: "/files", icon: FolderOpen },
-  { name: "OCR Workflow", href: "/ocr", icon: ScanLine },
-]
+  { name: "File Management", href: "/file-management", icon: FolderOpen },
+  { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
+];
 
 export function Sidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <div className="flex h-full w-64 flex-col bg-white border-r border-gray-200">
@@ -43,7 +43,9 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">MedFlow EMR</h1>
-            <p className="text-xs text-gray-500">Healthcare Management System</p>
+            <p className="text-xs text-gray-500">
+              Healthcare Management System
+            </p>
           </div>
         </div>
       </div>
@@ -51,7 +53,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-1">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
@@ -60,15 +62,20 @@ export function Sidebar() {
                 "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                 isActive
                   ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600"
-                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
+                  : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
               )}
             >
-              <item.icon className={cn("mr-3 h-5 w-5", isActive ? "text-blue-600" : "text-gray-400")} />
+              <item.icon
+                className={cn(
+                  "mr-3 h-5 w-5",
+                  isActive ? "text-blue-600" : "text-gray-400"
+                )}
+              />
               {item.name}
             </Link>
-          )
+          );
         })}
       </nav>
     </div>
-  )
+  );
 }

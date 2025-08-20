@@ -1,185 +1,142 @@
-"use client"
+"use client";
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Button } from "@/components/ui/button";
+import { UploadCloud } from "lucide-react";
 
-import type React from "react"
-
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Upload, FileText, CreditCard, ClipboardList, UserCheck, CheckCircle } from "lucide-react"
-
-const steps = [
-  { id: 1, name: "Upload", icon: Upload, active: true },
-  { id: 2, name: "Processing", icon: FileText, active: false },
-  { id: 3, name: "Validation", icon: CheckCircle, active: false },
-  { id: 4, name: "Complete", icon: CheckCircle, active: false },
-]
-
-const supportedDocuments = [
-  {
-    icon: UserCheck,
-    title: "Patient face sheets and intake forms",
-    description: "Automatically extract patient demographics and contact information",
-  },
-  {
-    icon: CreditCard,
-    title: "Insurance cards (front and back)",
-    description: "Extract insurance details, policy numbers, and coverage information",
-  },
-  {
-    icon: ClipboardList,
-    title: "Medical history forms",
-    description: "Process medical history, medications, and allergy information",
-  },
-  {
-    icon: FileText,
-    title: "Registration documents",
-    description: "Extract data from patient registration and consent forms",
-  },
-]
-
-export default function OCRWorkflow() {
-  const [dragActive, setDragActive] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const newFiles = Array.from(e.dataTransfer.files)
-      setFiles((prev) => [...prev, ...newFiles])
-    }
-  }, [])
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files)
-      setFiles((prev) => [...prev, ...newFiles])
-    }
-  }
+const Stepper = ({ currentStep }: { currentStep: number }) => {
+  const steps = ["Upload", "Processing", "Validation", "Complete"];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">OCR Document Processing</h1>
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-          Powered by AI
-        </Badge>
-      </div>
-
-      {/* Progress Steps */}
-      <div className="flex items-center justify-center space-x-8 py-6">
-        {steps.map((step, index) => (
-          <div key={step.id} className="flex items-center">
-            <div className={`flex items-center space-x-2 ${step.active ? "text-blue-600" : "text-gray-400"}`}>
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step.active ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"
-                }`}
-              >
-                {step.id}
-              </div>
-              <span className="font-medium">{step.name}</span>
+    <div className="flex items-center justify-between w-full max-w-md mx-auto">
+      {steps.map((step, index) => (
+        <>
+          <div key={index} className="flex flex-col items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                index + 1 <= currentStep
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              {index + 1}
             </div>
-            {index < steps.length - 1 && <div className="w-16 h-px bg-gray-300 mx-4" />}
+            <p
+              className={`mt-2 text-xs font-medium ${
+                index + 1 <= currentStep ? "text-blue-600" : "text-gray-500"
+              }`}
+            >
+              {step}
+            </p>
           </div>
-        ))}
-      </div>
-
-      {/* Upload Area */}
-      <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
-        <CardContent className="p-12">
-          <div
-            className={`text-center space-y-4 ${dragActive ? "scale-105" : ""} transition-transform`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-              <Upload className="h-8 w-8 text-gray-400" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium text-gray-900">Upload Patient Document</h3>
-              <p className="text-gray-600">
-                Upload a scanned patient face sheet, insurance card, or intake form for automatic data extraction.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 bg-gray-50">
-                <div className="text-center space-y-2">
-                  <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                  <p className="text-gray-600">Choose file or drag and drop</p>
-                  <p className="text-sm text-gray-500">Supports: JPG, PNG, PDF (Max 10MB)</p>
-                </div>
-                <input
-                  type="file"
-                  multiple
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  onChange={handleFileSelect}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Supported Document Types */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900">Supported Document Types:</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {supportedDocuments.map((doc, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <doc.icon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-medium text-gray-900">{doc.title}</h4>
-                    <p className="text-sm text-gray-600">{doc.description}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* Uploaded Files */}
-      {files.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Uploaded Files:</h3>
-          <div className="space-y-2">
-            {files.map((file, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <FileText className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm font-medium">{file.name}</span>
-                  <span className="text-xs text-gray-500">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                </div>
-                <Badge variant="secondary">Ready to process</Badge>
-              </div>
-            ))}
-          </div>
-          <Button className="w-full bg-blue-600 hover:bg-blue-700">Start Processing</Button>
-        </div>
-      )}
+          {index < steps.length - 1 && (
+            <div
+              className={`flex-1 h-0.5 ${
+                index + 1 < currentStep ? "bg-blue-600" : "bg-gray-200"
+              }`}
+            />
+          )}
+        </>
+      ))}
     </div>
-  )
+  );
+};
+
+export default function OCRWorkflow() {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  return (
+    <MainLayout>
+      <div className="p-8 bg-white min-h-screen">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            OCR Document Processing
+          </h1>
+          <p className="text-sm text-gray-500">Powered By AI</p>
+        </div>
+
+        {/* Stepper */}
+        <div className="mb-10">
+          <Stepper currentStep={1} />
+        </div>
+
+        {/* Upload Section */}
+        <div className="text-center mb-8">
+          <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
+          <h2 className="mt-2 text-lg font-semibold text-gray-900">
+            Upload Patient Document
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Upload a scanned patient face sheet, insurance card, or intake form
+            for automatic data extraction.
+          </p>
+        </div>
+
+        {/* Drag and Drop Area */}
+        <div
+          className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-gray-50"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          <div className="flex flex-col items-center">
+            <UploadCloud className="h-8 w-8 text-gray-500 mb-2" />
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              onChange={handleFileChange}
+              accept=".jpg,.jpeg,.png,.pdf"
+            />
+            <label
+              htmlFor="file-upload"
+              className="font-semibold text-blue-600 cursor-pointer hover:underline"
+            >
+              Choose file or drag and drop
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              Supports: JPG, PNG, PDF (Max 10MB)
+            </p>
+            {file && (
+              <p className="mt-4 text-sm font-medium text-gray-700">
+                Selected file: {file.name}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Supported Document Types */}
+        <div className="mt-8">
+          <h3 className="font-semibold text-gray-800">
+            Supported Document Types:
+          </h3>
+          <ul className="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
+            <li>Patient face sheets and intake forms</li>
+            <li>Insurance cards (front and back)</li>
+            <li>Medical history forms</li>
+            <li>Registration documents</li>
+          </ul>
+        </div>
+      </div>
+    </MainLayout>
+  );
 }

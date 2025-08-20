@@ -1,28 +1,42 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { User, Shield, Heart, AlertCircle, Save, Send, ChevronRight } from "lucide-react"
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import {
+  User,
+  Shield,
+  Heart,
+  AlertCircle,
+  Save,
+  Send,
+  ChevronRight,
+} from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const sections = [
-  { id: "personal", name: "Personal Info", icon: User, completed: false },
-  { id: "insurance", name: "Insurance", icon: Shield, completed: false },
-  { id: "medical", name: "Medical History", icon: Heart, completed: false },
-  { id: "concerns", name: "Current Concerns", icon: AlertCircle, completed: false },
-]
+  { id: "personal", name: "Personal Info", icon: User },
+  { id: "insurance", name: "Insurance", icon: Shield },
+  { id: "medical", name: "Medical History", icon: Heart },
+  { id: "concerns", name: "Current Concerns", icon: AlertCircle },
+];
 
 export default function PatientIntake() {
-  const [activeSection, setActiveSection] = useState("personal")
-  const [completedSections, setCompletedSections] = useState<string[]>([])
+  const [activeSection, setActiveSection] = useState("personal");
+  const [completedSections, setCompletedSections] = useState([]);
   const [formData, setFormData] = useState({
     // Personal Info
     firstName: "",
@@ -46,7 +60,7 @@ export default function PatientIntake() {
     relationshipToPatient: "",
     // Medical History
     primaryCarePhysician: "",
-    allergies: [] as string[],
+    allergies: [],
     currentMedications: "",
     previousSurgeries: "",
     familyMedicalHistory: "",
@@ -59,30 +73,36 @@ export default function PatientIntake() {
     painLevel: "",
     previousTreatment: "",
     additionalNotes: "",
-  })
+  });
 
-  const completionPercentage = (completedSections.length / sections.length) * 100
+  const completionPercentage =
+    (completedSections.length / sections.length) * 100;
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const handleAllergyChange = (allergy: string, checked: boolean) => {
+  const handleAllergyChange = (allergy, checked) => {
     setFormData((prev) => ({
       ...prev,
-      allergies: checked ? [...prev.allergies, allergy] : prev.allergies.filter((a) => a !== allergy),
-    }))
-  }
+      allergies: checked
+        ? [...prev.allergies, allergy]
+        : prev.allergies.filter((a) => a !== allergy),
+    }));
+  };
 
-  const markSectionComplete = (sectionId: string) => {
+  const markSectionComplete = (sectionId) => {
     if (!completedSections.includes(sectionId)) {
-      setCompletedSections((prev) => [...prev, sectionId])
+      setCompletedSections((prev) => [...prev, sectionId]);
     }
-  }
+  };
 
   const renderPersonalInfo = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardTitle className="text-xl font-semibold mb-4">
+        Personal Information
+      </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="firstName">First Name *</Label>
           <Input
@@ -101,9 +121,6 @@ export default function PatientIntake() {
             onChange={(e) => handleInputChange("lastName", e.target.value)}
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="dateOfBirth">Date of Birth *</Label>
           <Input
@@ -116,7 +133,10 @@ export default function PatientIntake() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="gender">Gender *</Label>
-          <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+          <Select
+            value={formData.gender}
+            onValueChange={(value) => handleInputChange("gender", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
@@ -124,13 +144,12 @@ export default function PatientIntake() {
               <SelectItem value="male">Male</SelectItem>
               <SelectItem value="female">Female</SelectItem>
               <SelectItem value="other">Other</SelectItem>
-              <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+              <SelectItem value="prefer-not-to-say">
+                Prefer not to say
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="phoneNumber">Phone Number *</Label>
           <Input
@@ -151,7 +170,6 @@ export default function PatientIntake() {
           />
         </div>
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="address">Address *</Label>
         <Input
@@ -161,8 +179,7 @@ export default function PatientIntake() {
           onChange={(e) => handleInputChange("address", e.target.value)}
         />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
           <Label htmlFor="city">City *</Label>
           <Input
@@ -174,7 +191,10 @@ export default function PatientIntake() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="state">State *</Label>
-          <Select value={formData.state} onValueChange={(value) => handleInputChange("state", value)}>
+          <Select
+            value={formData.state}
+            onValueChange={(value) => handleInputChange("state", value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
@@ -196,15 +216,16 @@ export default function PatientIntake() {
           />
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
           <Input
             id="emergencyContactName"
             placeholder="Contact name"
             value={formData.emergencyContactName}
-            onChange={(e) => handleInputChange("emergencyContactName", e.target.value)}
+            onChange={(e) =>
+              handleInputChange("emergencyContactName", e.target.value)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -213,36 +234,41 @@ export default function PatientIntake() {
             id="emergencyContactPhone"
             placeholder="(555) 123-4567"
             value={formData.emergencyContactPhone}
-            onChange={(e) => handleInputChange("emergencyContactPhone", e.target.value)}
+            onChange={(e) =>
+              handleInputChange("emergencyContactPhone", e.target.value)
+            }
           />
         </div>
       </div>
-
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-6">
         <Button
           onClick={() => {
-            markSectionComplete("personal")
-            setActiveSection("insurance")
+            markSectionComplete("personal");
+            setActiveSection("insurance");
           }}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Continue to Insurance
-          <ChevronRight className="ml-2 h-4 w-4" />
+          Continue to Insurance <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
-  )
+  );
 
   const renderInsurance = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardTitle className="text-xl font-semibold mb-4">
+        Insurance Information
+      </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="insuranceProvider">Insurance Provider *</Label>
           <Input
             id="insuranceProvider"
             placeholder="e.g., Blue Cross Blue Shield"
             value={formData.insuranceProvider}
-            onChange={(e) => handleInputChange("insuranceProvider", e.target.value)}
+            onChange={(e) =>
+              handleInputChange("insuranceProvider", e.target.value)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -254,9 +280,6 @@ export default function PatientIntake() {
             onChange={(e) => handleInputChange("policyNumber", e.target.value)}
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="groupNumber">Group Number</Label>
           <Input
@@ -272,26 +295,30 @@ export default function PatientIntake() {
             id="policyHolderName"
             placeholder="Policy holder name"
             value={formData.policyHolderName}
-            onChange={(e) => handleInputChange("policyHolderName", e.target.value)}
+            onChange={(e) =>
+              handleInputChange("policyHolderName", e.target.value)
+            }
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="policyHolderDob">Policy Holder Date of Birth</Label>
           <Input
             id="policyHolderDob"
+            type="date"
             placeholder="mm/dd/yyyy"
             value={formData.policyHolderDob}
-            onChange={(e) => handleInputChange("policyHolderDob", e.target.value)}
+            onChange={(e) =>
+              handleInputChange("policyHolderDob", e.target.value)
+            }
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="relationshipToPatient">Relationship to Patient</Label>
           <Select
             value={formData.relationshipToPatient}
-            onValueChange={(value) => handleInputChange("relationshipToPatient", value)}
+            onValueChange={(value) =>
+              handleInputChange("relationshipToPatient", value)
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select relationship" />
@@ -306,179 +333,211 @@ export default function PatientIntake() {
           </Select>
         </div>
       </div>
-
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={() => setActiveSection("personal")}>
           Previous
         </Button>
         <Button
           onClick={() => {
-            markSectionComplete("insurance")
-            setActiveSection("medical")
+            markSectionComplete("insurance");
+            setActiveSection("medical");
           }}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Continue to Medical History
-          <ChevronRight className="ml-2 h-4 w-4" />
+          Continue to Medical History <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
-  )
+  );
 
   const renderMedicalHistory = () => (
     <div className="space-y-6">
+      <CardTitle className="text-xl font-semibold mb-4">
+        Medical History
+      </CardTitle>
       <div className="space-y-2">
         <Label htmlFor="primaryCarePhysician">Primary Care Physician</Label>
         <Input
           id="primaryCarePhysician"
           placeholder="Dr. Name, Practice"
           value={formData.primaryCarePhysician}
-          onChange={(e) => handleInputChange("primaryCarePhysician", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("primaryCarePhysician", e.target.value)
+          }
         />
       </div>
-
       <div className="space-y-4">
         <Label>Allergies *</Label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {["Penicillin", "Latex", "Dairy", "Sulfa drugs", "Shellfish", "Pollen", "Aspirin", "Nuts", "Pet dander"].map(
-            (allergy) => (
-              <div key={allergy} className="flex items-center space-x-2">
-                <Checkbox
-                  id={allergy}
-                  checked={formData.allergies.includes(allergy)}
-                  onCheckedChange={(checked) => handleAllergyChange(allergy, checked as boolean)}
-                />
-                <Label htmlFor={allergy} className="text-sm">
-                  {allergy}
-                </Label>
-              </div>
-            ),
-          )}
+          {[
+            "Penicillin",
+            "Latex",
+            "Dairy",
+            "Sulfa drugs",
+            "Shellfish",
+            "Pollen",
+            "Aspirin",
+            "Nuts",
+            "Pet dander",
+          ].map((allergy) => (
+            <div key={allergy} className="flex items-center space-x-2">
+              <Checkbox
+                id={allergy}
+                checked={formData.allergies.includes(allergy)}
+                onCheckedChange={(checked) =>
+                  handleAllergyChange(allergy, checked)
+                }
+              />
+              <Label htmlFor={allergy} className="text-sm font-normal">
+                {allergy}
+              </Label>
+            </div>
+          ))}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="no-allergies"
               checked={formData.allergies.includes("No known allergies")}
-              onCheckedChange={(checked) => handleAllergyChange("No known allergies", checked as boolean)}
+              onCheckedChange={(checked) =>
+                handleAllergyChange("No known allergies", checked)
+              }
             />
-            <Label htmlFor="no-allergies" className="text-sm">
+            <Label htmlFor="no-allergies" className="text-sm font-normal">
               No known allergies
             </Label>
           </div>
         </div>
-        <div className="mt-2">
-          <Input placeholder="Please specify any additional allergies or reactions" className="text-sm text-blue-600" />
-        </div>
+        <Input
+          placeholder="Please specify any additional allergies or reactions"
+          className="text-sm mt-2"
+        />
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="currentMedications">Current Medications</Label>
         <Textarea
           id="currentMedications"
           placeholder="List all current medications, dosages, and frequency"
           value={formData.currentMedications}
-          onChange={(e) => handleInputChange("currentMedications", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("currentMedications", e.target.value)
+          }
           rows={3}
         />
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="previousSurgeries">Previous Surgeries</Label>
         <Textarea
           id="previousSurgeries"
           placeholder="List any previous surgeries and dates"
           value={formData.previousSurgeries}
-          onChange={(e) => handleInputChange("previousSurgeries", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("previousSurgeries", e.target.value)
+          }
           rows={3}
         />
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="familyMedicalHistory">Family Medical History</Label>
         <Textarea
           id="familyMedicalHistory"
           placeholder="Notable family medical history (heart disease, diabetes, cancer, etc.)"
           value={formData.familyMedicalHistory}
-          onChange={(e) => handleInputChange("familyMedicalHistory", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("familyMedicalHistory", e.target.value)
+          }
           rows={3}
         />
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
           <Label>Smoking Status</Label>
-          <div className="space-y-2">
-            {["Never", "Former", "Current"].map((status) => (
-              <div key={status} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`smoking-${status}`}
-                  checked={formData.smokingStatus === status}
-                  onCheckedChange={(checked) => checked && handleInputChange("smokingStatus", status)}
-                />
-                <Label htmlFor={`smoking-${status}`} className="text-sm">
-                  {status}
-                </Label>
-              </div>
-            ))}
-          </div>
+          <RadioGroup
+            value={formData.smokingStatus}
+            onValueChange={(value) => handleInputChange("smokingStatus", value)}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="never" id="never" />
+              <Label htmlFor="never">Never</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="former" id="former" />
+              <Label htmlFor="former">Former</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="current" id="current" />
+              <Label htmlFor="current">Current</Label>
+            </div>
+          </RadioGroup>
         </div>
-
         <div className="space-y-2">
           <Label>Alcohol Consumption</Label>
-          <div className="space-y-2">
-            {["None", "Occasional", "Regular"].map((consumption) => (
-              <div key={consumption} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`alcohol-${consumption}`}
-                  checked={formData.alcoholConsumption === consumption}
-                  onCheckedChange={(checked) => checked && handleInputChange("alcoholConsumption", consumption)}
-                />
-                <Label htmlFor={`alcohol-${consumption}`} className="text-sm">
-                  {consumption}
-                </Label>
-              </div>
-            ))}
-          </div>
+          <RadioGroup
+            value={formData.alcoholConsumption}
+            onValueChange={(value) =>
+              handleInputChange("alcoholConsumption", value)
+            }
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="none" id="none-alcohol" />
+              <Label htmlFor="none-alcohol">None</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="occasional" id="occasional" />
+              <Label htmlFor="occasional">Occasional</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="regular" id="regular" />
+              <Label htmlFor="regular">Regular</Label>
+            </div>
+          </RadioGroup>
         </div>
-
         <div className="space-y-2">
           <Label>Exercise Frequency</Label>
-          <div className="space-y-2">
-            {["None", "1-3x/week", "Daily"].map((frequency) => (
-              <div key={frequency} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`exercise-${frequency}`}
-                  checked={formData.exerciseFrequency === frequency}
-                  onCheckedChange={(checked) => checked && handleInputChange("exerciseFrequency", frequency)}
-                />
-                <Label htmlFor={`exercise-${frequency}`} className="text-sm">
-                  {frequency}
-                </Label>
-              </div>
-            ))}
-          </div>
+          <RadioGroup
+            value={formData.exerciseFrequency}
+            onValueChange={(value) =>
+              handleInputChange("exerciseFrequency", value)
+            }
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="none" id="none-exercise" />
+              <Label htmlFor="none-exercise">None</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="1-3-week" id="1-3-week" />
+              <Label htmlFor="1-3-week">1-3x/week</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="daily" id="daily" />
+              <Label htmlFor="daily">Daily</Label>
+            </div>
+          </RadioGroup>
         </div>
       </div>
-
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={() => setActiveSection("insurance")}>
           Previous
         </Button>
         <Button
           onClick={() => {
-            markSectionComplete("medical")
-            setActiveSection("concerns")
+            markSectionComplete("medical");
+            setActiveSection("concerns");
           }}
           className="bg-blue-600 hover:bg-blue-700"
         >
-          Continue to Current Concerns
-          <ChevronRight className="ml-2 h-4 w-4" />
+          Continue to Current Concerns <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
-  )
+  );
 
   const renderCurrentConcerns = () => (
     <div className="space-y-6">
+      <CardTitle className="text-xl font-semibold mb-4">
+        Current Concerns
+      </CardTitle>
       <div className="space-y-2">
         <Label htmlFor="chiefComplaint">Chief Complaint *</Label>
         <Textarea
@@ -486,13 +545,17 @@ export default function PatientIntake() {
           placeholder="Please describe your main reason for today's visit"
           value={formData.chiefComplaint}
           onChange={(e) => handleInputChange("chiefComplaint", e.target.value)}
-          rows={3}
+          rows={4}
         />
       </div>
-
       <div className="space-y-2">
-        <Label htmlFor="symptomDuration">How long have you been experiencing these symptoms?</Label>
-        <Select value={formData.symptomDuration} onValueChange={(value) => handleInputChange("symptomDuration", value)}>
+        <Label htmlFor="symptomDuration">
+          How long have you been experiencing these symptoms?
+        </Label>
+        <Select
+          value={formData.symptomDuration}
+          onValueChange={(value) => handleInputChange("symptomDuration", value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select duration" />
           </SelectTrigger>
@@ -505,42 +568,45 @@ export default function PatientIntake() {
           </SelectContent>
         </Select>
       </div>
-
-      <div className="space-y-4">
+      <div className="space-y-3">
         <Label>Current Pain Level (if applicable)</Label>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600">No Pain</span>
-          <div className="flex space-x-1">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+          <div className="flex-1 flex justify-between">
+            {[...Array(10)].map((_, i) => (
               <button
-                key={level}
+                key={i + 1}
                 type="button"
-                onClick={() => handleInputChange("painLevel", level.toString())}
-                className={`w-8 h-8 rounded border text-sm font-medium transition-colors ${
-                  formData.painLevel === level.toString()
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                onClick={() =>
+                  handleInputChange("painLevel", (i + 1).toString())
+                }
+                className={`w-8 h-8 rounded-md border text-sm font-medium transition-colors ${
+                  formData.painLevel === (i + 1).toString()
+                    ? "bg-red-600 text-white border-red-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-red-400"
                 }`}
               >
-                {level}
+                {i + 1}
               </button>
             ))}
           </div>
           <span className="text-sm text-gray-600">Severe Pain</span>
         </div>
       </div>
-
       <div className="space-y-2">
-        <Label htmlFor="previousTreatment">Previous Treatment for This Condition</Label>
+        <Label htmlFor="previousTreatment">
+          Previous Treatment for This Condition
+        </Label>
         <Textarea
           id="previousTreatment"
           placeholder="Have you seen other doctors or tried treatments for this condition?"
           value={formData.previousTreatment}
-          onChange={(e) => handleInputChange("previousTreatment", e.target.value)}
+          onChange={(e) =>
+            handleInputChange("previousTreatment", e.target.value)
+          }
           rows={3}
         />
       </div>
-
       <div className="space-y-2">
         <Label htmlFor="additionalNotes">Additional Notes</Label>
         <Textarea
@@ -551,111 +617,90 @@ export default function PatientIntake() {
           rows={3}
         />
       </div>
-
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={() => setActiveSection("medical")}>
           Previous
         </Button>
-        <Button onClick={() => markSectionComplete("concerns")} className="bg-green-600 hover:bg-green-700">
+        <Button
+          onClick={() => markSectionComplete("concerns")}
+          className="bg-green-600 hover:bg-green-700"
+        >
           Complete Forms
         </Button>
       </div>
     </div>
-  )
+  );
 
   const renderSectionContent = () => {
     switch (activeSection) {
       case "personal":
-        return renderPersonalInfo()
+        return renderPersonalInfo();
       case "insurance":
-        return renderInsurance()
+        return renderInsurance();
       case "medical":
-        return renderMedicalHistory()
+        return renderMedicalHistory();
       case "concerns":
-        return renderCurrentConcerns()
+        return renderCurrentConcerns();
       default:
-        return renderPersonalInfo()
+        return renderPersonalInfo();
     }
-  }
+  };
 
   return (
     <MainLayout>
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-8 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Patient Intake Forms</h1>
-            <p className="text-gray-600 mt-1">Form Completion: {completedSections.length}/4 sections</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Patient Intake Forms
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Form Completion: {completedSections.length}/4 sections
+            </p>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" className="flex items-center bg-transparent">
-              <Save className="mr-2 h-4 w-4" />
-              Save Draft
+            <Button variant="outline" className="flex items-center bg-white">
+              <Save className="mr-2 h-4 w-4" /> Save Draft
             </Button>
             <Button className="bg-blue-600 hover:bg-blue-700 flex items-center">
-              <Send className="mr-2 h-4 w-4" />
-              Submit Forms
+              <Send className="mr-2 h-4 w-4" /> Submit Forms
             </Button>
           </div>
         </div>
 
-        {/* Progress */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Progress</span>
-            <span className="text-sm text-gray-600">{Math.round(completionPercentage)}% Complete</span>
-          </div>
           <Progress value={completionPercentage} className="h-2" />
         </div>
 
-        {/* Section Navigation */}
-        <div className="flex flex-wrap gap-4 mb-8">
+        <div className="grid grid-cols-4 gap-2 mb-8 bg-white p-1 rounded-lg shadow-sm">
           {sections.map((section) => {
-            const Icon = section.icon
-            const isActive = activeSection === section.id
-            const isCompleted = completedSections.includes(section.id)
-
+            const Icon = section.icon;
+            const isActive = activeSection === section.id;
             return (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`flex items-center space-x-2 px-4 py-3 rounded-lg border transition-colors ${
+                className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-blue-50 border-blue-200 text-blue-700"
-                    : isCompleted
-                      ? "bg-green-50 border-green-200 text-green-700"
-                      : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    ? "bg-gray-100 text-gray-900"
+                    : "text-gray-500 hover:bg-gray-50"
                 }`}
               >
                 <Icon
-                  className={`h-5 w-5 ${isActive ? "text-blue-600" : isCompleted ? "text-green-600" : "text-gray-400"}`}
+                  className={`h-5 w-5 ${
+                    isActive ? "text-blue-600" : "text-gray-400"
+                  }`}
                 />
-                <span className="font-medium">{section.name}</span>
-                {isCompleted && <Badge className="bg-green-100 text-green-800 text-xs">✓</Badge>}
+                <span>{section.name}</span>
               </button>
-            )
+            );
           })}
         </div>
 
-        {/* Form Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              {(() => {
-                const section = sections.find((s) => s.id === activeSection)
-                const Icon = section?.icon || User
-                return (
-                  <>
-                    <Icon className="mr-2 h-5 w-5" />
-                    {section?.name}
-                  </>
-                )
-              })()}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>{renderSectionContent()}</CardContent>
+        <Card className="rounded-xl shadow-sm">
+          <CardContent className="p-8">{renderSectionContent()}</CardContent>
         </Card>
       </div>
     </MainLayout>
-  )
+  );
 }
