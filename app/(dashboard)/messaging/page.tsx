@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { MainLayout } from "@/components/layout/main-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +22,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Search, Plus, Send, MessageSquare, Shield, Clock } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Search, Plus, Send, MessageSquare, Shield, Clock } from "lucide-react";
 
 const sampleMessages = [
   {
@@ -39,7 +45,8 @@ const sampleMessages = [
     sender: "Sarah Johnson",
     senderType: "patient",
     subject: "Question about medication side effects",
-    preview: "I've been experiencing some dizziness since starting the new medication. Is this normal?",
+    preview:
+      "I've been experiencing some dizziness since starting the new medication. Is this normal?",
     timestamp: "8/11/2024",
     time: "10:15 AM",
     unread: true,
@@ -50,20 +57,21 @@ const sampleMessages = [
     sender: "Billing Department",
     senderType: "staff",
     subject: "Payment Reminder",
-    preview: "This is a friendly reminder that you have an outstanding balance of $150.00.",
+    preview:
+      "This is a friendly reminder that you have an outstanding balance of $150.00.",
     timestamp: "8/10/2024",
     time: "9:00 AM",
     unread: false,
     priority: "normal",
   },
-]
+];
 
 export default function SecureMessaging() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterType, setFilterType] = useState("all")
-  const [selectedMessage, setSelectedMessage] = useState<any>(null)
-  const [isComposeOpen, setIsComposeOpen] = useState(false)
-  const [messages, setMessages] = useState(sampleMessages)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [messages, setMessages] = useState(sampleMessages);
 
   const [newMessage, setNewMessage] = useState({
     recipient: "",
@@ -71,18 +79,19 @@ export default function SecureMessaging() {
     subject: "",
     content: "",
     priority: "normal",
-  })
+  });
 
   const filteredMessages = messages.filter((message) => {
     const matchesSearch =
       message.sender.toLowerCase().includes(searchTerm.toLowerCase()) ||
       message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.preview.toLowerCase().includes(searchTerm.toLowerCase())
+      message.preview.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesFilter = filterType === "all" || message.senderType === filterType
+    const matchesFilter =
+      filterType === "all" || message.senderType === filterType;
 
-    return matchesSearch && matchesFilter
-  })
+    return matchesSearch && matchesFilter;
+  });
 
   const handleSendMessage = () => {
     if (newMessage.recipient && newMessage.subject && newMessage.content) {
@@ -93,45 +102,48 @@ export default function SecureMessaging() {
         subject: newMessage.subject,
         preview: newMessage.content.substring(0, 100) + "...",
         timestamp: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         unread: false,
         priority: newMessage.priority,
-      }
-      setMessages([message, ...messages])
-      setIsComposeOpen(false)
+      };
+      setMessages([message, ...messages]);
+      setIsComposeOpen(false);
       setNewMessage({
         recipient: "",
         recipientType: "",
         subject: "",
         content: "",
         priority: "normal",
-      })
+      });
     }
-  }
+  };
 
   const getSenderTypeColor = (type: string) => {
     switch (type) {
       case "provider":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "patient":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "staff":
-        return "bg-purple-100 text-purple-800"
+        return "bg-purple-100 text-purple-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "medium":
-        return "bg-orange-100 text-orange-800"
+        return "bg-orange-100 text-orange-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <MainLayout>
@@ -139,10 +151,15 @@ export default function SecureMessaging() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Secure Messaging</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Secure Messaging
+            </h1>
             <div className="flex items-center mt-2 text-sm text-gray-600">
               <Shield className="h-4 w-4 mr-2 text-green-600" />
-              <span>Telemedicine platform ready. All sessions are encrypted and HIPAA compliant.</span>
+              <span>
+                Telemedicine platform ready. All sessions are encrypted and
+                HIPAA compliant.
+              </span>
             </div>
           </div>
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
@@ -155,7 +172,9 @@ export default function SecureMessaging() {
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Compose New Message</DialogTitle>
-                <DialogDescription>Send a secure, HIPAA-compliant message.</DialogDescription>
+                <DialogDescription>
+                  Send a secure, HIPAA-compliant message.
+                </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -165,14 +184,21 @@ export default function SecureMessaging() {
                       id="recipient"
                       placeholder="Enter recipient name"
                       value={newMessage.recipient}
-                      onChange={(e) => setNewMessage({ ...newMessage, recipient: e.target.value })}
+                      onChange={(e) =>
+                        setNewMessage({
+                          ...newMessage,
+                          recipient: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="recipientType">Recipient Type</Label>
                     <Select
                       value={newMessage.recipientType}
-                      onValueChange={(value) => setNewMessage({ ...newMessage, recipientType: value })}
+                      onValueChange={(value) =>
+                        setNewMessage({ ...newMessage, recipientType: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select type" />
@@ -192,7 +218,9 @@ export default function SecureMessaging() {
                     id="subject"
                     placeholder="Enter message subject"
                     value={newMessage.subject}
-                    onChange={(e) => setNewMessage({ ...newMessage, subject: e.target.value })}
+                    onChange={(e) =>
+                      setNewMessage({ ...newMessage, subject: e.target.value })
+                    }
                   />
                 </div>
 
@@ -200,7 +228,9 @@ export default function SecureMessaging() {
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={newMessage.priority}
-                    onValueChange={(value) => setNewMessage({ ...newMessage, priority: value })}
+                    onValueChange={(value) =>
+                      setNewMessage({ ...newMessage, priority: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -219,16 +249,24 @@ export default function SecureMessaging() {
                     id="content"
                     placeholder="Type your message here..."
                     value={newMessage.content}
-                    onChange={(e) => setNewMessage({ ...newMessage, content: e.target.value })}
+                    onChange={(e) =>
+                      setNewMessage({ ...newMessage, content: e.target.value })
+                    }
                     rows={6}
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsComposeOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsComposeOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSendMessage} className="bg-blue-600 hover:bg-blue-700">
+                <Button
+                  onClick={handleSendMessage}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <Send className="mr-2 h-4 w-4" />
                   Send Message
                 </Button>
@@ -277,7 +315,9 @@ export default function SecureMessaging() {
                     <div
                       key={message.id}
                       className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
-                        selectedMessage?.id === message.id ? "bg-blue-50 border-l-4 border-l-blue-600" : ""
+                        selectedMessage?.id === message.id
+                          ? "bg-blue-50 border-l-4 border-l-blue-600"
+                          : ""
                       }`}
                       onClick={() => setSelectedMessage(message)}
                     >
@@ -292,30 +332,58 @@ export default function SecureMessaging() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className={`text-sm font-medium ${message.unread ? "text-gray-900" : "text-gray-600"}`}>
+                            <p
+                              className={`text-sm font-medium ${
+                                message.unread
+                                  ? "text-gray-900"
+                                  : "text-gray-600"
+                              }`}
+                            >
                               {message.sender}
                             </p>
-                            <Badge className={`text-xs ${getSenderTypeColor(message.senderType)}`}>
+                            <Badge
+                              className={`text-xs ${getSenderTypeColor(
+                                message.senderType
+                              )}`}
+                            >
                               {message.senderType}
                             </Badge>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">{message.timestamp}</p>
-                          {message.unread && <div className="w-2 h-2 bg-blue-600 rounded-full mt-1 ml-auto"></div>}
+                          <p className="text-xs text-gray-500">
+                            {message.timestamp}
+                          </p>
+                          {message.unread && (
+                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-1 ml-auto"></div>
+                          )}
                         </div>
                       </div>
 
                       <div className="mb-2">
-                        <p className={`text-sm ${message.unread ? "font-medium text-gray-900" : "text-gray-600"}`}>
+                        <p
+                          className={`text-sm ${
+                            message.unread
+                              ? "font-medium text-gray-900"
+                              : "text-gray-600"
+                          }`}
+                        >
                           {message.subject}
                         </p>
                         {message.priority === "high" && (
-                          <Badge className={`text-xs mt-1 ${getPriorityColor(message.priority)}`}>High Priority</Badge>
+                          <Badge
+                            className={`text-xs mt-1 ${getPriorityColor(
+                              message.priority
+                            )}`}
+                          >
+                            High Priority
+                          </Badge>
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-500 line-clamp-2">{message.preview}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2">
+                        {message.preview}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -331,7 +399,9 @@ export default function SecureMessaging() {
                   <CardHeader className="border-b">
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-lg">{selectedMessage.subject}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {selectedMessage.subject}
+                        </CardTitle>
                         <div className="flex items-center space-x-4 mt-2">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-8 w-8">
@@ -343,26 +413,39 @@ export default function SecureMessaging() {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="text-sm font-medium">{selectedMessage.sender}</p>
-                              <Badge className={`text-xs ${getSenderTypeColor(selectedMessage.senderType)}`}>
+                              <p className="text-sm font-medium">
+                                {selectedMessage.sender}
+                              </p>
+                              <Badge
+                                className={`text-xs ${getSenderTypeColor(
+                                  selectedMessage.senderType
+                                )}`}
+                              >
                                 {selectedMessage.senderType}
                               </Badge>
                             </div>
                           </div>
                           <div className="flex items-center text-sm text-gray-500">
                             <Clock className="h-4 w-4 mr-1" />
-                            {selectedMessage.timestamp} at {selectedMessage.time}
+                            {selectedMessage.timestamp} at{" "}
+                            {selectedMessage.time}
                           </div>
                         </div>
                       </div>
                       {selectedMessage.priority === "high" && (
-                        <Badge className={getPriorityColor(selectedMessage.priority)}>High Priority</Badge>
+                        <Badge
+                          className={getPriorityColor(selectedMessage.priority)}
+                        >
+                          High Priority
+                        </Badge>
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="prose max-w-none">
-                      <p className="text-gray-700 leading-relaxed">{selectedMessage.preview}</p>
+                      <p className="text-gray-700 leading-relaxed">
+                        {selectedMessage.preview}
+                      </p>
                     </div>
                     <div className="mt-6 pt-6 border-t">
                       <div className="flex space-x-3">
@@ -380,8 +463,12 @@ export default function SecureMessaging() {
                 <CardContent className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Message Selected</h3>
-                    <p className="text-gray-600">Select a message from the list to view its contents</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Message Selected
+                    </h3>
+                    <p className="text-gray-600">
+                      Select a message from the list to view its contents
+                    </p>
                   </div>
                 </CardContent>
               )}
@@ -390,5 +477,5 @@ export default function SecureMessaging() {
         </div>
       </div>
     </MainLayout>
-  )
+  );
 }

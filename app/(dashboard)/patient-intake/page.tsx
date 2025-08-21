@@ -35,8 +35,8 @@ const sections = [
 ];
 
 export default function PatientIntake() {
-  const [activeSection, setActiveSection] = useState("personal");
-  const [completedSections, setCompletedSections] = useState([]);
+  const [activeSection, setActiveSection] = useState<string>("personal");
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     // Personal Info
     firstName: "",
@@ -78,20 +78,21 @@ export default function PatientIntake() {
   const completionPercentage =
     (completedSections.length / sections.length) * 100;
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAllergyChange = (allergy, checked) => {
+  const handleAllergyChange = (allergy: string, checked: boolean | string) => {
+    const isChecked = checked === true;
     setFormData((prev) => ({
       ...prev,
-      allergies: checked
+      allergies: isChecked
         ? [...prev.allergies, allergy]
         : prev.allergies.filter((a) => a !== allergy),
     }));
   };
 
-  const markSectionComplete = (sectionId) => {
+  const markSectionComplete = (sectionId: string) => {
     if (!completedSections.includes(sectionId)) {
       setCompletedSections((prev) => [...prev, sectionId]);
     }

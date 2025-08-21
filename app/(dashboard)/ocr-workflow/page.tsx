@@ -16,7 +16,7 @@ import {
   Phone,
 } from "lucide-react";
 
-const Stepper = ({ currentStep }) => {
+const Stepper = ({ currentStep }: { currentStep: number }) => {
   const steps = ["Upload", "Processing", "Validation", "Complete"];
 
   return (
@@ -58,7 +58,13 @@ const Stepper = ({ currentStep }) => {
   );
 };
 
-const ProcessingScreen = ({ fileName, fileSize }) => {
+const ProcessingScreen = ({
+  fileName,
+  fileSize,
+}: {
+  fileName: string;
+  fileSize: string;
+}) => {
   const [progress, setProgress] = useState([
     { text: "Document uploaded successfully", done: false },
     { text: "OCR text extraction completed", done: false },
@@ -126,7 +132,7 @@ const ProcessingScreen = ({ fileName, fileSize }) => {
   );
 };
 
-const ConfidenceBadge = ({ score }) => {
+const ConfidenceBadge = ({ score }: { score: number }) => {
   const getColor = () => {
     if (score >= 90) return "border-green-500 text-green-600";
     if (score >= 70) return "border-yellow-500 text-yellow-600";
@@ -141,7 +147,17 @@ const ConfidenceBadge = ({ score }) => {
   );
 };
 
-const EditableField = ({ label, value, confidence, warning }) => (
+const EditableField = ({
+  label,
+  value,
+  confidence,
+  warning,
+}: {
+  label: string;
+  value: string;
+  confidence?: number;
+  warning?: string;
+}) => (
   <div className="p-3 border rounded-lg bg-white shadow-sm">
     <div className="flex justify-between items-center mb-1">
       <div className="flex items-center space-x-2">
@@ -259,10 +275,12 @@ const ValidationForm = () => (
 );
 
 export default function OCRWorkflow() {
-  const [file, setFile] = useState(null);
-  const [status, setStatus] = useState("upload"); // upload, processing, validation
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<"upload" | "processing" | "validation">(
+    "upload"
+  ); // upload, processing, validation
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setStatus("processing");
@@ -270,7 +288,7 @@ export default function OCRWorkflow() {
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
@@ -280,7 +298,7 @@ export default function OCRWorkflow() {
     }
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };

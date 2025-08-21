@@ -85,7 +85,19 @@ const filterTags = [
   "improvement",
 ];
 
-const DocumentCard = ({ doc }) => (
+type Document = {
+  id: number;
+  name: string;
+  patient: string;
+  date: string;
+  size: string;
+  description: string;
+  tags: string[];
+  isStarred: boolean;
+  iconColor: string;
+};
+
+const DocumentCard = ({ doc }: { doc: Document }) => (
   <Card className="rounded-lg border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
     <CardContent className="p-4 flex flex-col flex-grow">
       <div className="flex justify-between items-start">
@@ -130,7 +142,7 @@ const DocumentCard = ({ doc }) => (
   </Card>
 );
 
-const DocumentRow = ({ doc }) => (
+const DocumentRow = ({ doc }: { doc: Document }) => (
   <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center space-x-4">
     <FileText className={`h-8 w-8 flex-shrink-0 ${doc.iconColor}`} />
     <div className="flex-grow">
@@ -165,7 +177,7 @@ const DocumentRow = ({ doc }) => (
 );
 
 export default function FileManagement() {
-  const [view, setView] = useState("grid"); // 'grid' or 'list'
+  const [view, setView] = useState<"grid" | "list">("grid"); // 'grid' or 'list'
 
   return (
     <MainLayout>

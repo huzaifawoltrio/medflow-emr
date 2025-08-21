@@ -24,7 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Search, Plus, Clock, Users, User } from "lucide-react";
+import { CalendarIcon, Search, Plus, Users, User } from "lucide-react";
 
 const timeSlots = [
   "08:00",
@@ -62,15 +62,27 @@ const providerAvailability = [
   { name: "Dr. Johnson", status: "Available", color: "green" },
 ];
 
-export default function Appointments() {
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 7, 20)); // August 20, 2025
-  const [selectedProvider, setSelectedProvider] = useState("all");
-  const [searchPatient, setSearchPatient] = useState("");
-  const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
-  const [appointments, setAppointments] = useState([]);
+type Appointment = {
+  id: number;
+  patientName: string;
+  provider: string;
+  appointmentType: string;
+  duration: string;
+  notes: string;
+  time: string;
+  date: Date;
+  status: "confirmed" | "pending";
+};
 
-  const [newAppointment, setNewAppointment] = useState({
+export default function Appointments() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isNewAppointmentOpen, setIsNewAppointmentOpen] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+
+  const [newAppointment, setNewAppointment] = useState<
+    Omit<Appointment, "id" | "time" | "date" | "status">
+  >({
     patientName: "",
     provider: "",
     appointmentType: "",
@@ -78,10 +90,10 @@ export default function Appointments() {
     notes: "",
   });
 
-  const formatDate = (date) => {
+  const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
+      month: "long",
+      day: "numeric",
       year: "numeric",
     });
   };
@@ -92,7 +104,7 @@ export default function Appointments() {
       newAppointment.patientName &&
       newAppointment.provider
     ) {
-      const appointment = {
+      const appointment: Appointment = {
         id: Date.now(),
         ...newAppointment,
         time: selectedTimeSlot,
@@ -112,7 +124,7 @@ export default function Appointments() {
     }
   };
 
-  const getAppointmentForSlot = (time) => {
+  const getAppointmentForSlot = (time: string) => {
     return appointments.find(
       (apt) =>
         apt.time === time &&
@@ -124,19 +136,12 @@ export default function Appointments() {
     (apt) => apt.date.toDateString() === selectedDate.toDateString()
   );
 
-  const confirmedCount = todaysAppointments.filter(
-    (apt) => apt.status === "confirmed"
-  ).length;
-  const pendingCount = todaysAppointments.filter(
-    (apt) => apt.status === "pending"
-  ).length;
-
   return (
     <MainLayout>
-      <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="space-y-6 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Appointment Scheduling
           </h1>
           <Dialog
@@ -149,12 +154,11 @@ export default function Appointments() {
                 New Appointment
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Schedule New Appointment</DialogTitle>
                 <DialogDescription>
-                  Fill in the details to schedule a new appointment for{" "}
-                  {formatDate(selectedDate)}{" "}
+                  Fill in details for {formatDate(selectedDate)}{" "}
                   {selectedTimeSlot && `at ${selectedTimeSlot}`}.
                 </DialogDescription>
               </DialogHeader>
@@ -206,12 +210,16 @@ export default function Appointments() {
                       <SelectValue placeholder="Select appointment type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="consultation">
+                      <SelectItem value="Initial Consultation">
                         Initial Consultation
                       </SelectItem>
-                      <SelectItem value="follow-up">Follow-up</SelectItem>
-                      <SelectItem value="therapy">Therapy Session</SelectItem>
-                      <SelectItem value="checkup">Regular Checkup</SelectItem>
+                      <SelectItem value="Follow-up">Follow-up</SelectItem>
+                      <SelectItem value="Therapy Session">
+                        Therapy Session
+                      </SelectItem>
+                      <SelectItem value="Regular Checkup">
+                        Regular Checkup
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -238,7 +246,7 @@ export default function Appointments() {
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea
                     id="notes"
-                    placeholder="Additional notes or special instructions"
+                    placeholder="Additional notes..."
                     value={newAppointment.notes}
                     onChange={(e) =>
                       setNewAppointment({
@@ -246,7 +254,6 @@ export default function Appointments() {
                         notes: e.target.value,
                       })
                     }
-                    rows={3}
                   />
                 </div>
               </div>
@@ -261,7 +268,7 @@ export default function Appointments() {
                   onClick={handleScheduleAppointment}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  Schedule Appointment
+                  Schedule
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -269,57 +276,51 @@ export default function Appointments() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-white rounded-xl shadow-sm">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4 p-4 bg-white rounded-xl shadow-sm">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
             <CalendarIcon className="h-5 w-5 text-gray-500" />
             <Input
               type="date"
               value={selectedDate.toISOString().split("T")[0]}
               onChange={(e) => setSelectedDate(new Date(e.target.value))}
-              className="border-gray-200 rounded-md"
+              className="border-gray-200 rounded-md flex-1"
             />
           </div>
-
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
             <Users className="h-5 w-5 text-gray-500" />
-            <Select
-              value={selectedProvider}
-              onValueChange={setSelectedProvider}
-            >
-              <SelectTrigger className="w-48 border-gray-200 rounded-md">
-                <SelectValue />
+            <Select>
+              <SelectTrigger className="w-full sm:w-48 border-gray-200 rounded-md">
+                <SelectValue placeholder="All Providers" />
               </SelectTrigger>
               <SelectContent>
-                {providers.map((provider) => (
-                  <SelectItem key={provider.id} value={provider.id}>
-                    {provider.name}
+                {providers.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex items-center space-x-2 flex-1">
+          <div className="flex items-center space-x-2 flex-1 w-full sm:w-auto">
             <Search className="h-5 w-5 text-gray-500" />
             <Input
               placeholder="Search Patient"
-              value={searchPatient}
-              onChange={(e) => setSearchPatient(e.target.value)}
-              className="border-gray-200 rounded-md"
+              className="border-gray-200 rounded-md flex-1"
             />
           </div>
         </div>
 
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Card className="rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">
+                <CardTitle className="text-lg md:text-xl font-semibold">
                   Schedule for {formatDate(selectedDate)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {timeSlots.map((time) => {
                     const appointment = getAppointmentForSlot(time);
                     return (
@@ -337,21 +338,19 @@ export default function Appointments() {
                           }
                         }}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center space-x-3">
                             <span className="font-medium text-gray-700 w-16">
                               {time}
                             </span>
                             {appointment ? (
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-blue-600" />
-                                </div>
+                              <div className="flex items-center space-x-2">
+                                <User className="h-4 w-4 text-blue-600 hidden sm:block" />
                                 <div>
-                                  <p className="font-semibold text-gray-900">
+                                  <p className="font-semibold text-sm text-gray-900">
                                     {appointment.patientName}
                                   </p>
-                                  <p className="text-sm text-gray-600">
+                                  <p className="text-xs text-gray-600">
                                     {appointment.appointmentType} •{" "}
                                     {appointment.provider}
                                   </p>
@@ -364,11 +363,12 @@ export default function Appointments() {
                             )}
                           </div>
                           {appointment && (
-                            <div className="flex items-center space-x-2">
-                              <Badge variant="secondary" className="capitalize">
-                                {appointment.status}
-                              </Badge>
-                            </div>
+                            <Badge
+                              variant="secondary"
+                              className="capitalize mt-2 sm:mt-0"
+                            >
+                              {appointment.status}
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -383,53 +383,58 @@ export default function Appointments() {
           <div className="space-y-6">
             <Card className="rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">
+                <CardTitle className="text-lg md:text-xl font-semibold">
                   Today's Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
+              <CardContent className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Appointments</span>
-                  <span className="font-bold text-lg">
+                  <span className="text-gray-600">Total</span>
+                  <span className="font-bold text-base">
                     {todaysAppointments.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Confirmed</span>
                   <span className="font-semibold text-green-600">
-                    {confirmedCount}
+                    {
+                      todaysAppointments.filter((a) => a.status === "confirmed")
+                        .length
+                    }
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Pending</span>
                   <span className="font-semibold text-orange-600">
-                    {pendingCount}
+                    {
+                      todaysAppointments.filter((a) => a.status === "pending")
+                        .length
+                    }
                   </span>
                 </div>
               </CardContent>
             </Card>
-
             <Card className="rounded-xl shadow-sm">
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">
+                <CardTitle className="text-lg md:text-xl font-semibold">
                   Provider Availability
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {providerAvailability.map((provider) => (
+                {providerAvailability.map((p) => (
                   <div
-                    key={provider.name}
+                    key={p.name}
                     className="flex items-center justify-between"
                   >
-                    <span className="font-medium">{provider.name}</span>
+                    <span className="font-medium">{p.name}</span>
                     <Badge
                       className={`capitalize ${
-                        provider.color === "green"
+                        p.color === "green"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {provider.status}
+                      {p.status}
                     </Badge>
                   </div>
                 ))}
