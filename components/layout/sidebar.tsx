@@ -17,12 +17,14 @@ import {
   ScanLine,
   LayoutDashboard,
   UserCircle,
+  Users,
   X, // Close icon
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Appointments", href: "/appointments", icon: Calendar },
+  { name: "Patients", href: "/patients", icon: Users },
   { name: "Patient Intake", href: "/patient-intake", icon: FileText },
   { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
