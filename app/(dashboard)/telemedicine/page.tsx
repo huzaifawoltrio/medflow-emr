@@ -25,7 +25,7 @@ const recentSessions = [
   {
     id: 1,
     patient: "Mike Wilson",
-    date: "8/11/2024",
+    date: "8/11/2025",
     type: "Initial Consultation",
     duration: "45 min",
     status: "completed",

@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Search, Settings, LogOut, User, Menu } from "lucide-react";
-
+import Link from "next/link";
 /**
  * The top navigation bar for the dashboard.
  * It includes a mobile menu trigger, search bar, and user profile menu.
@@ -51,11 +51,6 @@ export function Header({ onSidebarOpen }: { onSidebarOpen: () => void }) {
 
       {/* Right side: Contains actions, notifications, and the user menu */}
       <div className="flex items-center space-x-2 md:space-x-4">
-        {/* Quick Action Button: Hidden on smaller screens for a cleaner look */}
-        <Button className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700">
-          Quick Action
-        </Button>
-
         {/* Notifications Button */}
         <Button
           variant="ghost"
@@ -108,10 +103,11 @@ export function Header({ onSidebarOpen }: { onSidebarOpen: () => void }) {
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+              <DropdownMenuItem asChild>
+                <Link href="/login">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

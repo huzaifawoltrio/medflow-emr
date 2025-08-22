@@ -40,7 +40,7 @@ const sampleNotes = [
     id: 1,
     patientName: "John Doe",
     patientId: "P001",
-    date: "8/12/2024",
+    date: "8/12/2025",
     type: "Follow-up",
     status: "completed",
     content:
@@ -51,7 +51,7 @@ const sampleNotes = [
     id: 2,
     patientName: "Sarah Johnson",
     patientId: "P002",
-    date: "8/11/2024",
+    date: "8/11/2025",
     type: "Initial Assessment",
     status: "draft",
     content:

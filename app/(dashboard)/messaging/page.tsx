@@ -35,7 +35,7 @@ const sampleMessages = [
     subject: "Lab Results Available",
     preview:
       "Your recent lab results are now available. The CBC panel shows normal values. Please schedule a follow-up appointment.",
-    timestamp: "8/12/2024",
+    timestamp: "8/12/2025",
     time: "2:30 PM",
     unread: true,
     priority: "normal",
@@ -47,7 +47,7 @@ const sampleMessages = [
     subject: "Question about medication side effects",
     preview:
       "I've been experiencing some dizziness since starting the new medication. Is this normal?",
-    timestamp: "8/11/2024",
+    timestamp: "8/11/2025",
     time: "10:15 AM",
     unread: true,
     priority: "high",
@@ -59,7 +59,7 @@ const sampleMessages = [
     subject: "Payment Reminder",
     preview:
       "This is a friendly reminder that you have an outstanding balance of $150.00.",
-    timestamp: "8/10/2024",
+    timestamp: "8/10/2025",
     time: "9:00 AM",
     unread: false,
     priority: "normal",

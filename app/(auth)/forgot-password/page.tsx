@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-2">
             <Stethoscope className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">Daisy EMR</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Daisy</h1>
           <p className="text-sm text-gray-500">
             Secure Healthcare Management Platform
           </p>
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-opacity">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors">
               Send Reset Instructions
             </Button>
           </form>
@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-xs text-gray-400">
-          <p>© 2025 Daisy EMR. All rights reserved.</p>
+          <p>© 2025 Daisy. All rights reserved.</p>
           <p>HIPAA Compliant | SOC 2 Certified | ISO 27001</p>
         </div>
       </div>

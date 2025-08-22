@@ -17,7 +17,7 @@ import {
   FileText,
 } from "lucide-react";
 import type { ComponentType } from "react";
-
+import Link from "next/link";
 // A helper component for Quick Action items
 const QuickActionButton = ({
   icon: Icon,
@@ -61,9 +61,6 @@ export default function Dashboard() {
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
               />
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 rounded-lg whitespace-nowrap">
-              + Quick Action
-            </Button>
           </div>
         </div>
 
@@ -147,26 +144,34 @@ export default function Dashboard() {
               <CardContent>
                 {/* Responsive grid for actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <QuickActionButton
-                    icon={Calendar}
-                    label="Schedule"
-                    colorClass="blue"
-                  />
-                  <QuickActionButton
-                    icon={FileText}
-                    label="New Note"
-                    colorClass="green"
-                  />
-                  <QuickActionButton
-                    icon={LinkIcon}
-                    label="Prescribe"
-                    colorClass="purple"
-                  />
-                  <QuickActionButton
-                    icon={ScanLine}
-                    label="Scan Doc"
-                    colorClass="orange"
-                  />
+                  <Link href="/appointments">
+                    <QuickActionButton
+                      icon={Calendar}
+                      label="Schedule"
+                      colorClass="blue"
+                    />
+                  </Link>
+                  <Link href="/clinical-notes">
+                    <QuickActionButton
+                      icon={FileText}
+                      label="New Note"
+                      colorClass="green"
+                    />
+                  </Link>
+                  <Link href="/e-prescription">
+                    <QuickActionButton
+                      icon={LinkIcon}
+                      label="Prescribe"
+                      colorClass="purple"
+                    />
+                  </Link>
+                  <Link href="/ocr-workflow">
+                    <QuickActionButton
+                      icon={ScanLine}
+                      label="Scan Doc"
+                      colorClass="orange"
+                    />
+                  </Link>
                 </div>
               </CardContent>
             </Card>

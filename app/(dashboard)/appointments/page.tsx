@@ -131,83 +131,87 @@ const AppointmentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 gap-0">
-        <div className="flex">
+      <DialogContent className="max-w-4xl p-0 gap-0 max-h-[90vh] overflow-hidden">
+        <div className="flex flex-col md:flex-row max-h-[90vh]">
           {/* Left Side - Form */}
-          <div className="flex-1 p-6 border-r border-gray-200">
+          <div className="flex-1 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto">
             {/* Header with logo */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="flex items-center gap-2">
-                <Stethoscope className="w-6 h-6 text-blue-600" />
-                <span className="text-xl font-bold text-blue-600">
-                  Daisy EMR
+                <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+                <span className="text-lg md:text-xl font-bold text-blue-600">
+                  Daisy
                 </span>
               </div>
               <button
                 onClick={onClose}
-                className="ml-auto p-1 hover:bg-gray-100 rounded"
+                className="ml-auto p-1 hover:bg-gray-100 rounded touch-manipulation"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
-            <h2 className="text-xl font-semibold mb-6">Add New</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
+              Add New
+            </h2>
 
             {/* Upload Image */}
-            <div className="mb-6">
-              <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2">
-                <Plus className="w-6 h-6 text-gray-400" />
+            <div className="mb-4 md:mb-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2">
+                <Plus className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500">Upload Image here</p>
+              <p className="text-xs md:text-sm text-gray-500">
+                Upload Image here
+              </p>
             </div>
 
             {/* Form Fields */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
               <div>
-                <Label className="text-sm text-gray-600 mb-1 block">
+                <Label className="text-xs md:text-sm text-gray-600 mb-1 block">
                   Name*
                 </Label>
                 <div className="relative">
                   <Input
                     placeholder="Enter name"
-                    className="pl-10 border-gray-300"
+                    className="pl-8 md:pl-10 border-gray-300 h-10 md:h-auto"
                   />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                  <div className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 md:w-4 md:h-4 bg-gray-300 rounded-full"></div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <Label className="text-sm text-gray-600 mb-1 block">
+                <Label className="text-xs md:text-sm text-gray-600 mb-1 block">
                   Role*
                 </Label>
                 <div className="relative">
                   <Input
                     placeholder="Enter Role"
-                    className="pl-10 border-gray-300"
+                    className="pl-8 md:pl-10 border-gray-300 h-10 md:h-auto"
                   />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                  <div className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-3 h-3 md:w-4 md:h-4 bg-gray-300 rounded-full"></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Selected Date Display */}
-            <div className="mb-4">
-              <p className="font-medium text-gray-900">
+            <div className="mb-3 md:mb-4">
+              <p className="font-medium text-sm md:text-base text-gray-900">
                 {formatSelectedDate()}
               </p>
             </div>
 
             {/* Time Slots */}
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-48 md:max-h-none overflow-y-auto">
               {timeSlots.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTimeSlot === time ? "default" : "outline"}
-                  className={`w-full justify-start text-left ${
+                  className={`w-full justify-start text-left h-10 md:h-auto touch-manipulation ${
                     selectedTimeSlot === time
                       ? "bg-blue-600 text-white"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
@@ -221,32 +225,34 @@ const AppointmentModal = ({
           </div>
 
           {/* Right Side - Calendar */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-4 md:p-6 border-t md:border-t-0 md:border-l border-gray-200 overflow-y-auto">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 md:mb-6">
               <button
                 onClick={() => navigateMonth("prev")}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-2 hover:bg-gray-100 rounded touch-manipulation"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
               </button>
-              <h3 className="font-semibold text-gray-900">{monthName}</h3>
+              <h3 className="font-semibold text-sm md:text-base text-gray-900">
+                {monthName}
+              </h3>
               <button
                 onClick={() => navigateMonth("next")}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-2 hover:bg-gray-100 rounded touch-manipulation"
               >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
               </button>
             </div>
 
             {/* Calendar Grid */}
-            <div className="mb-6">
+            <div className="mb-4 md:mb-6">
               {/* Day Headers */}
               <div className="grid grid-cols-7 gap-1 mb-2">
-                {["So", "Mo", "Tu", "Wed", "Th", "Fr", "Sa"].map((day) => (
+                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
                   <div
                     key={day}
-                    className="text-center text-sm text-gray-500 py-2"
+                    className="text-center text-xs md:text-sm text-gray-500 py-1 md:py-2"
                   >
                     {day}
                   </div>
@@ -261,7 +267,7 @@ const AppointmentModal = ({
                     onClick={() => day && setSelectedDate(day)}
                     disabled={!day}
                     className={`
-                      h-10 text-sm rounded-lg transition-colors
+                      h-8 md:h-10 text-xs md:text-sm rounded-lg transition-colors touch-manipulation
                       ${!day ? "invisible" : ""}
                       ${
                         selectedDate === day
@@ -284,7 +290,7 @@ const AppointmentModal = ({
             </div>
 
             {/* Add New Button */}
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 md:h-auto touch-manipulation">
               <Plus className="w-4 h-4 mr-2" />
               Add new
             </Button>
@@ -303,6 +309,7 @@ const CustomWeekCalendar = ({
   onAddNewClick: () => void;
 }) => {
   const [currentWeek, setCurrentWeek] = useState(new Date(2025, 1, 14)); // February 14, 2025
+  const [isMobile, setIsMobile] = useState(false);
 
   const getWeekDays = (startDate: Date) => {
     const days = [];
@@ -350,15 +357,15 @@ const CustomWeekCalendar = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-blue-200 p-6">
+    <div className="bg-white rounded-2xl border border-blue-200 p-3 md:p-6">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900">
           {formatWeekRange(currentWeek)}
         </h2>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <Select defaultValue="february">
-            <SelectTrigger className="w-32 border-gray-300">
+            <SelectTrigger className="w-24 md:w-32 border-gray-300 h-9 md:h-auto text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -368,23 +375,25 @@ const CustomWeekCalendar = ({
             </SelectContent>
           </Select>
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg text-sm md:text-base h-9 md:h-auto touch-manipulation"
             onClick={onAddNewClick}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Add new
+            <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Add new</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="relative">
+      <div className="relative overflow-x-auto">
         {/* Week Header */}
-        <div className="grid grid-cols-8 border-b border-gray-200 pb-4 mb-4">
-          <div className="text-sm text-gray-500 font-medium">Week</div>
+        <div className="grid grid-cols-8 border-b border-gray-200 pb-2 md:pb-4 mb-2 md:mb-4 min-w-[600px] md:min-w-0">
+          <div className="text-xs md:text-sm text-gray-500 font-medium px-1">
+            Week
+          </div>
           {weekDays.map((day, index) => (
-            <div key={index} className="text-center">
-              <div className="text-sm font-medium text-gray-900">
+            <div key={index} className="text-center px-1">
+              <div className="text-xs md:text-sm font-medium text-gray-900">
                 {day.getDate()}
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -395,14 +404,14 @@ const CustomWeekCalendar = ({
         </div>
 
         {/* Time Grid */}
-        <div className="relative">
+        <div className="relative min-w-[600px] md:min-w-0">
           {/* Time Labels */}
-          <div className="absolute left-0 top-0 w-16">
+          <div className="absolute left-0 top-0 w-12 md:w-16">
             {timeSlots.map((time, index) => (
               <div
                 key={time}
-                className="h-15 flex items-start pt-2 text-xs text-gray-400"
-                style={{ height: "60px" }}
+                className="h-12 md:h-15 flex items-start pt-1 md:pt-2 text-xs text-gray-400"
+                style={{ height: "48px" }}
               >
                 {time}
               </div>
@@ -410,20 +419,23 @@ const CustomWeekCalendar = ({
           </div>
 
           {/* Calendar Body */}
-          <div className="ml-16 relative">
+          <div className="ml-12 md:ml-16 relative">
             {/* Horizontal Lines */}
             {timeSlots.map((_, index) => (
               <div
                 key={index}
-                className="border-t border-gray-100 h-15"
-                style={{ height: "60px" }}
+                className="border-t border-gray-100 h-12 md:h-15"
+                style={{ height: "48px" }}
               />
             ))}
 
             {/* Day Columns */}
             <div className="absolute inset-0 grid grid-cols-7">
               {weekDays.map((day, dayIndex) => (
-                <div key={dayIndex} className="relative">
+                <div
+                  key={dayIndex}
+                  className="relative border-r border-gray-50 last:border-r-0"
+                >
                   {/* Appointments for this day */}
                   {appointments
                     .filter((apt) => apt.day === dayIndex)
@@ -435,19 +447,27 @@ const CustomWeekCalendar = ({
                       return (
                         <div
                           key={appointment.id}
-                          className={`absolute left-1 right-1 ${appointment.color} ${appointment.borderColor} border-l-4 rounded-md p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
-                          style={position}
+                          className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 ${appointment.color} ${appointment.borderColor} border-l-2 md:border-l-4 rounded-md p-1 md:p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow touch-manipulation`}
+                          style={{
+                            top: position.top,
+                            height: position.height,
+                            minHeight: "32px",
+                          }}
                         >
                           <div
                             className={`text-xs ${appointment.textColor} mb-1 flex items-center`}
                           >
-                            <div className="w-2 h-2 rounded-full bg-current mr-1 opacity-60"></div>
-                            {appointment.timeDisplay}
+                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-current mr-1 opacity-60"></div>
+                            <span className="truncate">
+                              {appointment.timeDisplay}
+                            </span>
                           </div>
                           <div
-                            className={`text-sm font-medium ${appointment.textColor}`}
+                            className={`text-xs md:text-sm font-medium ${appointment.textColor} leading-tight`}
                           >
-                            {appointment.title}
+                            <span className="line-clamp-2">
+                              {appointment.title}
+                            </span>
                           </div>
                         </div>
                       );
@@ -467,16 +487,16 @@ export default function Appointments() {
 
   return (
     <MainLayout>
-      <div className="space-y-6 md:space-y-8">
+      <div className="space-y-4 md:space-y-6 lg:space-y-8 p-4 md:p-0">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
             Scheduling
           </h1>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           <div className="lg:col-span-2">
             <CustomWeekCalendar
               appointments={dummyAppointments}
@@ -485,14 +505,14 @@ export default function Appointments() {
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4 md:space-y-6">
             <Card className="rounded-xl shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg md:text-xl font-semibold">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
                   Today's Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-2 md:space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total</span>
                   <span className="font-bold text-base">3</span>
@@ -509,12 +529,12 @@ export default function Appointments() {
             </Card>
 
             <Card className="rounded-xl shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg md:text-xl font-semibold">
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
                   Provider Availability
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-2 md:space-y-3 text-sm">
                 {providerAvailability.map((p) => (
                   <div
                     key={p.name}
@@ -522,7 +542,7 @@ export default function Appointments() {
                   >
                     <span className="font-medium">{p.name}</span>
                     <Badge
-                      className={`capitalize ${
+                      className={`capitalize text-xs ${
                         p.color === "green"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"

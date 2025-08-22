@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import {
   User,
   Shield,
@@ -75,8 +74,19 @@ export default function PatientIntake() {
     additionalNotes: "",
   });
 
-  const completionPercentage =
-    (completedSections.length / sections.length) * 100;
+  const getProgressPercentage = () => {
+    const sectionIndex = sections.findIndex(
+      (section) => section.id === activeSection
+    );
+    return ((sectionIndex + 1) / sections.length) * 100;
+  };
+
+  const getCurrentSectionNumber = () => {
+    const sectionIndex = sections.findIndex(
+      (section) => section.id === activeSection
+    );
+    return sectionIndex + 1;
+  };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -655,9 +665,12 @@ export default function PatientIntake() {
             <h1 className="text-3xl font-bold text-gray-900">
               Patient Intake Forms
             </h1>
-            <p className="text-gray-600 mt-1">
-              Form Completion: {completedSections.length}/4 sections
-            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-gray-600">
+                Section {getCurrentSectionNumber()}/4:{" "}
+                {sections.find((s) => s.id === activeSection)?.name}
+              </p>
+            </div>
           </div>
           <div className="flex space-x-3">
             <Button variant="outline" className="flex items-center bg-white">
@@ -670,10 +683,15 @@ export default function PatientIntake() {
         </div>
 
         <div className="mb-8">
-          <Progress value={completionPercentage} className="h-1" />
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
+              style={{ width: `${getProgressPercentage()}%` }}
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mb-8 bg-gray-100 p-1 rounded-lg">
+        <div className="flex items-center justify-between mb-8 bg-gray-100 p-1 rounded-full">
           {sections.map((section) => {
             const Icon = section.icon;
             const isActive = activeSection === section.id;
@@ -681,18 +699,21 @@ export default function PatientIntake() {
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`flex items-center justify-center space-x-2 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex-1 justify-center ${
                   isActive
-                    ? "bg-white shadow-sm text-blue-600"
-                    : "text-gray-500 hover:bg-gray-200"
+                    ? "text-gray-900 bg-white shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
                 }`}
+                style={{
+                  backgroundColor: isActive ? "white" : "#F1F5F9",
+                }}
               >
                 <Icon
-                  className={`h-5 w-5 ${
-                    isActive ? "text-blue-600" : "text-gray-400"
+                  className={`h-4 w-4 ${
+                    isActive ? "text-gray-700" : "text-gray-400"
                   }`}
                 />
-                <span>{section.name}</span>
+                <span className="whitespace-nowrap">{section.name}</span>
               </button>
             );
           })}

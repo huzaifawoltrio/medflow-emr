@@ -45,7 +45,7 @@ export default function Login() {
             <Stethoscope className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Daisy EMR</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Daisy</h1>
             <p className="text-gray-600">
               Secure Healthcare Management Platform
             </p>
@@ -161,7 +161,7 @@ export default function Login() {
 
         {/* Footer */}
         <div className="text-center text-xs text-gray-500 space-y-1">
-          <p>© 2024 Daisy EMR. All rights reserved.</p>
+          <p>© 2025 Daisy. All rights reserved.</p>
           <p>HIPAA Compliant | SOC 2 Certified | ISO 27001</p>
         </div>
       </div>

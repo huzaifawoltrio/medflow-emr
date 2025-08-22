@@ -87,7 +87,7 @@ export function Sidebar({
               <Stethoscope className="h-6 w-6 text-white p-0.5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Daisy EMR</h1>
+              <h1 className="text-lg font-semibold text-gray-900">Daisy</h1>
             </div>
           </div>
           {/* Close button: Only visible on mobile screens */}
