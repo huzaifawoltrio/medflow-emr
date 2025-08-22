@@ -1,0 +1,76 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Lock, Stethoscope } from "lucide-react";
+import Link from "next/link";
+
+export default function ForgotPasswordPage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+      <div className="w-full max-w-md mx-auto">
+        {/* Header Logo and Title */}
+        <div className="text-center mb-8">
+          <div className="inline-block p-3 bg-blue-600 rounded-full mb-2">
+            <Stethoscope className="h-6 w-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Daisy EMR</h1>
+          <p className="text-sm text-gray-500">
+            Secure Healthcare Management Platform
+          </p>
+        </div>
+
+        {/* Reset Password Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="text-center">
+            <div className="inline-block p-3 bg-orange-100 rounded-full mb-3">
+              <Lock className="h-5 w-5 text-orange-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Reset Password
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Enter your email to receive reset instructions
+            </p>
+          </div>
+
+          <form className="mt-6 space-y-6">
+            <div className="space-y-2">
+              <Label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700"
+              >
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="enter your email address"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition-opacity">
+              Send Reset Instructions
+            </Button>
+          </form>
+
+          <div className="text-center mt-6">
+            <Link href="/login">
+              <span className="text-sm text-blue-600 hover:underline">
+                Back to Sign in
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-xs text-gray-400">
+          <p>© 2025 Daisy EMR. All rights reserved.</p>
+          <p>HIPAA Compliant | SOC 2 Certified | ISO 27001</p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, Shield, Loader2 } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Shield,
+  Loader2,
+  Stethoscope,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function Login() {
@@ -34,7 +42,7 @@ export default function Login() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <span className="text-2xl">🩺</span>
+            <Stethoscope className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Daisy EMR</h1>
@@ -116,7 +124,7 @@ export default function Login() {
                   </label>
                 </div>
                 <Link
-                  href="/auth/forgot-password"
+                  href="/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-700"
                 >
                   Forgot password?
@@ -135,18 +143,6 @@ export default function Login() {
                 )}
               </Button>
             </form>
-
-            <div className="text-center">
-              <span className="text-sm text-gray-600">
-                Don't have an account?{" "}
-              </span>
-              <Link
-                href="/auth/register"
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                Create Account
-              </Link>
-            </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-2">
