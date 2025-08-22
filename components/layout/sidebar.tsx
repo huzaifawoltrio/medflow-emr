@@ -37,14 +37,6 @@ const navigation = [
   { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
 ];
 
-/**
- * The main navigation sidebar for the dashboard.
- * On mobile, it acts as a slide-in drawer.
- * On desktop, it is a fixed, visible panel.
- * @param {object} props - The component props.
- * @param {boolean} props.isOpen - Whether the sidebar is open on mobile.
- * @param {() => void} props.onClose - Function to call to close the sidebar.
- */
 export function Sidebar({
   isOpen,
   onClose,
@@ -56,9 +48,7 @@ export function Sidebar({
 
   return (
     <Fragment>
-      {/* Overlay for mobile: Appears behind the sidebar when it's open.
-        Clicking it will close the sidebar. It is hidden on desktop screens.
-      */}
+      {/* Overlay for mobile */}
       <div
         onClick={onClose}
         className={cn(
@@ -71,16 +61,13 @@ export function Sidebar({
       {/* The Sidebar panel */}
       <div
         className={cn(
-          // Base styles for positioning and transition
           "fixed top-0 left-0 h-full w-64 flex flex-col bg-white border-r border-gray-200 z-40",
           "transition-transform duration-300 ease-in-out",
-          // Mobile state: Translate based on the 'isOpen' prop
           isOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop styles: Override mobile positioning to be static
           "md:relative md:translate-x-0 md:flex"
         )}
       >
-        {/* Sidebar Header: Contains logo and a close button for mobile */}
+        {/* Sidebar Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 shrink-0">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -90,7 +77,6 @@ export function Sidebar({
               <h1 className="text-lg font-semibold text-gray-900">Daisy</h1>
             </div>
           </div>
-          {/* Close button: Only visible on mobile screens */}
           <Button
             onClick={onClose}
             variant="ghost"
@@ -106,24 +92,37 @@ export function Sidebar({
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
+            const linkClasses = cn(
+              "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+              isActive
+                ? "bg-blue-50 text-blue-700"
+                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            );
+            const iconClasses = cn(
+              "mr-3 h-5 w-5",
+              isActive ? "text-blue-600" : "text-gray-400"
+            );
+
+            // Apply legacyBehavior only to the problematic link
+            if (item.name === "e-Prescription") {
+              return (
+                <Link key={item.name} href={item.href} passHref legacyBehavior>
+                  <a onClick={onClose} className={linkClasses}>
+                    <item.icon className={iconClasses} />
+                    {item.name}
+                  </a>
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={onClose} // On mobile, clicking a link closes the sidebar
-                className={cn(
-                  "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                  isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-                )}
+                onClick={onClose}
+                className={linkClasses}
               >
-                <item.icon
-                  className={cn(
-                    "mr-3 h-5 w-5",
-                    isActive ? "text-blue-600" : "text-gray-400"
-                  )}
-                />
+                <item.icon className={iconClasses} />
                 {item.name}
               </Link>
             );
