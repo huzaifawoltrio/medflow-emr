@@ -86,9 +86,7 @@ export function Sidebar({
               <span className="text-white font-bold text-sm">M</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                MedFlow EMR
-              </h1>
+              <h1 className="text-lg font-semibold text-gray-900">Daisy EMR</h1>
             </div>
           </div>
           {/* Close button: Only visible on mobile screens */}

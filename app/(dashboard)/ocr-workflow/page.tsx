@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Fragment } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,37 +19,31 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
   const steps = ["Upload", "Processing", "Validation", "Complete"];
 
   return (
-    <div className="flex items-center justify-between w-full max-w-2xl mx-auto">
+    <div className="flex items-center justify-center space-x-6">
       {steps.map((step, index) => (
         <Fragment key={index}>
-          <div className="flex flex-col items-center text-center">
+          <div className="flex flex-col items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-                index + 1 <= currentStep
+              className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-medium ${
+                index + 1 === currentStep
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-500 border-gray-300"
+                  : "bg-white text-gray-600 border-gray-300"
               }`}
             >
-              {index + 1 <= currentStep ? (
-                <CheckCircle2 size={16} />
-              ) : (
-                index + 1
-              )}
+              {index + 1}
             </div>
             <p
-              className={`mt-2 text-xs font-medium ${
-                index + 1 <= currentStep ? "text-blue-600" : "text-gray-500"
+              className={`mt-2 text-xs ${
+                index + 1 === currentStep
+                  ? "text-blue-600 font-medium"
+                  : "text-gray-500"
               }`}
             >
               {step}
             </p>
           </div>
           {index < steps.length - 1 && (
-            <div
-              className={`flex-1 h-0.5 mx-4 ${
-                index + 1 < currentStep ? "bg-blue-600" : "bg-gray-300"
-              }`}
-            />
+            <div className="w-12 h-0.5 bg-gray-300" />
           )}
         </Fragment>
       ))}
@@ -278,13 +271,13 @@ export default function OCRWorkflow() {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"upload" | "processing" | "validation">(
     "upload"
-  ); // upload, processing, validation
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setStatus("processing");
-      setTimeout(() => setStatus("validation"), 4000); // Simulate processing time
+      setTimeout(() => setStatus("validation"), 4000);
     }
   };
 
@@ -294,7 +287,7 @@ export default function OCRWorkflow() {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
       setStatus("processing");
-      setTimeout(() => setStatus("validation"), 4000); // Simulate processing time
+      setTimeout(() => setStatus("validation"), 4000);
     }
   };
 
@@ -320,23 +313,25 @@ export default function OCRWorkflow() {
     <MainLayout>
       <div className="p-8 bg-gray-50 min-h-screen">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             OCR Document Processing
           </h1>
-          <p className="text-sm text-gray-500">Powered By AI</p>
+          <p className="text-sm text-gray-500 mt-1">Powered By AI</p>
         </div>
 
         {/* Stepper */}
-        <div className="mb-10">
+        <div className="mb-10 bg-white rounded-lg shadow-sm p-6">
           <Stepper currentStep={getCurrentStep()} />
         </div>
 
+        {/* Upload Screen */}
         {status === "upload" && (
-          <>
-            <div className="text-center mb-8">
-              <UploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-              <h2 className="mt-2 text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            {/* Upload Header */}
+            <div className="text-center mb-6">
+              <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
+              <h2 className="mt-3 text-lg font-semibold text-gray-900">
                 Upload Patient Document
               </h2>
               <p className="mt-1 text-sm text-gray-600">
@@ -344,32 +339,34 @@ export default function OCRWorkflow() {
                 form for automatic data extraction.
               </p>
             </div>
+
+            {/* Upload Drop Zone */}
             <div
-              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center bg-white"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              <div className="flex flex-col items-center">
-                <UploadCloud className="h-8 w-8 text-gray-500 mb-2" />
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept=".jpg,.jpeg,.png,.pdf"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="font-semibold text-blue-600 cursor-pointer hover:underline"
-                >
-                  Choose file or drag and drop
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  Supports: JPG, PNG, PDF (Max 10MB)
-                </p>
-              </div>
+              <UploadCloud className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".jpg,.jpeg,.png,.pdf"
+              />
+              <label
+                htmlFor="file-upload"
+                className="font-semibold text-blue-600 cursor-pointer hover:underline"
+              >
+                Choose file or drag and drop
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Supports: JPG, PNG, PDF (Max 10MB)
+              </p>
             </div>
-            <div className="mt-8">
+
+            {/* Supported Docs inside same card */}
+            <div className="mt-6 border-t border-gray-200 pt-4">
               <h3 className="font-semibold text-gray-800">
                 Supported Document Types:
               </h3>
@@ -380,9 +377,10 @@ export default function OCRWorkflow() {
                 <li>Registration documents</li>
               </ul>
             </div>
-          </>
+          </div>
         )}
 
+        {/* Processing */}
         {status === "processing" && file && (
           <ProcessingScreen
             fileName={file.name}
@@ -390,6 +388,7 @@ export default function OCRWorkflow() {
           />
         )}
 
+        {/* Validation */}
         {status === "validation" && <ValidationForm />}
       </div>
     </MainLayout>

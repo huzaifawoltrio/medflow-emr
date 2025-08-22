@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -66,8 +66,6 @@ const providerAvailability = [
 
 export default function Appointments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const calendarRef = useRef<FullCalendar>(null);
-  const [calendarTitle, setCalendarTitle] = useState("");
 
   const handleDateClick = (arg: any) => {
     setIsModalOpen(true);
@@ -81,66 +79,103 @@ export default function Appointments() {
     );
   };
 
-  const goToNext = () => {
-    calendarRef.current?.getApi().next();
-  };
-
-  const goToPrev = () => {
-    calendarRef.current?.getApi().prev();
-  };
-
   return (
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Appointment Scheduling
-            </h1>
-            <p className="text-gray-500 mt-1" id="calendar-title">
-              {calendarTitle}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={goToPrev}>
-                <ChevronLeft className="h-4 w-4" />
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Scheduling
+          </h1>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+                <Plus className="mr-2 h-4 w-4" /> Add New
               </Button>
-              <Button variant="outline" size="icon" onClick={goToNext}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
-                  <Plus className="mr-2 h-4 w-4" /> Add New
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Schedule New Appointment</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  {/* Form fields from your design */}
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Schedule New Appointment</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="patient">Patient</Label>
+                  <Input id="patient" placeholder="Search patient name or ID" />
                 </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Schedule Appointment
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="provider">Provider</Label>
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dr-brown">Dr. Brown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="appointment-type">Appointment Type</Label>
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="therapy">Therapy Session</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10:00">10:00 AM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration (minutes)</Label>
+                  <Select defaultValue="45">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes (optional)</Label>
+                  <Textarea id="notes" placeholder="Additional notes..." />
+                </div>
+              </div>
+              <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 flex-1"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Schedule Appointment
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Main Content Grid */}
@@ -149,18 +184,27 @@ export default function Appointments() {
             <Card className="rounded-xl shadow-sm h-[70vh]">
               <CardContent className="p-2 md:p-4 h-full">
                 <FullCalendar
-                  ref={calendarRef}
                   plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                   initialView="timeGridWeek"
-                  headerToolbar={false}
-                  height="100%"
+                  headerToolbar={{
+                    left: "prev",
+                    center: "title",
+                    right: "next",
+                  }}
+                  height="auto"
+                  contentHeight="auto"
+                  expandRows={true}
                   slotMinTime="08:00:00"
-                  slotMaxTime="19:00:00"
+                  slotMaxTime="17:00:00"
+                  allDaySlot={false}
+                  hiddenDays={[0]} // Hides Sunday
                   events={dummyAppointments}
                   dateClick={handleDateClick}
                   eventClick={handleEventClick}
-                  datesSet={(arg) => {
-                    setCalendarTitle(arg.view.title);
+                  titleFormat={{
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   }}
                 />
               </CardContent>
@@ -224,8 +268,21 @@ export default function Appointments() {
         .fc {
           border: none;
         }
-        .fc .fc-toolbar {
-          display: none;
+        .fc-header-toolbar {
+          padding-bottom: 1rem;
+          font-size: 1rem;
+        }
+        .fc-toolbar-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+        .fc .fc-button {
+          background-color: transparent;
+          border: 1px solid #e5e7eb;
+          color: #4b5563;
+        }
+        .fc .fc-button:hover {
+          background-color: #f3f4f6;
         }
         .fc .fc-col-header-cell {
           background-color: #f9fafb;
@@ -252,6 +309,14 @@ export default function Appointments() {
         }
         .fc-v-event .fc-event-main {
           color: inherit;
+        }
+
+        /* FIX white space on right */
+        .fc-scroller {
+          overflow-x: hidden !important;
+        }
+        .fc-scrollgrid {
+          margin-right: 0 !important;
         }
       `}</style>
     </MainLayout>

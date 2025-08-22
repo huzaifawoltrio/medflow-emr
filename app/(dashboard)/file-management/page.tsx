@@ -15,14 +15,21 @@ import {
   List,
   LayoutGrid,
   Eye,
+  User,
+  FileImage,
 } from "lucide-react";
+
+// Define FileJson icon component since it doesn't exist in lucide-react
+const FileJson = FileText;
 
 // Placeholder data for documents
 const documents = [
   {
     id: 1,
     name: "John_Doe_Initial_Assessment.pdf",
+    title: "John_Doe_Initial_Assessment.pdf",
     patient: "John Doe",
+    user: "John Doe",
     date: "8/10/2024",
     size: "2.4 MB",
     description:
@@ -30,39 +37,49 @@ const documents = [
     tags: ["assessment", "intake", "depression", "anxiety"],
     isStarred: true,
     iconColor: "text-red-500",
+    fileType: "pdf",
   },
   {
     id: 2,
     name: "Lab_Results_CBC_20240812.pdf",
+    title: "Lab_Results_CBC_20240812.pdf",
     patient: "Sarah Johnson",
+    user: "Sarah Johnson",
     date: "8/12/2024",
     size: "1.2 MB",
     description: "Complete blood count results.",
     tags: ["lab", "blood-work", "cbc", "routine"],
     isStarred: false,
     iconColor: "text-green-500",
+    fileType: "pdf",
   },
   {
     id: 3,
     name: "Insurance_Card_Front.jpg",
+    title: "Insurance_Card_Front.jpg",
     patient: "Mike Wilson",
+    user: "Mike Wilson",
     date: "8/11/2024",
     size: "856 KB",
     description: "Front side of insurance card.",
     tags: ["insurance", "card", "verification"],
     isStarred: false,
     iconColor: "text-blue-500",
+    fileType: "image",
   },
   {
     id: 4,
     name: "Progress_Notes_Session_5.pdf",
+    title: "Progress_Notes_Session_5.pdf",
     patient: "John Doe",
+    user: "John Doe",
     date: "8/09/2024",
     size: "802 KB",
     description: "Therapy session progress note showing improvement.",
     tags: ["progress", "therapy", "session", "improvement"],
     isStarred: false,
     iconColor: "text-blue-500",
+    fileType: "pdf",
   },
 ];
 
@@ -88,59 +105,103 @@ const filterTags = [
 type Document = {
   id: number;
   name: string;
+  title: string;
   patient: string;
+  user: string;
   date: string;
   size: string;
   description: string;
   tags: string[];
   isStarred: boolean;
   iconColor: string;
+  fileType: string;
 };
 
-const DocumentCard = ({ doc }: { doc: Document }) => (
-  <Card className="rounded-lg border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow flex flex-col">
-    <CardContent className="p-4 flex flex-col flex-grow">
-      <div className="flex justify-between items-start">
-        <FileText className={`h-6 w-6 ${doc.iconColor}`} />
-        {doc.isStarred && (
-          <Star className="h-5 w-5 text-yellow-400 fill-current" />
-        )}
+const fileTypeStyles: {
+  [key: string]: { icon: React.ElementType; color: string };
+} = {
+  pdf: { icon: FileText, color: "text-red-500" },
+  sheet: { icon: FileJson, color: "text-green-500" },
+  image: { icon: FileImage, color: "text-blue-500" },
+  doc: { icon: FileText, color: "text-blue-500" },
+};
+
+// Reusable Document Card Component
+const DocumentCard = ({ doc }: { doc: Document }) => {
+  const FileIcon = fileTypeStyles[doc.fileType]?.icon || FileText;
+  const iconColor = fileTypeStyles[doc.fileType]?.color || "text-gray-500";
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-full transition-all hover:shadow-lg hover:-translate-y-1">
+      {/* Card Header */}
+      <div className="p-4 flex justify-between items-start">
+        <FileIcon className={`h-6 w-6 ${iconColor}`} />
+        <Star
+          className={`h-5 w-5 cursor-pointer ${
+            doc.isStarred
+              ? "text-yellow-400 fill-yellow-400"
+              : "text-gray-300 hover:text-yellow-400"
+          }`}
+        />
       </div>
-      <div className="flex-grow mt-4">
-        <h3 className="font-medium text-gray-800 truncate hover:underline cursor-pointer">
-          {doc.name}
+
+      {/* Card Content */}
+      <div className="px-4 pb-4 flex-grow">
+        <h3 className="font-semibold text-gray-800 truncate" title={doc.title}>
+          {doc.title}
         </h3>
-        <div className="text-xs text-gray-500 mt-3 space-y-1">
-          <p>{doc.patient}</p>
+        <div className="mt-2 text-xs text-gray-500 space-y-1">
+          <div className="flex items-center">
+            <User className="h-3 w-3 mr-1.5" />
+            <span>{doc.user}</span>
+          </div>
           <p>{doc.date}</p>
           <p>{doc.size}</p>
         </div>
-        <p className="text-sm text-gray-600 mt-4 truncate">{doc.description}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {doc.tags.map((tag, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5"
+        <p className="mt-3 text-sm text-gray-600 line-clamp-1">
+          {doc.description}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {doc.tags.map((tag) => (
+            <span
+              key={tag}
+              className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full"
             >
               {tag}
-            </Badge>
+            </span>
           ))}
         </div>
       </div>
-      <div className="flex items-center mt-5 border-t pt-2">
+
+      {/* Card Footer */}
+      <div className="p-4 border-t mt-auto flex justify-between items-center">
         <div className="flex-1"></div> {/* Spacer */}
         <div className="flex-1 flex justify-center">
-          <Eye className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
+          <Button variant="ghost" size="sm" className="text-gray-600">
+            <Eye className="h-4 w-4 mr-2" />
+            View
+          </Button>
         </div>
-        <div className="flex-1 flex justify-end space-x-4">
-          <Download className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
-          <Trash2 className="h-5 w-5 text-gray-500 hover:text-red-500 cursor-pointer" />
+        <div className="flex-1 flex justify-end items-center space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <Download className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-500 hover:text-red-600"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
         </div>
       </div>
-    </CardContent>
-  </Card>
-);
+    </div>
+  );
+};
 
 const DocumentRow = ({ doc }: { doc: Document }) => (
   <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow flex items-center space-x-4">
@@ -251,9 +312,8 @@ export default function FileManagement() {
           </div>
         </div>
 
-        {/* Documents Display */}
         {view === "grid" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {documents.map((doc) => (
               <DocumentCard key={doc.id} doc={doc} />
             ))}
