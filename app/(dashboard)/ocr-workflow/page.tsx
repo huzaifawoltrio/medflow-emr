@@ -19,7 +19,7 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
   const steps = ["Upload", "Processing", "Validation", "Complete"];
 
   return (
-    <div className="flex items-center justify-center space-x-6">
+    <div className="flex items-center justify-start space-x-6">
       {steps.map((step, index) => (
         <Fragment key={index}>
           <div className="flex flex-col items-center">
