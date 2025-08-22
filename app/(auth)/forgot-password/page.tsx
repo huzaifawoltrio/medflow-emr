@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md mx-auto">
         {/* Header Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-block p-3 bg-blue-600 rounded-full mb-2">
+          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-2">
             <Stethoscope className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Daisy EMR</h1>
