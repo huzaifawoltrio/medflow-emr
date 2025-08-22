@@ -5,7 +5,7 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DaisyEMR - Healthcare Management System",
+  title: "Daisy EMR - Healthcare Management System",
   description: "Electronic Medical Records and Healthcare Management Platform",
   generator: "v0.app",
 };
