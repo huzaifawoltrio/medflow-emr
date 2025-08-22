@@ -1,8 +1,11 @@
+// app/layout.tsx
+
 import type React from "react";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
+import StoreProvider from "./redux/provider"; // Import the provider
 
 export const metadata: Metadata = {
   title: "Daisy EMR - Healthcare Management System",
@@ -26,7 +29,10 @@ html {
 }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        {/* Wrap the children with the StoreProvider */}
+        <StoreProvider>{children}</StoreProvider>
+      </body>
     </html>
   );
 }

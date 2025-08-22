@@ -41,6 +41,7 @@ export const loginUser = createAsyncThunk<
     // On success, store tokens in localStorage
     localStorage.setItem("accessToken", response.data.access_token);
     localStorage.setItem("refreshToken", response.data.refresh_token);
+    console.log("Login successful:", response);
     return response.data;
   } catch (error: any) {
     // Handle potential errors from the API call

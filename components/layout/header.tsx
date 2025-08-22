@@ -51,11 +51,6 @@ export function Header({ onSidebarOpen }: { onSidebarOpen: () => void }) {
 
       {/* Right side: Contains actions, notifications, and the user menu */}
       <div className="flex items-center space-x-2 md:space-x-4">
-        {/* Quick Action Button: Hidden on smaller screens for a cleaner look */}
-        <Button className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700">
-          Quick Action
-        </Button>
-
         {/* Notifications Button */}
         <Button
           variant="ghost"
