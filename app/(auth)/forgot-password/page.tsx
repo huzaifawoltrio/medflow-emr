@@ -8,7 +8,10 @@ import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4">
+    <div
+      className="flex flex-col items-center justify-center min-h-screen p-4"
+      style={{ backgroundColor: "#E9F0FF" }}
+    >
       <div className="w-full max-w-md mx-auto">
         {/* Header Logo and Title */}
         <div className="text-center mb-8">
