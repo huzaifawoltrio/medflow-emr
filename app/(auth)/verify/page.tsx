@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Shield, Info, Loader2, Plus } from "lucide-react";
+import { Shield, Info, Loader2, Stethoscope } from "lucide-react";
 import {
   InputOTP,
   InputOTPGroup,
@@ -37,12 +37,15 @@ export default function SecurityVerification() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ backgroundColor: "#E9F0FF" }}
+    >
       <div className="w-full max-w-lg space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <Plus className="h-8 w-8 text-white" />
+            <Stethoscope className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Daisy EMR</h1>
