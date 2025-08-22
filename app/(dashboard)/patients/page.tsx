@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation"; // Import useRouter
+import Link from "next/link"; // Import Link
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const patients = [
 
 export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter(); // Initialize the router
 
   const filteredPatients = patients.filter(
     (p) =>
@@ -75,9 +77,11 @@ export default function PatientsPage() {
                 className="pl-10"
               />
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="mr-2 h-4 w-4" /> New Patient
-            </Button>
+            <Link href="/patient-intake">
+              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                <Plus className="mr-2 h-4 w-4" /> New Patient
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -102,12 +106,13 @@ export default function PatientsPage() {
                 </thead>
                 <tbody>
                   {filteredPatients.map((patient) => (
-                    <tr key={patient.id} className="border-b last:border-b-0">
+                    <tr
+                      key={patient.id}
+                      className="border-b last:border-b-0 hover:bg-gray-50/70 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/patients/${patient.id}`)} // Add onClick to the entire row
+                    >
                       <td className="p-4">
-                        <Link
-                          href={`/patients/${patient.id}`}
-                          className="flex items-center space-x-4 group"
-                        >
+                        <div className="flex items-center space-x-4">
                           <Avatar className="w-10 h-10">
                             <AvatarImage
                               src={patient.avatar}
@@ -116,14 +121,14 @@ export default function PatientsPage() {
                             <AvatarFallback>{patient.initials}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            <p className="font-semibold text-gray-900">
                               {patient.name}
                             </p>
                             <p className="text-sm text-gray-500">
                               ID: {patient.id}
                             </p>
                           </div>
-                        </Link>
+                        </div>
                       </td>
                       <td className="p-4 hidden md:table-cell">
                         <p className="text-sm text-gray-800">{patient.email}</p>
@@ -135,11 +140,7 @@ export default function PatientsPage() {
                         </p>
                       </td>
                       <td className="p-4 text-right">
-                        <Link href={`/patients/${patient.id}`}>
-                          <Button variant="ghost" size="icon">
-                            <ChevronRight className="h-5 w-5 text-gray-500" />
-                          </Button>
-                        </Link>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
                       </td>
                     </tr>
                   ))}
