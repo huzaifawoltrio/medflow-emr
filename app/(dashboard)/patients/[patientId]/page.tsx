@@ -7,6 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   FileText,
   Calendar,
@@ -17,13 +35,11 @@ import {
   Plus,
   ArrowLeft,
   AlertTriangle,
-  DollarSign,
-  Pill,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Expanded static data for a richer detail page
+// Static data for the patient detail page
 const patientData = {
   id: "P001",
   name: "John Doe",
@@ -115,6 +131,21 @@ export default function PatientDetailPage({
   params: { patientId: string };
 }) {
   const [activeTab, setActiveTab] = useState("Overview");
+  const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
+  const [newNote, setNewNote] = useState({
+    patientName: patientData.name, // Pre-populate with patient data
+    patientId: patientData.id, // Pre-populate with patient data
+    type: "",
+    content: "",
+    billingCodes: "",
+    status: "draft",
+  });
+
+  const handleCreateNote = () => {
+    console.log("Creating new note:", newNote);
+    // Logic to save the new note would go here
+    setIsNewNoteOpen(false); // Close the modal on save
+  };
 
   // Tab Content Components
   const OverviewTab = () => (
@@ -304,9 +335,134 @@ export default function PatientDetailPage({
                 </div>
               </div>
               <div className="flex gap-2 w-full md:w-auto">
-                <Button className="bg-blue-600 hover:bg-blue-700 flex-1">
-                  <Plus className="mr-2 h-4 w-4" /> New Note
-                </Button>
+                <Dialog open={isNewNoteOpen} onOpenChange={setIsNewNoteOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700 flex-1">
+                      <Plus className="mr-2 h-4 w-4" /> New Note
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create New Clinical Note</DialogTitle>
+                      <DialogDescription>
+                        Document patient encounter and clinical findings for{" "}
+                        {patientData.name}.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="patientName">Patient Name</Label>
+                          <Input
+                            id="patientName"
+                            value={newNote.patientName}
+                            disabled // Field is disabled as it's pre-populated
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="patientId">Patient ID</Label>
+                          <Input
+                            id="patientId"
+                            value={newNote.patientId}
+                            disabled // Field is disabled as it's pre-populated
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="type">Note Type</Label>
+                        <Select
+                          value={newNote.type}
+                          onValueChange={(value) =>
+                            setNewNote({ ...newNote, type: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select note type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Initial Assessment">
+                              Initial Assessment
+                            </SelectItem>
+                            <SelectItem value="Progress Note">
+                              Progress Note
+                            </SelectItem>
+                            <SelectItem value="Therapy Session">
+                              Therapy Session
+                            </SelectItem>
+                            <SelectItem value="Medication Review">
+                              Medication Review
+                            </SelectItem>
+                            <SelectItem value="Discharge Summary">
+                              Discharge Summary
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="content">Clinical Content</Label>
+                        <Textarea
+                          id="content"
+                          placeholder="Enter clinical notes..."
+                          value={newNote.content}
+                          onChange={(e) =>
+                            setNewNote({ ...newNote, content: e.target.value })
+                          }
+                          rows={10}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="billingCodes">Billing Codes</Label>
+                        <Input
+                          id="billingCodes"
+                          placeholder="99213, 90834 (comma separated)"
+                          value={newNote.billingCodes}
+                          onChange={(e) =>
+                            setNewNote({
+                              ...newNote,
+                              billingCodes: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select
+                          value={newNote.status}
+                          onValueChange={(value) =>
+                            setNewNote({
+                              ...newNote,
+                              status: value as "draft" | "completed",
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsNewNoteOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleCreateNote}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Save Note
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
                 <Button variant="outline" className="flex-1">
                   <Calendar className="mr-2 h-4 w-4" /> Schedule
                 </Button>
