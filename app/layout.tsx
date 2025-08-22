@@ -10,22 +10,22 @@ export const metadata: Metadata = {
   generator: "v0.app",
 };
 
+/**
+ * RootLayout for the application.
+ *
+ * Key Changes:
+ * 1. Removed manual `<head>` and `<body>` tags. Next.js handles these.
+ * 2. Removed the inline `<style>` block to prevent potential hydration mismatches.
+ * 3. Applied the font variables directly to the `<html>` tag using `className`.
+ * This is the standard and safest way to apply global fonts with Next.js and geist.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>{children}</body>
     </html>
   );

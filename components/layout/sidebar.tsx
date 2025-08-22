@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,7 @@ import {
   LayoutDashboard,
   UserCircle,
   Users,
-  X, // Close icon
+  X,
   Stethoscope,
 } from "lucide-react";
 
@@ -30,7 +30,7 @@ const navigation = [
   { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
-  { name: "e-Prescription", href: "/prescriptions", icon: Pill },
+  { name: "e-Prescription", href: "/e-prescription", icon: Pill },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Clinical Notes", href: "/clinical-notes", icon: ClipboardList },
   { name: "File Management", href: "/file-management", icon: FolderOpen },
@@ -45,6 +45,28 @@ export function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // Check if window is available (client-side)
+    if (typeof window !== "undefined") {
+      setIsMobile(window.innerWidth < 768);
+
+      const handleResize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
+
+  // Handle navigation click
+  const handleNavClick = () => {
+    if (isMobile) {
+      onClose();
+    }
+  };
 
   return (
     <Fragment>
@@ -77,6 +99,7 @@ export function Sidebar({
               <h1 className="text-lg font-semibold text-gray-900">Daisy</h1>
             </div>
           </div>
+          {/* Close button */}
           <Button
             onClick={onClose}
             variant="ghost"
@@ -92,37 +115,24 @@ export function Sidebar({
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
-            const linkClasses = cn(
-              "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-              isActive
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-            );
-            const iconClasses = cn(
-              "mr-3 h-5 w-5",
-              isActive ? "text-blue-600" : "text-gray-400"
-            );
-
-            // Apply legacyBehavior only to the problematic link
-            if (item.name === "e-Prescription") {
-              return (
-                <Link key={item.name} href={item.href} passHref legacyBehavior>
-                  <a onClick={onClose} className={linkClasses}>
-                    <item.icon className={iconClasses} />
-                    {item.name}
-                  </a>
-                </Link>
-              );
-            }
-
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={onClose}
-                className={linkClasses}
+                onClick={handleNavClick}
+                className={cn(
+                  "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
+                  isActive
+                    ? "bg-blue-50 text-blue-700"
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                )}
               >
-                <item.icon className={iconClasses} />
+                <item.icon
+                  className={cn(
+                    "mr-3 h-5 w-5",
+                    isActive ? "text-blue-600" : "text-gray-400"
+                  )}
+                />
                 {item.name}
               </Link>
             );
