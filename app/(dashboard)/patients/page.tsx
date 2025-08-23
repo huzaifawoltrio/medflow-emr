@@ -78,7 +78,7 @@ export default function PatientsPage() {
               />
             </div>
             <Link href="/patient-intake">
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+              <Button className="bg-blue-800 hover:bg-blue-700 w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> New Patient
               </Button>
             </Link>

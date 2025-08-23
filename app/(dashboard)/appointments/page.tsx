@@ -213,7 +213,7 @@ const AppointmentModal = ({
                   variant={selectedTimeSlot === time ? "default" : "outline"}
                   className={`w-full justify-start text-left h-10 md:h-auto touch-manipulation ${
                     selectedTimeSlot === time
-                      ? "bg-blue-600 text-white"
+                      ? "bg-blue-800 text-white"
                       : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => setSelectedTimeSlot(time)}
@@ -271,7 +271,7 @@ const AppointmentModal = ({
                       ${!day ? "invisible" : ""}
                       ${
                         selectedDate === day
-                          ? "bg-blue-600 text-white"
+                          ? "bg-blue-800 text-white"
                           : "hover:bg-gray-100 text-gray-700"
                       }
                       ${
@@ -290,7 +290,7 @@ const AppointmentModal = ({
             </div>
 
             {/* Add New Button */}
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white h-10 md:h-auto touch-manipulation">
+            <Button className="w-full bg-blue-800 hover:bg-blue-700 text-white h-10 md:h-auto touch-manipulation">
               <Plus className="w-4 h-4 mr-2" />
               Add new
             </Button>
@@ -375,7 +375,7 @@ const CustomWeekCalendar = ({
             </SelectContent>
           </Select>
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg text-sm md:text-base h-9 md:h-auto touch-manipulation"
+            className="bg-blue-800 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg text-sm md:text-base h-9 md:h-auto touch-manipulation"
             onClick={onAddNewClick}
           >
             <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />

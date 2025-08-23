@@ -214,7 +214,7 @@ export default function Billing() {
             onOpenChange={setIsCreateInvoiceOpen}
           >
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-800 hover:bg-blue-700">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Invoice
               </Button>
@@ -349,7 +349,7 @@ export default function Billing() {
                 </Button>
                 <Button
                   onClick={handleCreateInvoice}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-800 hover:bg-blue-700"
                 >
                   Create Invoice
                 </Button>
@@ -419,7 +419,7 @@ export default function Billing() {
               <CardTitle className="text-sm font-medium text-blue-900">
                 This Month
               </CardTitle>
-              <div className="p-2 bg-blue-600 rounded-lg">
+              <div className="p-2 bg-blue-800 rounded-lg">
                 <DollarSign className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
@@ -521,7 +521,7 @@ export default function Billing() {
                         {invoice.status !== "paid" && (
                           <Button
                             size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-800 hover:bg-blue-700"
                           >
                             <CreditCard className="h-4 w-4 mr-1" />
                             Process Payment

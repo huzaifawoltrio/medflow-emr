@@ -76,7 +76,7 @@ export default function Dashboard() {
                   12
                 </div>
               </div>
-              <div className="p-3 bg-blue-600 rounded-lg">
+              <div className="p-3 bg-blue-800 rounded-lg">
                 <Calendar className="h-6 w-6 text-white" />
               </div>
             </CardContent>
@@ -238,7 +238,7 @@ export default function Dashboard() {
                     <p className="font-semibold text-sm">John Doe</p>
                     <p className="text-xs text-gray-500">Follow-up • 9:00 AM</p>
                   </div>
-                  <Badge className="bg-blue-600 hover:bg-blue-700 text-xs">
+                  <Badge className="bg-blue-800 hover:bg-blue-700 text-xs">
                     Next
                   </Badge>
                 </div>

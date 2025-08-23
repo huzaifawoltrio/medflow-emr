@@ -41,7 +41,7 @@ export default function Login() {
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+          <div className="mx-auto w-16 h-16 bg-blue-800 rounded-full flex items-center justify-center">
             <Stethoscope className="h-6 w-6 text-white" />
           </div>
           <div>
@@ -133,7 +133,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-800 hover:bg-blue-700"
                 disabled={isLoading}
               >
                 {isLoading ? (

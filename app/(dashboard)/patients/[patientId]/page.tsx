@@ -337,7 +337,7 @@ export default function PatientDetailPage({
               <div className="flex gap-2 w-full md:w-auto">
                 <Dialog open={isNewNoteOpen} onOpenChange={setIsNewNoteOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700 flex-1">
+                    <Button className="bg-blue-800 hover:bg-blue-700 flex-1">
                       <Plus className="mr-2 h-4 w-4" /> New Note
                     </Button>
                   </DialogTrigger>
@@ -455,7 +455,7 @@ export default function PatientDetailPage({
                       </Button>
                       <Button
                         onClick={handleCreateNote}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-800 hover:bg-blue-700"
                       >
                         Save Note
                       </Button>

@@ -84,7 +84,7 @@ export default function SettingsPage() {
           </div>
           <Button
             onClick={handleSaveSettings}
-            className="bg-blue-600 hover:bg-blue-700 flex items-center"
+            className="bg-blue-800 hover:bg-blue-700 flex items-center"
           >
             <Save className="mr-2 h-4 w-4" /> Save All Changes
           </Button>

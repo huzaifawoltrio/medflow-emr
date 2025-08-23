@@ -163,7 +163,7 @@ export default function PatientPortal() {
                       8/15/2024 at 2:00 PM
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 text-white">confirmed</Badge>
+                  <Badge className="bg-blue-800 text-white">confirmed</Badge>
                 </div>
               </div>
               <Button variant="outline" className="w-full mt-4">
@@ -180,7 +180,7 @@ export default function PatientPortal() {
     <Card className="rounded-xl shadow-sm">
       <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <CardTitle className="text-xl font-semibold">My Appointments</CardTitle>
-        <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+        <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
           Schedule New
         </Button>
       </CardHeader>
@@ -225,7 +225,7 @@ export default function PatientPortal() {
     <Card className="rounded-xl shadow-sm">
       <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <CardTitle className="text-xl font-semibold">Medical Records</CardTitle>
-        <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+        <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
           <Upload className="mr-2 h-4 w-4" /> Upload Document
         </Button>
       </CardHeader>
@@ -272,7 +272,7 @@ export default function PatientPortal() {
     <Card className="rounded-xl shadow-sm">
       <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <CardTitle className="text-xl font-semibold">Messages</CardTitle>
-        <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+        <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
           New Message
         </Button>
       </CardHeader>
@@ -342,7 +342,7 @@ export default function PatientPortal() {
               </div>
             </div>
           </div>
-          <Button className="w-full mt-6 bg-blue-600 hover:bg-blue-700">
+          <Button className="w-full mt-6 bg-blue-800 hover:bg-blue-700">
             Pay Outstanding Balance ($150.00)
           </Button>
         </CardContent>
@@ -379,7 +379,7 @@ export default function PatientPortal() {
             </h1>
             <p className="text-gray-600 mt-1">Welcome back, John Doe</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+          <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
             <Bell className="mr-2 h-4 w-4" /> Notifications
           </Button>
         </div>

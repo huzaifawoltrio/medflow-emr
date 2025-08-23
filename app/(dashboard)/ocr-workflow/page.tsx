@@ -26,7 +26,7 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
             <div
               className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-medium ${
                 index + 1 === currentStep
-                  ? "bg-blue-600 text-white border-blue-600"
+                  ? "bg-blue-800 text-white border-blue-600"
                   : "bg-white text-gray-600 border-gray-300"
               }`}
             >

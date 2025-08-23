@@ -191,7 +191,7 @@ export default function EPrescription() {
           </h1>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+              <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> New Prescription
               </Button>
             </DialogTrigger>
@@ -298,7 +298,7 @@ export default function EPrescription() {
                   Cancel
                 </Button>
                 <Button
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-800 hover:bg-blue-700"
                   onClick={handleSendPrescription}
                 >
                   <Send className="mr-2 h-4 w-4" /> Send to Pharmacy

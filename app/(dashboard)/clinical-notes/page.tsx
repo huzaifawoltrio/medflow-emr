@@ -106,7 +106,7 @@ export default function ClinicalNotes() {
           </h1>
           <Dialog open={isNewNoteOpen} onOpenChange={setIsNewNoteOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+              <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
                 <Plus className="mr-2 h-4 w-4" /> New Note
               </Button>
             </DialogTrigger>
@@ -217,7 +217,7 @@ export default function ClinicalNotes() {
                 </Button>
                 <Button
                   onClick={handleCreateNote}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-800 hover:bg-blue-700"
                 >
                   Save Note
                 </Button>

@@ -257,7 +257,7 @@ export default function PatientIntake() {
             markSectionComplete("personal");
             setActiveSection("insurance");
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700"
         >
           Continue to Insurance <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -353,7 +353,7 @@ export default function PatientIntake() {
             markSectionComplete("insurance");
             setActiveSection("medical");
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700"
         >
           Continue to Medical History <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -536,7 +536,7 @@ export default function PatientIntake() {
             markSectionComplete("medical");
             setActiveSection("concerns");
           }}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700"
         >
           Continue to Current Concerns <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
@@ -634,7 +634,7 @@ export default function PatientIntake() {
         </Button>
         <Button
           onClick={() => markSectionComplete("concerns")}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700"
         >
           Complete Forms
         </Button>
@@ -676,7 +676,7 @@ export default function PatientIntake() {
             <Button variant="outline" className="flex items-center bg-white">
               <Save className="mr-2 h-4 w-4" /> Save Draft
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 flex items-center">
+            <Button className="bg-blue-800 hover:bg-blue-700 flex items-center">
               <Send className="mr-2 h-4 w-4" /> Submit Forms
             </Button>
           </div>

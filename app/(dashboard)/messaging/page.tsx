@@ -164,7 +164,7 @@ export default function SecureMessaging() {
           </div>
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-800 hover:bg-blue-700">
                 <Plus className="mr-2 h-4 w-4" />
                 Compose Message
               </Button>
@@ -265,7 +265,7 @@ export default function SecureMessaging() {
                 </Button>
                 <Button
                   onClick={handleSendMessage}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-800 hover:bg-blue-700"
                 >
                   <Send className="mr-2 h-4 w-4" />
                   Send Message
@@ -355,7 +355,7 @@ export default function SecureMessaging() {
                             {message.timestamp}
                           </p>
                           {message.unread && (
-                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-1 ml-auto"></div>
+                            <div className="w-2 h-2 bg-blue-800 rounded-full mt-1 ml-auto"></div>
                           )}
                         </div>
                       </div>
@@ -449,7 +449,7 @@ export default function SecureMessaging() {
                     </div>
                     <div className="mt-6 pt-6 border-t">
                       <div className="flex space-x-3">
-                        <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Button className="bg-blue-800 hover:bg-blue-700">
                           <Send className="mr-2 h-4 w-4" />
                           Reply
                         </Button>

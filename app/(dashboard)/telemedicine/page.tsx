@@ -115,7 +115,7 @@ export default function Telemedicine() {
               <span>All sessions are encrypted and HIPAA compliant.</span>
             </div>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
+          <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
             <Calendar className="mr-2 h-4 w-4" /> Schedule Session
           </Button>
         </div>
@@ -187,7 +187,7 @@ export default function Telemedicine() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700">
+              <Button className="w-full justify-start bg-blue-800 hover:bg-blue-700">
                 <Calendar className="mr-3 h-4 w-4" />
                 Schedule New Session
               </Button>

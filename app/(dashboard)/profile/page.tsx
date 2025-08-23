@@ -90,7 +90,7 @@ export default function ProfilePage() {
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="bg-blue-600 hover:bg-blue-700 flex items-center"
+                  className="bg-blue-800 hover:bg-blue-700 flex items-center"
                 >
                   <Save className="mr-2 h-4 w-4" /> Save Changes
                 </Button>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
             ) : (
               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700 flex items-center"
+                className="bg-blue-800 hover:bg-blue-700 flex items-center"
               >
                 <Edit className="mr-2 h-4 w-4" /> Edit Profile
               </Button>
