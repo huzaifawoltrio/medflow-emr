@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,31 +10,36 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Eye,
   EyeOff,
-  Mail,
+  User,
   Lock,
   Shield,
   Loader2,
   Stethoscope,
 } from "lucide-react";
 import Link from "next/link";
+import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
+import { loginUser } from "@/app/redux/features/auth/authActions";
 
 export default function Login() {
-  const [email, setEmail] = useState("doctor@hospital.com");
-  const [password, setPassword] = useState("password123");
+  const [username, setUsername] = useState("janedoe6");
+  const [password, setPassword] = useState("U-Xky})XS1kr");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { loading, error, success } = useAppSelector((state) => state.auth);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/verify");
-    }, 2000);
+    dispatch(loginUser({ username, password }));
   };
+
+  useEffect(() => {
+    if (success) {
+      router.push("/");
+    }
+  }, [success, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -67,15 +72,15 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Email Address
+                  Username
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
-                    type="email"
-                    placeholder="doctor@hospital.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-10"
                     required
                   />
@@ -130,13 +135,13 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
-
+              {error && <p className="text-red-500 text-xs">{error}</p>}
               <Button
                 type="submit"
                 className="w-full bg-blue-800 hover:bg-blue-700"
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? (
+                {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Sign In →"

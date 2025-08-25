@@ -14,6 +14,10 @@ interface UserData {
   id: number;
   role: "superadmin" | "doctor" | "patient";
   username: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  profile_picture_url?: string;
 }
 
 // Define the type for the login response
@@ -44,6 +48,28 @@ export const loginUser = createAsyncThunk<
     return response.data;
   } catch (error: any) {
     // Handle potential errors from the API call
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});
+
+/**
+ * Async thunk to fetch the current user's details.
+ * It uses the access token stored in localStorage to make an authenticated request.
+ */
+export const getUserDetails = createAsyncThunk<
+  UserData,
+  void,
+  { rejectValue: string }
+>("auth/getUserDetails", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get<UserData>("/users/me");
+    console.log("logged in details", response.data);
+    return response.data;
+  } catch (error: any) {
     if (error.response && error.response.data.message) {
       return rejectWithValue(error.response.data.message);
     } else {
