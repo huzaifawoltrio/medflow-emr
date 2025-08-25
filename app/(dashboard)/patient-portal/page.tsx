@@ -39,7 +39,7 @@ export default function PatientPortal() {
                   variant="outline"
                   className="h-24 flex flex-col items-center justify-center space-y-2 text-center"
                 >
-                  <Calendar className="h-6 w-6 text-blue-600" />
+                  <Calendar className="h-6 w-6 text-blue-800" />
                   <span className="text-sm font-medium">
                     Schedule Appointment
                   </span>
@@ -78,7 +78,7 @@ export default function PatientPortal() {
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                <FileText className="h-5 w-5 text-blue-500 mt-1 shrink-0" />
+                <FileText className="h-5 w-5 text-blue-800 mt-1 shrink-0" />
                 <div className="flex-1">
                   <p className="font-medium text-sm">Lab results are ready</p>
                   <p className="text-xs text-gray-500">
@@ -232,7 +232,7 @@ export default function PatientPortal() {
       <CardContent className="space-y-3">
         <div className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="flex items-center space-x-3">
-            <FileText className="h-6 w-6 text-blue-500 shrink-0" />
+            <FileText className="h-6 w-6 text-blue-800 shrink-0" />
             <div>
               <p className="font-semibold">Lab Results - CBC</p>
               <p className="text-sm text-gray-500">Lab Report • 8/10/2024</p>
@@ -249,7 +249,7 @@ export default function PatientPortal() {
         </div>
         <div className="p-4 border rounded-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="flex items-center space-x-3">
-            <FileText className="h-6 w-6 text-blue-500 shrink-0" />
+            <FileText className="h-6 w-6 text-blue-800 shrink-0" />
             <div>
               <p className="font-semibold">Progress Note - Session 5</p>
               <p className="text-sm text-gray-500">Clinical Note • 8/8/2024</p>
@@ -281,7 +281,7 @@ export default function PatientPortal() {
           <div>
             <p className="font-semibold">Dr. Smith</p>
             <p className="text-sm text-gray-600">Lab Results Available</p>
-            <a href="#" className="text-sm text-blue-600 hover:underline">
+            <a href="#" className="text-sm text-blue-800 hover:underline">
               Read Message
             </a>
           </div>
@@ -294,7 +294,7 @@ export default function PatientPortal() {
           <div>
             <p className="font-semibold">Billing Department</p>
             <p className="text-sm text-gray-600">Payment Reminder</p>
-            <a href="#" className="text-sm text-blue-600 hover:underline">
+            <a href="#" className="text-sm text-blue-800 hover:underline">
               Read Message
             </a>
           </div>
@@ -393,7 +393,7 @@ export default function PatientPortal() {
                 className={cn(
                   "py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap",
                   activeTab === tab
-                    ? "border-blue-500 text-blue-600"
+                    ? "border-blue-800 text-blue-800"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 )}
               >

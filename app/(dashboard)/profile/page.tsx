@@ -112,7 +112,7 @@ export default function ProfilePage() {
             <CardContent className="p-4">
               <Avatar className="w-16 h-16 mx-auto mb-2">
                 <AvatarImage src="/professional-doctor-headshot.png" />
-                <AvatarFallback className="text-lg bg-blue-100 text-blue-600">
+                <AvatarFallback className="text-lg bg-blue-100 text-blue-800">
                   {profileData.first_name[0]}
                   {profileData.last_name[0]}
                 </AvatarFallback>

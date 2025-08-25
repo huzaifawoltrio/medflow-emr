@@ -1,62 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // Import useRouter
-import Link from "next/link"; // Import Link
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, ChevronRight } from "lucide-react";
-
-const patients = [
-  {
-    id: "P001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "(555) 123-4567",
-    lastActivity: "2025-08-20",
-    avatar: "/avatars/01.png",
-    initials: "JD",
-  },
-  {
-    id: "P002",
-    name: "Sarah Johnson",
-    email: "sarah.j@example.com",
-    phone: "(555) 987-6543",
-    lastActivity: "2025-08-19",
-    avatar: "/avatars/02.png",
-    initials: "SJ",
-  },
-  {
-    id: "P003",
-    name: "Mike Wilson",
-    email: "mike.w@example.com",
-    phone: "(555) 234-5678",
-    lastActivity: "2025-08-21",
-    avatar: "/avatars/03.png",
-    initials: "MW",
-  },
-  {
-    id: "P004",
-    name: "Emily Davis",
-    email: "emily.d@example.com",
-    phone: "(555) 876-5432",
-    lastActivity: "2025-08-18",
-    avatar: "/avatars/04.png",
-    initials: "ED",
-  },
-];
+import { Search, Plus, ChevronRight, Loader2 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
+import { fetchPatients } from "../../redux/features/patients/patientActions";
 
 export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { patients, loading, error } = useAppSelector((state) => state.patient);
+
+  useEffect(() => {
+    dispatch(fetchPatients());
+  }, [dispatch]);
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName[0]}${lastName[0]}`;
+  };
 
   const filteredPatients = patients.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.id.toLowerCase().includes(searchTerm.toLowerCase())
+      p.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -105,45 +79,74 @@ export default function PatientsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPatients.map((patient) => (
-                    <tr
-                      key={patient.id}
-                      className="border-b last:border-b-0 hover:bg-gray-50/70 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/patients/${patient.id}`)} // Add onClick to the entire row
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="w-10 h-10">
-                            <AvatarImage
-                              src={patient.avatar}
-                              alt={patient.name}
-                            />
-                            <AvatarFallback>{patient.initials}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {patient.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              ID: {patient.id}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4 hidden md:table-cell">
-                        <p className="text-sm text-gray-800">{patient.email}</p>
-                        <p className="text-sm text-gray-500">{patient.phone}</p>
-                      </td>
-                      <td className="p-4 hidden sm:table-cell">
-                        <p className="text-sm text-gray-800">
-                          {patient.lastActivity}
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="text-center p-8">
+                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+                        <p className="mt-2 text-gray-500">
+                          Loading patients...
                         </p>
                       </td>
-                      <td className="p-4 text-right">
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={4} className="text-center p-8 text-red-500">
+                        {error}
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    filteredPatients.map((patient) => (
+                      <tr
+                        key={patient.user_id}
+                        className="border-b last:border-b-0 hover:bg-gray-50/70 transition-colors cursor-pointer"
+                        onClick={() =>
+                          router.push(`/patients/${patient.user_id}`)
+                        }
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center space-x-4">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage
+                                src={patient.profile_picture_url || ""}
+                                alt={`${patient.first_name} ${patient.last_name}`}
+                              />
+                              <AvatarFallback>
+                                {getInitials(
+                                  patient.first_name,
+                                  patient.last_name
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {patient.first_name} {patient.last_name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                ID: {patient.username}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">
+                          <p className="text-sm text-gray-800">
+                            {patient.email}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {patient.phone_number}
+                          </p>
+                        </td>
+                        <td className="p-4 hidden sm:table-cell">
+                          <p className="text-sm text-gray-800">
+                            {/* Placeholder for last activity */}
+                            2025-08-25
+                          </p>
+                        </td>
+                        <td className="p-4 text-right">
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

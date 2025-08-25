@@ -233,7 +233,7 @@ export default function Telemedicine() {
                   >
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                        <Video className="h-5 w-5 text-blue-600" />
+                        <Video className="h-5 w-5 text-blue-800" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">

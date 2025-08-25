@@ -23,8 +23,11 @@ import {
   Save,
   Send,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import api from "@/app/lib/axiosConfig";
+import { useRouter } from "next/navigation";
 
 const sections = [
   { id: "personal", name: "Personal Info", icon: User },
@@ -36,42 +39,47 @@ const sections = [
 export default function PatientIntake() {
   const [activeSection, setActiveSection] = useState<string>("personal");
   const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     // Personal Info
-    firstName: "",
-    lastName: "",
-    dateOfBirth: "",
-    gender: "",
-    phoneNumber: "",
-    emailAddress: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
+    username: "johnsmith",
+    email: "huzaifaali2002@gmail.com",
+    first_name: "John",
+    last_name: "Smith",
+    date_of_birth: "1985-05-20",
+    gender: "Male",
+    phone_number: "555-0101",
+    address: "123 Health St",
+    city: "Wellnessville",
+    state: "CA",
+    zip_code: "90210",
+    emergency_contact_name: "Jane Smith",
+    emergency_contact_phone: "555-0102",
     // Insurance
-    insuranceProvider: "",
-    policyNumber: "",
-    groupNumber: "",
-    policyHolderName: "",
-    policyHolderDob: "",
-    relationshipToPatient: "",
+    insurance_provider: "HealthNet Secure",
+    policy_number: "HN987654321",
+    group_number: "GRP-A567",
+    policy_holder_name: "John Smith",
+    policy_holder_date_of_birth: "1985-05-20",
+    relationship_to_patient: "Self",
     // Medical History
-    primaryCarePhysician: "",
-    allergies: [],
-    currentMedications: "",
-    previousSurgeries: "",
-    familyMedicalHistory: "",
-    smokingStatus: "",
-    alcoholConsumption: "",
-    exerciseFrequency: "",
+    primary_care_physician: "Dr. Emily White",
+    allergies: ["Penicillin", "Peanuts"],
+    current_medications: "Lisinopril 10mg daily",
+    previous_surgeries: "Appendectomy (2010)",
+    family_medical_history: "Father - Hypertension, Mother - Type 2 Diabetes",
+    smoking_status: "Never Smoked",
+    alcohol_consumption: "1-2 drinks per week",
+    exercise_frequency: "3 times per week",
     // Current Concerns
-    chiefComplaint: "",
-    symptomDuration: "",
-    painLevel: "",
-    previousTreatment: "",
-    additionalNotes: "",
+    chief_complaint: "Persistent cough and shortness of breath",
+    symptoms_duration: "3 weeks",
+    current_pain_level: 2,
+    previous_treatment_for_condition: "None",
+    additional_notes: "Patient reports cough is worse at night.",
   });
 
   const getProgressPercentage = () => {
@@ -88,7 +96,10 @@ export default function PatientIntake() {
     return sectionIndex + 1;
   };
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | number | string[]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -108,6 +119,29 @@ export default function PatientIntake() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    // Format data for the API
+    const registrationData = {
+      ...formData,
+      allergies: formData.allergies.join(", "),
+    };
+
+    try {
+      const response = await api.post("/patients/register", registrationData);
+      console.log("Patient registered successfully:", response.data);
+      // On success, redirect to the patients list
+      router.push("/patients");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderPersonalInfo = () => (
     <div className="space-y-6">
       <CardTitle className="text-xl font-semibold mb-4">
@@ -115,12 +149,21 @@ export default function PatientIntake() {
       </CardTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
+          <Label htmlFor="username">Username *</Label>
+          <Input
+            id="username"
+            placeholder="Enter username"
+            value={formData.username}
+            onChange={(e) => handleInputChange("username", e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="firstName">First Name *</Label>
           <Input
             id="firstName"
             placeholder="Enter first name"
-            value={formData.firstName}
-            onChange={(e) => handleInputChange("firstName", e.target.value)}
+            value={formData.first_name}
+            onChange={(e) => handleInputChange("first_name", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -128,8 +171,8 @@ export default function PatientIntake() {
           <Input
             id="lastName"
             placeholder="Enter last name"
-            value={formData.lastName}
-            onChange={(e) => handleInputChange("lastName", e.target.value)}
+            value={formData.last_name}
+            onChange={(e) => handleInputChange("last_name", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -138,8 +181,8 @@ export default function PatientIntake() {
             id="dateOfBirth"
             type="date"
             placeholder="mm/dd/yyyy"
-            value={formData.dateOfBirth}
-            onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+            value={formData.date_of_birth}
+            onChange={(e) => handleInputChange("date_of_birth", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -152,10 +195,10 @@ export default function PatientIntake() {
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-              <SelectItem value="prefer-not-to-say">
+              <SelectItem value="Male">Male</SelectItem>
+              <SelectItem value="Female">Female</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+              <SelectItem value="Prefer not to say">
                 Prefer not to say
               </SelectItem>
             </SelectContent>
@@ -166,8 +209,8 @@ export default function PatientIntake() {
           <Input
             id="phoneNumber"
             placeholder="(555) 123-4567"
-            value={formData.phoneNumber}
-            onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+            value={formData.phone_number}
+            onChange={(e) => handleInputChange("phone_number", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -176,8 +219,8 @@ export default function PatientIntake() {
             id="emailAddress"
             type="email"
             placeholder="email@example.com"
-            value={formData.emailAddress}
-            onChange={(e) => handleInputChange("emailAddress", e.target.value)}
+            value={formData.email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
           />
         </div>
       </div>
@@ -210,10 +253,10 @@ export default function PatientIntake() {
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ca">California</SelectItem>
-              <SelectItem value="ny">New York</SelectItem>
-              <SelectItem value="tx">Texas</SelectItem>
-              <SelectItem value="fl">Florida</SelectItem>
+              <SelectItem value="CA">California</SelectItem>
+              <SelectItem value="NY">New York</SelectItem>
+              <SelectItem value="TX">Texas</SelectItem>
+              <SelectItem value="FL">Florida</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -222,8 +265,8 @@ export default function PatientIntake() {
           <Input
             id="zipCode"
             placeholder="12345"
-            value={formData.zipCode}
-            onChange={(e) => handleInputChange("zipCode", e.target.value)}
+            value={formData.zip_code}
+            onChange={(e) => handleInputChange("zip_code", e.target.value)}
           />
         </div>
       </div>
@@ -233,9 +276,9 @@ export default function PatientIntake() {
           <Input
             id="emergencyContactName"
             placeholder="Contact name"
-            value={formData.emergencyContactName}
+            value={formData.emergency_contact_name}
             onChange={(e) =>
-              handleInputChange("emergencyContactName", e.target.value)
+              handleInputChange("emergency_contact_name", e.target.value)
             }
           />
         </div>
@@ -244,9 +287,9 @@ export default function PatientIntake() {
           <Input
             id="emergencyContactPhone"
             placeholder="(555) 123-4567"
-            value={formData.emergencyContactPhone}
+            value={formData.emergency_contact_phone}
             onChange={(e) =>
-              handleInputChange("emergencyContactPhone", e.target.value)
+              handleInputChange("emergency_contact_phone", e.target.value)
             }
           />
         </div>
@@ -276,9 +319,9 @@ export default function PatientIntake() {
           <Input
             id="insuranceProvider"
             placeholder="e.g., Blue Cross Blue Shield"
-            value={formData.insuranceProvider}
+            value={formData.insurance_provider}
             onChange={(e) =>
-              handleInputChange("insuranceProvider", e.target.value)
+              handleInputChange("insurance_provider", e.target.value)
             }
           />
         </div>
@@ -287,8 +330,8 @@ export default function PatientIntake() {
           <Input
             id="policyNumber"
             placeholder="Policy number"
-            value={formData.policyNumber}
-            onChange={(e) => handleInputChange("policyNumber", e.target.value)}
+            value={formData.policy_number}
+            onChange={(e) => handleInputChange("policy_number", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -296,8 +339,8 @@ export default function PatientIntake() {
           <Input
             id="groupNumber"
             placeholder="Group number"
-            value={formData.groupNumber}
-            onChange={(e) => handleInputChange("groupNumber", e.target.value)}
+            value={formData.group_number}
+            onChange={(e) => handleInputChange("group_number", e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -305,9 +348,9 @@ export default function PatientIntake() {
           <Input
             id="policyHolderName"
             placeholder="Policy holder name"
-            value={formData.policyHolderName}
+            value={formData.policy_holder_name}
             onChange={(e) =>
-              handleInputChange("policyHolderName", e.target.value)
+              handleInputChange("policy_holder_name", e.target.value)
             }
           />
         </div>
@@ -317,29 +360,29 @@ export default function PatientIntake() {
             id="policyHolderDob"
             type="date"
             placeholder="mm/dd/yyyy"
-            value={formData.policyHolderDob}
+            value={formData.policy_holder_date_of_birth}
             onChange={(e) =>
-              handleInputChange("policyHolderDob", e.target.value)
+              handleInputChange("policy_holder_date_of_birth", e.target.value)
             }
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="relationshipToPatient">Relationship to Patient</Label>
           <Select
-            value={formData.relationshipToPatient}
+            value={formData.relationship_to_patient}
             onValueChange={(value) =>
-              handleInputChange("relationshipToPatient", value)
+              handleInputChange("relationship_to_patient", value)
             }
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select relationship" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="self">Self</SelectItem>
-              <SelectItem value="spouse">Spouse</SelectItem>
-              <SelectItem value="child">Child</SelectItem>
-              <SelectItem value="parent">Parent</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="Self">Self</SelectItem>
+              <SelectItem value="Spouse">Spouse</SelectItem>
+              <SelectItem value="Child">Child</SelectItem>
+              <SelectItem value="Parent">Parent</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -371,9 +414,9 @@ export default function PatientIntake() {
         <Input
           id="primaryCarePhysician"
           placeholder="Dr. Name, Practice"
-          value={formData.primaryCarePhysician}
+          value={formData.primary_care_physician}
           onChange={(e) =>
-            handleInputChange("primaryCarePhysician", e.target.value)
+            handleInputChange("primary_care_physician", e.target.value)
           }
         />
       </div>
@@ -427,9 +470,9 @@ export default function PatientIntake() {
         <Textarea
           id="currentMedications"
           placeholder="List all current medications, dosages, and frequency"
-          value={formData.currentMedications}
+          value={formData.current_medications}
           onChange={(e) =>
-            handleInputChange("currentMedications", e.target.value)
+            handleInputChange("current_medications", e.target.value)
           }
           rows={3}
         />
@@ -439,9 +482,9 @@ export default function PatientIntake() {
         <Textarea
           id="previousSurgeries"
           placeholder="List any previous surgeries and dates"
-          value={formData.previousSurgeries}
+          value={formData.previous_surgeries}
           onChange={(e) =>
-            handleInputChange("previousSurgeries", e.target.value)
+            handleInputChange("previous_surgeries", e.target.value)
           }
           rows={3}
         />
@@ -451,9 +494,9 @@ export default function PatientIntake() {
         <Textarea
           id="familyMedicalHistory"
           placeholder="Notable family medical history (heart disease, diabetes, cancer, etc.)"
-          value={formData.familyMedicalHistory}
+          value={formData.family_medical_history}
           onChange={(e) =>
-            handleInputChange("familyMedicalHistory", e.target.value)
+            handleInputChange("family_medical_history", e.target.value)
           }
           rows={3}
         />
@@ -462,20 +505,22 @@ export default function PatientIntake() {
         <div className="space-y-2">
           <Label>Smoking Status</Label>
           <RadioGroup
-            value={formData.smokingStatus}
-            onValueChange={(value) => handleInputChange("smokingStatus", value)}
+            value={formData.smoking_status}
+            onValueChange={(value) =>
+              handleInputChange("smoking_status", value)
+            }
             className="space-y-2"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="never" id="never" />
+              <RadioGroupItem value="Never Smoked" id="never" />
               <Label htmlFor="never">Never</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="former" id="former" />
+              <RadioGroupItem value="Former" id="former" />
               <Label htmlFor="former">Former</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="current" id="current" />
+              <RadioGroupItem value="Current" id="current" />
               <Label htmlFor="current">Current</Label>
             </div>
           </RadioGroup>
@@ -483,22 +528,22 @@ export default function PatientIntake() {
         <div className="space-y-2">
           <Label>Alcohol Consumption</Label>
           <RadioGroup
-            value={formData.alcoholConsumption}
+            value={formData.alcohol_consumption}
             onValueChange={(value) =>
-              handleInputChange("alcoholConsumption", value)
+              handleInputChange("alcohol_consumption", value)
             }
             className="space-y-2"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="none" id="none-alcohol" />
+              <RadioGroupItem value="None" id="none-alcohol" />
               <Label htmlFor="none-alcohol">None</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="occasional" id="occasional" />
+              <RadioGroupItem value="1-2 drinks per week" id="occasional" />
               <Label htmlFor="occasional">Occasional</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="regular" id="regular" />
+              <RadioGroupItem value="Regular" id="regular" />
               <Label htmlFor="regular">Regular</Label>
             </div>
           </RadioGroup>
@@ -506,22 +551,22 @@ export default function PatientIntake() {
         <div className="space-y-2">
           <Label>Exercise Frequency</Label>
           <RadioGroup
-            value={formData.exerciseFrequency}
+            value={formData.exercise_frequency}
             onValueChange={(value) =>
-              handleInputChange("exerciseFrequency", value)
+              handleInputChange("exercise_frequency", value)
             }
             className="space-y-2"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="none" id="none-exercise" />
+              <RadioGroupItem value="None" id="none-exercise" />
               <Label htmlFor="none-exercise">None</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="1-3-week" id="1-3-week" />
+              <RadioGroupItem value="3 times per week" id="1-3-week" />
               <Label htmlFor="1-3-week">1-3x/week</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="daily" id="daily" />
+              <RadioGroupItem value="Daily" id="daily" />
               <Label htmlFor="daily">Daily</Label>
             </div>
           </RadioGroup>
@@ -554,8 +599,8 @@ export default function PatientIntake() {
         <Textarea
           id="chiefComplaint"
           placeholder="Please describe your main reason for today's visit"
-          value={formData.chiefComplaint}
-          onChange={(e) => handleInputChange("chiefComplaint", e.target.value)}
+          value={formData.chief_complaint}
+          onChange={(e) => handleInputChange("chief_complaint", e.target.value)}
           rows={4}
         />
       </div>
@@ -564,18 +609,21 @@ export default function PatientIntake() {
           How long have you been experiencing these symptoms?
         </Label>
         <Select
-          value={formData.symptomDuration}
-          onValueChange={(value) => handleInputChange("symptomDuration", value)}
+          value={formData.symptoms_duration}
+          onValueChange={(value) =>
+            handleInputChange("symptoms_duration", value)
+          }
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select duration" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="less-than-week">Less than a week</SelectItem>
-            <SelectItem value="1-2-weeks">1-2 weeks</SelectItem>
-            <SelectItem value="1-month">About a month</SelectItem>
-            <SelectItem value="several-months">Several months</SelectItem>
-            <SelectItem value="over-year">Over a year</SelectItem>
+            <SelectItem value="Less than a week">Less than a week</SelectItem>
+            <SelectItem value="1-2 weeks">1-2 weeks</SelectItem>
+            <SelectItem value="3 weeks">3 weeks</SelectItem>
+            <SelectItem value="About a month">About a month</SelectItem>
+            <SelectItem value="Several months">Several months</SelectItem>
+            <SelectItem value="Over a year">Over a year</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -588,11 +636,9 @@ export default function PatientIntake() {
               <button
                 key={i + 1}
                 type="button"
-                onClick={() =>
-                  handleInputChange("painLevel", (i + 1).toString())
-                }
+                onClick={() => handleInputChange("current_pain_level", i + 1)}
                 className={`w-8 h-8 rounded-md border text-sm font-medium transition-colors ${
-                  formData.painLevel === (i + 1).toString()
+                  formData.current_pain_level === i + 1
                     ? "bg-red-500 text-white border-red-500"
                     : "bg-white text-gray-700 border-gray-300 hover:border-red-400"
                 }`}
@@ -611,9 +657,12 @@ export default function PatientIntake() {
         <Textarea
           id="previousTreatment"
           placeholder="Have you seen other doctors or tried treatments for this condition?"
-          value={formData.previousTreatment}
+          value={formData.previous_treatment_for_condition}
           onChange={(e) =>
-            handleInputChange("previousTreatment", e.target.value)
+            handleInputChange(
+              "previous_treatment_for_condition",
+              e.target.value
+            )
           }
           rows={3}
         />
@@ -623,8 +672,10 @@ export default function PatientIntake() {
         <Textarea
           id="additionalNotes"
           placeholder="Any other information you'd like your provider to know"
-          value={formData.additionalNotes}
-          onChange={(e) => handleInputChange("additionalNotes", e.target.value)}
+          value={formData.additional_notes}
+          onChange={(e) =>
+            handleInputChange("additional_notes", e.target.value)
+          }
           rows={3}
         />
       </div>
@@ -633,10 +684,16 @@ export default function PatientIntake() {
           Previous
         </Button>
         <Button
-          onClick={() => markSectionComplete("concerns")}
-          className="bg-blue-800 hover:bg-blue-700"
+          type="submit"
+          className="bg-blue-800 hover:bg-blue-700 flex items-center"
+          disabled={loading}
         >
-          Complete Forms
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="mr-2 h-4 w-4" />
+          )}
+          {loading ? "Submitting..." : "Complete & Submit Forms"}
         </Button>
       </div>
     </div>
@@ -659,70 +716,70 @@ export default function PatientIntake() {
 
   return (
     <MainLayout>
-      <div className="p-8 bg-gray-50 min-h-screen">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Patient Intake Forms
-            </h1>
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-gray-600">
-                Section {getCurrentSectionNumber()}/4:{" "}
-                {sections.find((s) => s.id === activeSection)?.name}
-              </p>
+      <form onSubmit={handleSubmit}>
+        <div className="p-8 bg-gray-50 min-h-screen">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Patient Intake Forms
+              </h1>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-gray-600">
+                  Section {getCurrentSectionNumber()}/4:{" "}
+                  {sections.find((s) => s.id === activeSection)?.name}
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-3">
+              <Button variant="outline" className="flex items-center bg-white">
+                <Save className="mr-2 h-4 w-4" /> Save Draft
+              </Button>
             </div>
           </div>
-          <div className="flex space-x-3">
-            <Button variant="outline" className="flex items-center bg-white">
-              <Save className="mr-2 h-4 w-4" /> Save Draft
-            </Button>
-            <Button className="bg-blue-800 hover:bg-blue-700 flex items-center">
-              <Send className="mr-2 h-4 w-4" /> Submit Forms
-            </Button>
-          </div>
-        </div>
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
-        <div className="mb-8">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-in-out"
-              style={{ width: `${getProgressPercentage()}%` }}
-            />
+          <div className="mb-8">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-800 h-2 rounded-full transition-all duration-300 ease-in-out"
+                style={{ width: `${getProgressPercentage()}%` }}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between mb-8 bg-gray-100 p-1 rounded-full">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            const isActive = activeSection === section.id;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex-1 justify-center ${
-                  isActive
-                    ? "text-gray-900 bg-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                style={{
-                  backgroundColor: isActive ? "white" : "#F1F5F9",
-                }}
-              >
-                <Icon
-                  className={`h-4 w-4 ${
-                    isActive ? "text-gray-700" : "text-gray-400"
+          <div className="flex items-center justify-between mb-8 bg-gray-100 p-1 rounded-full">
+            {sections.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex-1 justify-center ${
+                    isActive
+                      ? "text-gray-900 bg-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
-                />
-                <span className="whitespace-nowrap">{section.name}</span>
-              </button>
-            );
-          })}
-        </div>
+                  style={{
+                    backgroundColor: isActive ? "white" : "#F1F5F9",
+                  }}
+                >
+                  <Icon
+                    className={`h-4 w-4 ${
+                      isActive ? "text-gray-700" : "text-gray-400"
+                    }`}
+                  />
+                  <span className="whitespace-nowrap">{section.name}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        <Card className="rounded-xl shadow-sm">
-          <CardContent className="p-8">{renderSectionContent()}</CardContent>
-        </Card>
-      </div>
+          <Card className="rounded-xl shadow-sm">
+            <CardContent className="p-8">{renderSectionContent()}</CardContent>
+          </Card>
+        </div>
+      </form>
     </MainLayout>
   );
 }

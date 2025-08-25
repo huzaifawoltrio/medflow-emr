@@ -37,7 +37,7 @@ const dummyAppointments = [
     endTime: "11:50",
     timeDisplay: "10:30 - 11:50",
     color: "bg-blue-200",
-    borderColor: "border-l-blue-500",
+    borderColor: "border-l-blue-800",
     textColor: "text-blue-800",
   },
   {
@@ -138,8 +138,8 @@ const AppointmentModal = ({
             {/* Header with logo */}
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
-                <span className="text-lg md:text-xl font-bold text-blue-600">
+                <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-800" />
+                <span className="text-lg md:text-xl font-bold text-blue-800">
                   Daisy
                 </span>
               </div>

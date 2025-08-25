@@ -316,7 +316,7 @@ export default function SecureMessaging() {
                       key={message.id}
                       className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
                         selectedMessage?.id === message.id
-                          ? "bg-blue-50 border-l-4 border-l-blue-600"
+                          ? "bg-blue-50 border-l-4 border-l-blue-800"
                           : ""
                       }`}
                       onClick={() => setSelectedMessage(message)}

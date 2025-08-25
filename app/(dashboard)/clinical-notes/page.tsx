@@ -273,7 +273,7 @@ export default function ClinicalNotes() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                        <User className="h-4 w-4 text-blue-600" />
+                        <User className="h-4 w-4 text-blue-800" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
@@ -287,7 +287,7 @@ export default function ClinicalNotes() {
                             <Calendar className="h-3 w-3 mr-1.5" />
                             {note.date}
                           </span>
-                          <span className="text-blue-600 font-medium">
+                          <span className="text-blue-800 font-medium">
                             {note.type}
                           </span>
                           <Badge
@@ -358,7 +358,7 @@ export default function ClinicalNotes() {
                   onClick={() => handleTemplateSelect(template.id)}
                 >
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <template.icon className="h-5 w-5 text-blue-600" />
+                    <template.icon className="h-5 w-5 text-blue-800" />
                   </div>
                   <span className="text-sm font-medium">{template.name}</span>
                 </Button>

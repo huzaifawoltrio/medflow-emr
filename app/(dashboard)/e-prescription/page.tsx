@@ -344,7 +344,7 @@ export default function EPrescription() {
                   <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                        <User className="h-5 w-5 text-blue-600" />
+                        <User className="h-5 w-5 text-blue-800" />
                       </div>
                       <div>
                         <div className="flex items-center flex-wrap gap-x-2">

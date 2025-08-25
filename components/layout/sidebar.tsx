@@ -123,14 +123,14 @@ export function Sidebar({
                 className={cn(
                   "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
                   isActive
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-blue-50 text-blue-800"
                     : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                 )}
               >
                 <item.icon
                   className={cn(
                     "mr-3 h-5 w-5",
-                    isActive ? "text-blue-600" : "text-gray-400"
+                    isActive ? "text-blue-800" : "text-gray-400"
                   )}
                 />
                 {item.name}
