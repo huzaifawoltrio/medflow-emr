@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
                 id="email"
                 type="email"
                 placeholder="enter your email address"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-800 focus:border-blue-800"
               />
             </div>
 
@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
 
           <div className="text-center mt-6">
             <Link href="/login">
-              <span className="text-sm text-blue-600 hover:underline">
+              <span className="text-sm text-blue-800 hover:underline">
                 Back to Sign in
               </span>
             </Link>

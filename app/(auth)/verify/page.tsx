@@ -108,7 +108,7 @@ export default function SecurityVerification() {
             <div className="text-center">
               <Button
                 variant="link"
-                className="text-blue-600 hover:text-blue-700"
+                className="text-blue-800 hover:text-blue-700"
               >
                 Resend Code
               </Button>
@@ -116,7 +116,7 @@ export default function SecurityVerification() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-2">
-                <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <Info className="h-4 w-4 text-blue-800 mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-blue-800">
                   Two-factor authentication is required for HIPAA compliance and
                   enhanced security.

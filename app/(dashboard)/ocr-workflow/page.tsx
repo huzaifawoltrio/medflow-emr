@@ -26,7 +26,7 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
             <div
               className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-medium ${
                 index + 1 === currentStep
-                  ? "bg-blue-800 text-white border-blue-600"
+                  ? "bg-blue-800 text-white border-blue-800"
                   : "bg-white text-gray-600 border-gray-300"
               }`}
             >
@@ -35,7 +35,7 @@ const Stepper = ({ currentStep }: { currentStep: number }) => {
             <p
               className={`mt-2 text-xs ${
                 index + 1 === currentStep
-                  ? "text-blue-600 font-medium"
+                  ? "text-blue-800 font-medium"
                   : "text-gray-500"
               }`}
             >
@@ -93,7 +93,7 @@ const ProcessingScreen = ({
 
   return (
     <div className="text-center p-12 bg-white rounded-lg shadow-sm">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto"></div>
       <h2 className="mt-4 text-xl font-semibold text-gray-900">
         Processing Document
       </h2>
@@ -170,7 +170,7 @@ const EditableField = ({
 const ValidationForm = () => (
   <div>
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start space-x-3 mb-6">
-      <AlertTriangle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+      <AlertTriangle className="h-5 w-5 text-blue-800 flex-shrink-0 mt-0.5" />
       <p className="text-sm text-blue-800">
         Please review and verify the extracted information below. Fields with
         lower confidence scores may require manual correction.
@@ -179,7 +179,7 @@ const ValidationForm = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
         <h3 className="font-semibold text-lg flex items-center">
-          <User className="mr-2 h-5 w-5 text-blue-600" /> Personal Information
+          <User className="mr-2 h-5 w-5 text-blue-800" /> Personal Information
         </h3>
         <div className="space-y-3">
           <EditableField label="First Name" value="John" confidence={98} />
@@ -209,7 +209,7 @@ const ValidationForm = () => (
       </div>
       <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
         <h3 className="font-semibold text-lg flex items-center">
-          <MapPin className="mr-2 h-5 w-5 text-blue-600" /> Address Information
+          <MapPin className="mr-2 h-5 w-5 text-blue-800" /> Address Information
         </h3>
         <div className="space-y-3">
           <EditableField
@@ -229,7 +229,7 @@ const ValidationForm = () => (
       </div>
       <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
         <h3 className="font-semibold text-lg flex items-center">
-          <Shield className="mr-2 h-5 w-5 text-blue-600" /> Insurance
+          <Shield className="mr-2 h-5 w-5 text-blue-800" /> Insurance
           Information
         </h3>
         <div className="space-y-3">
@@ -248,7 +248,7 @@ const ValidationForm = () => (
       </div>
       <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
         <h3 className="font-semibold text-lg flex items-center">
-          <Phone className="mr-2 h-5 w-5 text-blue-600" /> Emergency Contact
+          <Phone className="mr-2 h-5 w-5 text-blue-800" /> Emergency Contact
         </h3>
         <div className="space-y-3">
           <EditableField
@@ -342,7 +342,7 @@ export default function OCRWorkflow() {
 
             {/* Upload Drop Zone */}
             <div
-              className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-500 transition"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:border-blue-800 transition"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
@@ -356,7 +356,7 @@ export default function OCRWorkflow() {
               />
               <label
                 htmlFor="file-upload"
-                className="font-semibold text-blue-600 cursor-pointer hover:underline"
+                className="font-semibold text-blue-800 cursor-pointer hover:underline"
               >
                 Choose file or drag and drop
               </label>

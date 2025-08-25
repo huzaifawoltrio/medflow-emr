@@ -130,7 +130,7 @@ export function Sidebar({
                 <item.icon
                   className={cn(
                     "mr-3 h-5 w-5",
-                    isActive ? "text-blue-600" : "text-gray-400"
+                    isActive ? "text-blue-800" : "text-gray-400"
                   )}
                 />
                 {item.name}

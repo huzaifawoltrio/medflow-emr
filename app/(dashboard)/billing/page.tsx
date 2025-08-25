@@ -549,7 +549,7 @@ export default function Billing() {
                   className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-blue-600">{code.code}</span>
+                    <span className="font-bold text-blue-800">{code.code}</span>
                     <span className="font-bold text-green-600">
                       ${code.amount}
                     </span>

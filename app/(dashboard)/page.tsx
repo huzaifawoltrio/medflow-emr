@@ -58,7 +58,7 @@ export default function Dashboard() {
               <input
                 type="text"
                 placeholder="Search patients..."
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 w-full"
               />
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                  <CalendarCheck className="h-5 w-5 text-blue-500 mt-1 shrink-0" />
+                  <CalendarCheck className="h-5 w-5 text-blue-800 mt-1 shrink-0" />
                   <div className="flex-1">
                     <p className="font-medium text-sm">Appointment confirmed</p>
                     <p className="text-xs text-gray-500">
@@ -233,7 +233,7 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 bg-blue-50 border-l-4 border-blue-600 rounded-md flex justify-between items-center">
+                <div className="p-3 bg-blue-50 border-l-4 border-blue-800 rounded-md flex justify-between items-center">
                   <div>
                     <p className="font-semibold text-sm">John Doe</p>
                     <p className="text-xs text-gray-500">Follow-up • 9:00 AM</p>

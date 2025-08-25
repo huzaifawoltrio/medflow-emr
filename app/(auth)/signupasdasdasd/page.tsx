@@ -208,14 +208,14 @@ export default function Signup() {
                   I agree to the{" "}
                   <Link
                     href="/terms"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-800 hover:text-blue-700"
                   >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
                   <Link
                     href="/privacy"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-800 hover:text-blue-700"
                   >
                     Privacy Policy
                   </Link>
@@ -237,7 +237,7 @@ export default function Signup() {
               </span>
               <Link
                 href="/auth/login"
-                className="text-sm text-blue-600 hover:text-blue-700"
+                className="text-sm text-blue-800 hover:text-blue-700"
               >
                 Sign In
               </Link>
@@ -245,7 +245,7 @@ export default function Signup() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <div className="flex items-start space-x-2">
-                <Shield className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <Shield className="h-4 w-4 text-blue-800 mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-blue-800">
                   <p className="font-medium">HIPAA Compliant Security</p>
                   <p>
