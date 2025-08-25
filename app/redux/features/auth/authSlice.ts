@@ -46,6 +46,7 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.refreshToken = null;
       state.error = null;
+      state.success = false; // <-- FIX: Reset the success flag here
     },
   },
   extraReducers: (builder) => {
