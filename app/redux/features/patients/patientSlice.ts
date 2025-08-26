@@ -1,6 +1,10 @@
 // redux/features/patient/patientSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { registerPatient, fetchPatients } from "./patientActions";
+import {
+  registerPatient,
+  fetchPatients,
+  fetchPatientByUsername,
+} from "./patientActions";
 
 interface Patient {
   user_id: number;
@@ -13,6 +17,7 @@ interface Patient {
 
 interface PatientState {
   patients: Patient[];
+  selectedPatient: Patient | null;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -20,6 +25,7 @@ interface PatientState {
 
 const initialState: PatientState = {
   patients: [],
+  selectedPatient: null,
   loading: false,
   error: null,
   success: false,
@@ -61,7 +67,26 @@ const patientSlice = createSlice({
       .addCase(fetchPatients.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(fetchPatientByUsername.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.selectedPatient = null;
+      })
+      .addCase(
+        fetchPatientByUsername.fulfilled,
+        (state, action: PayloadAction<Patient>) => {
+          state.loading = false;
+          state.selectedPatient = action.payload;
+        }
+      )
+      .addCase(
+        fetchPatientByUsername.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        }
+      );
   },
 });
 

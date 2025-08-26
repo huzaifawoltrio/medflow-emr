@@ -66,9 +66,8 @@ export default function PatientsPage() {
     return age;
   };
 
-  // Placeholder functions for dynamic styling, as these fields are not in the API response
+  // Placeholder functions for dynamic styling
   const getPriorityColor = (patientId: number) => {
-    // Example logic: assign priority based on patient ID for demonstration
     if (patientId % 3 === 0)
       return "bg-green-100 text-green-800 border-green-200";
     if (patientId % 2 === 0)
@@ -205,7 +204,7 @@ export default function PatientsPage() {
               <Card
                 key={patient.user_id}
                 className="rounded-xl shadow-sm border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer group bg-gradient-to-r from-white to-gray-50/30"
-                onClick={() => router.push(`/patients/${patient.user_id}`)}
+                onClick={() => router.push(`/patients/${patient.username}`)}
               >
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-6">

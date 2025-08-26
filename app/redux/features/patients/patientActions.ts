@@ -35,7 +35,6 @@ interface Patient {
   chief_complaint: string;
   symptoms_duration: string;
   current_pain_level: number;
-  previous_treatment_for_condition: string;
   additional_notes: string;
   profile_picture_url?: string;
 }
@@ -52,6 +51,27 @@ export const fetchPatients = createAsyncThunk<
   try {
     const response = await api.get("/patients");
     return response.data.patients;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});
+
+/**
+ * Async thunk for fetching a single patient by username.
+ * It returns a single patient object on success.
+ */
+export const fetchPatientByUsername = createAsyncThunk<
+  Patient,
+  string, // The username will be passed as an argument
+  { rejectValue: string }
+>("patient/fetchByUsername", async (username, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/patients/search/${username}`);
+    return response.data.patient;
   } catch (error: any) {
     if (error.response && error.response.data.message) {
       return rejectWithValue(error.response.data.message);
