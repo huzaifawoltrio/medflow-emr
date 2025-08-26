@@ -30,9 +30,9 @@ const navigation = [
   { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
-  { name: "e-Prescription", href: "/e-prescription", icon: Pill },
+  // { name: "e-Prescription", href: "/e-prescription", icon: Pill },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
-  { name: "Clinical Notes", href: "/clinical-notes", icon: ClipboardList },
+  { name: "Documents", href: "/documents", icon: ClipboardList },
   { name: "File Management", href: "/file-management", icon: FolderOpen },
   { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
 ];
