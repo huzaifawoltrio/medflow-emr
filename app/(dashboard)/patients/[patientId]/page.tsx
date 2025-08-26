@@ -218,7 +218,7 @@ export default function PatientDetailPage({
         <CardContent className="grid grid-cols-2 gap-3">
           <Button
             onClick={() => setIsOrderMedOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-left justify-start"
+            className="bg-blue-800 hover:bg-blue-700 text-left justify-start"
           >
             <Pill className="mr-2 h-4 w-4" />
             Order Medication
@@ -317,7 +317,7 @@ export default function PatientDetailPage({
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
             >
               <div className="flex items-center space-x-3">
-                <Pill className="h-4 w-4 text-blue-600" />
+                <Pill className="h-4 w-4 text-blue-800" />
                 <span className="font-medium">{med}</span>
               </div>
               <div className="flex gap-2">
@@ -341,7 +341,7 @@ export default function PatientDetailPage({
         <h2 className="text-lg font-semibold">Medication Management</h2>
         <Button
           onClick={() => setIsOrderMedOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700"
         >
           <Plus className="mr-2 h-4 w-4" />
           Order New Medication
@@ -500,7 +500,7 @@ export default function PatientDetailPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button
               onClick={() => setIsTelemedicineOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 h-16 text-lg"
+              className="bg-blue-800 hover:bg-blue-700 h-16 text-lg"
             >
               <Video className="mr-2 h-5 w-5" />
               Start Video Call with Patient
@@ -638,7 +638,7 @@ export default function PatientDetailPage({
           </Button>
           <Button
             onClick={handleOrderMedication}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-800 hover:bg-blue-700"
           >
             Order Medication
           </Button>
@@ -875,7 +875,7 @@ export default function PatientDetailPage({
           </Button>
           <Button
             onClick={() => setIsTelemedicineOpen(false)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-800 hover:bg-blue-700"
           >
             Start Call
           </Button>
@@ -1095,7 +1095,7 @@ export default function PatientDetailPage({
                 <div className="relative">
                   <Avatar className="w-16 h-16 ring-4 ring-blue-100 ring-offset-2">
                     <AvatarImage src={patientData.avatar} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-lg font-semibold">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-800 text-white text-lg font-semibold">
                       {patientData.initials}
                     </AvatarFallback>
                   </Avatar>
@@ -1178,7 +1178,7 @@ export default function PatientDetailPage({
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 font-medium shadow-sm"
+                    className="bg-blue-800 hover:bg-blue-700 rounded-lg px-4 py-2 font-medium shadow-sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Quick Order
