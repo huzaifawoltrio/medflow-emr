@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,51 +14,80 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Plus, Stethoscope, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Stethoscope,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
+import {
+  fetchAppointments,
+  Appointment,
+} from "@/app/redux/features/appointments/appointmentActions";
+import { Input } from "@/components/ui/input";
 
-const dummyAppointments = [
-  {
-    id: 1,
-    title: "Doctor/Staff Schedule",
-    day: 0, // Sunday
-    startTime: "09:00",
-    endTime: "10:20",
-    timeDisplay: "09:00 - 10:20",
-    color: "bg-blue-100",
-    borderColor: "border-l-blue-400",
-    textColor: "text-blue-700",
-  },
-  {
-    id: 2,
-    title: "Doctor/Staff Schedule",
-    day: 1, // Monday
-    startTime: "10:30",
-    endTime: "11:50",
-    timeDisplay: "10:30 - 11:50",
-    color: "bg-blue-200",
-    borderColor: "border-l-blue-800",
-    textColor: "text-blue-800",
-  },
-  {
-    id: 3,
-    title: "Doctor/Staff Schedule",
-    day: 2, // Tuesday
-    startTime: "12:45",
-    endTime: "14:00",
-    timeDisplay: "12:45 - 14:00",
-    color: "bg-cyan-100",
-    borderColor: "border-l-cyan-400",
-    textColor: "text-cyan-700",
-  },
-];
+// --- Helper Functions & Types ---
 
+interface FormattedAppointment {
+  id: number;
+  title: string;
+  date: Date; // Full date object instead of just day
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+  timeDisplay: string; // "HH:mm - HH:mm"
+  color: string;
+  borderColor: string;
+  textColor: string;
+}
+
+// This function transforms the raw API data into the format the calendar component needs
+const formatAppointmentsForCalendar = (
+  appointments: Appointment[] = []
+): FormattedAppointment[] => {
+  return appointments.map((appt) => {
+    const startDate = new Date(appt.appointment_datetime);
+    const endDate = new Date(startDate.getTime() + appt.duration * 60000);
+
+    const formatTime = (date: Date) => date.toTimeString().substring(0, 5);
+
+    return {
+      id: appt.id,
+      title: appt.services.join(", "),
+      date: startDate, // Store the full date
+      startTime: formatTime(startDate),
+      endTime: formatTime(endDate),
+      timeDisplay: `${formatTime(startDate)} - ${formatTime(endDate)}`,
+      // Dynamic coloring based on status (can be customized)
+      color: appt.status === "Scheduled" ? "bg-blue-100" : "bg-gray-100",
+      borderColor:
+        appt.status === "Scheduled" ? "border-l-blue-400" : "border-l-gray-400",
+      textColor:
+        appt.status === "Scheduled" ? "text-blue-700" : "text-gray-700",
+    };
+  });
+};
+
+// Helper function to check if two dates are the same day
+const isSameDay = (date1: Date, date2: Date) => {
+  return (
+    date1.getDate() === date2.getDate() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getFullYear() === date2.getFullYear()
+  );
+};
+
+// Static data for sidebar cards
 const providerAvailability = [
   { name: "Dr. Smith", status: "Available", color: "green" },
   { name: "Dr. Brown", status: "Available", color: "green" },
   { name: "Dr. Johnson", status: "Available", color: "green" },
 ];
 
-// AppointmentModal Component
+// --- Components ---
+
 const AppointmentModal = ({
   isOpen,
   onClose,
@@ -67,9 +95,12 @@ const AppointmentModal = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2023, 8)); // September 2023
+  // This modal remains static for now as per the request
+  const [selectedDate, setSelectedDate] = useState<number | null>(18);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(
+    "10:30 AM"
+  );
+  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 8)); // September 2025
 
   const timeSlots = [
     "8:30 AM",
@@ -87,24 +118,15 @@ const AppointmentModal = ({
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-
-    // Add all days of the month
+    const days = Array(startingDayOfWeek).fill(null);
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
-
     return days;
   };
 
   const formatSelectedDate = () => {
-    if (!selectedDate) return "Monday, 18. September";
+    if (!selectedDate) return "Select a date";
     const date = new Date(
       currentMonth.getFullYear(),
       currentMonth.getMonth(),
@@ -118,9 +140,13 @@ const AppointmentModal = ({
   };
 
   const navigateMonth = (direction: "prev" | "next") => {
-    const newDate = new Date(currentMonth);
-    newDate.setMonth(currentMonth.getMonth() + (direction === "next" ? 1 : -1));
-    setCurrentMonth(newDate);
+    setCurrentMonth(
+      new Date(
+        currentMonth.setMonth(
+          currentMonth.getMonth() + (direction === "next" ? 1 : -1)
+        )
+      )
+    );
   };
 
   const monthName = currentMonth.toLocaleDateString("en-US", {
@@ -303,18 +329,21 @@ const AppointmentModal = ({
 
 const CustomWeekCalendar = ({
   appointments,
+  currentWeek,
+  setCurrentWeek,
   onAddNewClick,
+  loading,
 }: {
-  appointments: typeof dummyAppointments;
+  appointments: FormattedAppointment[];
+  currentWeek: Date;
+  setCurrentWeek: (date: Date) => void;
   onAddNewClick: () => void;
+  loading: boolean;
 }) => {
-  const [currentWeek, setCurrentWeek] = useState(new Date(2025, 1, 14)); // February 14, 2025
-  const [isMobile, setIsMobile] = useState(false);
-
   const getWeekDays = (startDate: Date) => {
     const days = [];
     const start = new Date(startDate);
-
+    start.setDate(start.getDate() - start.getDay()); // Sunday
     for (let i = 0; i < 7; i++) {
       const day = new Date(start);
       day.setDate(start.getDate() + i);
@@ -332,22 +361,20 @@ const CustomWeekCalendar = ({
   const getAppointmentPosition = (startTime: string, endTime: string) => {
     const [startHour, startMin] = startTime.split(":").map(Number);
     const [endHour, endMin] = endTime.split(":").map(Number);
-
     const startMinutes = (startHour - 9) * 60 + startMin;
     const endMinutes = (endHour - 9) * 60 + endMin;
-
-    const top = (startMinutes / 60) * 60; // 60px per hour
+    const top = (startMinutes / 60) * 60;
     const height = ((endMinutes - startMinutes) / 60) * 60;
-
-    return { top: `${top}px`, height: `${height}px` };
+    return { top: `${top}px`, height: `${Math.max(height, 48)}px` };
   };
 
   const formatWeekRange = (startDate: Date) => {
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
-
-    const monthName = startDate.toLocaleDateString("en-US", { month: "long" });
-    return `${monthName}, ${startDate.getDate()}-${endDate.getDate()}`;
+    const start = new Date(startDate);
+    start.setDate(start.getDate() - start.getDay());
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const monthName = start.toLocaleDateString("en-US", { month: "long" });
+    return `${monthName} ${start.getDate()} - ${end.getDate()}, ${start.getFullYear()}`;
   };
 
   const navigateWeek = (direction: "prev" | "next") => {
@@ -358,38 +385,39 @@ const CustomWeekCalendar = ({
 
   return (
     <div className="bg-white rounded-2xl border border-blue-200 p-3 md:p-6">
-      {/* Calendar Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-          {formatWeekRange(currentWeek)}
-        </h2>
-        <div className="flex items-center gap-2 md:gap-4">
-          <Select defaultValue="february">
-            <SelectTrigger className="w-24 md:w-32 border-gray-300 h-9 md:h-auto text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="february">February</SelectItem>
-              <SelectItem value="march">March</SelectItem>
-              <SelectItem value="april">April</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
           <Button
-            className="bg-blue-800 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg text-sm md:text-base h-9 md:h-auto touch-manipulation"
-            onClick={onAddNewClick}
+            variant="outline"
+            size="icon"
+            onClick={() => navigateWeek("prev")}
           >
-            <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Add new</span>
-            <span className="sm:hidden">Add</span>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900 text-center w-48">
+            {formatWeekRange(currentWeek)}
+          </h2>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigateWeek("next")}
+          >
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+        <Button
+          className="bg-blue-800 hover:bg-blue-700"
+          onClick={onAddNewClick}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add new
+        </Button>
       </div>
 
       <div className="relative overflow-x-auto">
-        {/* Week Header */}
         <div className="grid grid-cols-8 border-b border-gray-200 pb-2 md:pb-4 mb-2 md:mb-4 min-w-[600px] md:min-w-0">
           <div className="text-xs md:text-sm text-gray-500 font-medium px-1">
-            Week
+            Time
           </div>
           {weekDays.map((day, index) => (
             <div key={index} className="text-center px-1">
@@ -403,75 +431,79 @@ const CustomWeekCalendar = ({
           ))}
         </div>
 
-        {/* Time Grid */}
         <div className="relative min-w-[600px] md:min-w-0">
-          {/* Time Labels */}
-          <div className="absolute left-0 top-0 w-12 md:w-16">
-            {timeSlots.map((time, index) => (
+          <div className="absolute left-0 top-0 w-16 md:w-20 z-10">
+            {timeSlots.map((time) => (
               <div
                 key={time}
-                className="h-12 md:h-15 flex items-start pt-1 md:pt-2 text-xs text-gray-400"
-                style={{ height: "48px" }}
+                className="flex items-start pt-2 md:pt-3 text-xs text-gray-400 bg-white"
+                style={{ height: "60px" }}
               >
                 {time}
               </div>
             ))}
           </div>
 
-          {/* Calendar Body */}
-          <div className="ml-12 md:ml-16 relative">
-            {/* Horizontal Lines */}
+          <div className="ml-16 md:ml-20 relative">
+            {/* Background lines */}
             {timeSlots.map((_, index) => (
               <div
                 key={index}
-                className="border-t border-gray-100 h-12 md:h-15"
-                style={{ height: "48px" }}
+                className="border-t border-gray-200"
+                style={{ height: "60px" }}
               />
             ))}
 
-            {/* Day Columns */}
             <div className="absolute inset-0 grid grid-cols-7">
               {weekDays.map((day, dayIndex) => (
                 <div
                   key={dayIndex}
-                  className="relative border-r border-gray-50 last:border-r-0"
+                  className="relative bg-white border-r border-gray-100 last:border-r-0"
                 >
-                  {/* Appointments for this day */}
-                  {appointments
-                    .filter((apt) => apt.day === dayIndex)
-                    .map((appointment) => {
-                      const position = getAppointmentPosition(
-                        appointment.startTime,
-                        appointment.endTime
-                      );
-                      return (
-                        <div
-                          key={appointment.id}
-                          className={`absolute left-0.5 right-0.5 md:left-1 md:right-1 ${appointment.color} ${appointment.borderColor} border-l-2 md:border-l-4 rounded-md p-1 md:p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow touch-manipulation`}
-                          style={{
-                            top: position.top,
-                            height: position.height,
-                            minHeight: "32px",
-                          }}
-                        >
+                  {/* Vertical hour lines */}
+                  {timeSlots.map((_, hourIndex) => (
+                    <div
+                      key={hourIndex}
+                      className="absolute left-0 right-0 border-t border-gray-100"
+                      style={{ top: `${hourIndex * 60}px`, height: "1px" }}
+                    />
+                  ))}
+
+                  {loading ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-300" />
+                    </div>
+                  ) : (
+                    appointments
+                      .filter((apt) => isSameDay(apt.date, day))
+                      .map((appointment) => {
+                        const position = getAppointmentPosition(
+                          appointment.startTime,
+                          appointment.endTime
+                        );
+                        return (
                           <div
-                            className={`text-xs ${appointment.textColor} mb-1 flex items-center`}
+                            key={appointment.id}
+                            className={`absolute left-2 right-2 ${appointment.color} ${appointment.borderColor} border-l-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-all duration-200 z-20 flex flex-col justify-start p-2 overflow-hidden`}
+                            style={{
+                              top: position.top,
+                              height: position.height,
+                              minHeight: "48px",
+                            }}
                           >
-                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-current mr-1 opacity-60"></div>
-                            <span className="truncate">
-                              {appointment.timeDisplay}
-                            </span>
-                          </div>
-                          <div
-                            className={`text-xs md:text-sm font-medium ${appointment.textColor} leading-tight`}
-                          >
-                            <span className="line-clamp-2">
+                            <div className="text-xs text-gray-700 mb-1 flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-current inline-block" />
+                              <span className="font-semibold leading-tight">
+                                {appointment.timeDisplay}
+                              </span>
+                            </div>
+                            <div className="text-sm font-medium text-gray-900 leading-snug break-words overflow-hidden text-ellipsis line-clamp-2">
                               {appointment.title}
-                            </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                  )}
                 </div>
               ))}
             </div>
@@ -484,28 +516,68 @@ const CustomWeekCalendar = ({
 
 export default function Appointments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const dispatch = useAppDispatch();
+  const {
+    appointments: rawAppointments,
+    loading,
+    error,
+  } = useAppSelector((state) => state.appointment);
+
+  useEffect(() => {
+    const start = new Date(currentWeek);
+    start.setDate(start.getDate() - start.getDay());
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+    dispatch(
+      fetchAppointments({
+        startDate: formatDate(start),
+        endDate: formatDate(end),
+      })
+    );
+  }, [dispatch, currentWeek]);
+
+  const formattedAppointments = useMemo(
+    () => formatAppointmentsForCalendar(rawAppointments),
+    [rawAppointments]
+  );
+
+  // Calculate today's summary from appointments
+  const today = new Date();
+  const todaysAppointments = formattedAppointments.filter((appt) =>
+    isSameDay(appt.date, today)
+  );
+
+  const confirmedAppointments = todaysAppointments.filter(
+    (appt) => appt.textColor === "text-blue-700" // Assuming blue means confirmed
+  ).length;
+
+  const pendingAppointments = todaysAppointments.length - confirmedAppointments;
 
   return (
     <MainLayout>
       <div className="space-y-4 md:space-y-6 lg:space-y-8 p-4 md:p-0">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
             Scheduling
           </h1>
         </div>
-
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           <div className="lg:col-span-2">
+            {error && <p className="text-red-500">Error: {error}</p>}
             <CustomWeekCalendar
-              appointments={dummyAppointments}
+              appointments={formattedAppointments}
+              currentWeek={currentWeek}
+              setCurrentWeek={setCurrentWeek}
               onAddNewClick={() => setIsModalOpen(true)}
+              loading={loading}
             />
           </div>
-
-          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4 md:space-y-6">
+            {/* Today's Summary Card */}
             <Card className="rounded-xl shadow-sm">
               <CardHeader className="pb-3 md:pb-6">
                 <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
@@ -515,19 +587,26 @@ export default function Appointments() {
               <CardContent className="space-y-2 md:space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total</span>
-                  <span className="font-bold text-base">3</span>
+                  <span className="font-bold text-base">
+                    {todaysAppointments.length}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Confirmed</span>
-                  <span className="font-semibold text-green-600">3</span>
+                  <span className="font-semibold text-green-600">
+                    {confirmedAppointments}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Pending</span>
-                  <span className="font-semibold text-orange-600">0</span>
+                  <span className="font-semibold text-orange-600">
+                    {pendingAppointments}
+                  </span>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Provider Availability Card */}
             <Card className="rounded-xl shadow-sm">
               <CardHeader className="pb-3 md:pb-6">
                 <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
@@ -556,8 +635,6 @@ export default function Appointments() {
             </Card>
           </div>
         </div>
-
-        {/* AppointmentModal */}
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

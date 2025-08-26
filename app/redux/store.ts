@@ -1,8 +1,8 @@
 // redux/store.ts
-
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import patientReducer from "./features/patients/patientSlice";
+import appointmentReducer from "./features/appointments/appointmentSlice"; // Added appointment reducer
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -10,6 +10,7 @@ export const makeStore = () => {
     reducer: {
       auth: authReducer,
       patient: patientReducer,
+      appointment: appointmentReducer, // Register the new reducer
     },
   });
 };
