@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,7 +147,6 @@ const clinicalTabs = [
   { id: "labs", label: "Labs & Diagnostics", icon: FlaskConical },
   { id: "notes", label: "Clinical Notes", icon: FileText },
   { id: "vitals", label: "Vitals & Monitoring", icon: Heart },
-  { id: "telemedicine", label: "Telemedicine", icon: Video },
   { id: "imaging", label: "Imaging", icon: Camera },
   { id: "billing", label: "Billing", icon: Receipt },
 ];
@@ -162,7 +160,6 @@ export default function PatientDetailPage({
   const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
-  const [isTelemedicineOpen, setIsTelemedicineOpen] = useState(false);
 
   const [newNote, setNewNote] = useState({
     patientName: patientData.name,
@@ -172,7 +169,6 @@ export default function PatientDetailPage({
     billingCodes: "",
     status: "draft",
   });
-
   const [newMedication, setNewMedication] = useState({
     medication: "",
     dosage: "",
@@ -181,7 +177,6 @@ export default function PatientDetailPage({
     instructions: "",
     priority: "routine",
   });
-
   const [newLabOrder, setNewLabOrder] = useState({
     labType: "",
     priority: "routine",
@@ -237,16 +232,12 @@ export default function PatientDetailPage({
             <FileText className="mr-2 h-4 w-4" />
             Clinical Note
           </Button>
-          <Button
-            onClick={() => setIsTelemedicineOpen(true)}
-            className="bg-orange-600 hover:bg-orange-700 text-left justify-start"
-          >
+          <Button className="bg-yellow-600 hover:bg-green-700 text-left justify-start">
             <Video className="mr-2 h-4 w-4" />
-            Start Call
+            Telemedicine
           </Button>
         </CardContent>
       </Card>
-
       {/* Current Vitals */}
       <Card className="rounded-xl shadow-sm">
         <CardHeader>
@@ -295,7 +286,6 @@ export default function PatientDetailPage({
           </div>
         </CardContent>
       </Card>
-
       {/* Active Medications */}
       <Card className="rounded-xl shadow-sm lg:col-span-2">
         <CardHeader>
@@ -347,7 +337,6 @@ export default function PatientDetailPage({
           Order New Medication
         </Button>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Current Medications */}
         <Card>
@@ -381,7 +370,6 @@ export default function PatientDetailPage({
             ))}
           </CardContent>
         </Card>
-
         {/* Medication History */}
         <Card>
           <CardHeader>
@@ -420,7 +408,6 @@ export default function PatientDetailPage({
           Order Lab Test
         </Button>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Labs */}
         <Card>
@@ -459,7 +446,6 @@ export default function PatientDetailPage({
             ))}
           </CardContent>
         </Card>
-
         {/* Pending Orders */}
         <Card>
           <CardHeader>
@@ -484,44 +470,6 @@ export default function PatientDetailPage({
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-
-  const TelemedicineTab = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Video className="mr-2 h-5 w-5" />
-            Telemedicine Console
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button
-              onClick={() => setIsTelemedicineOpen(true)}
-              className="bg-blue-800 hover:bg-blue-700 h-16 text-lg"
-            >
-              <Video className="mr-2 h-5 w-5" />
-              Start Video Call with Patient
-            </Button>
-            <Button variant="outline" className="h-16 text-lg">
-              <Phone className="mr-2 h-5 w-5" />
-              Voice Call Only
-            </Button>
-          </div>
-
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <h3 className="font-medium mb-2">Recent Telemedicine Sessions</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span>Video consultation - 30 min</span>
-                <span className="text-gray-500">Aug 20, 2025</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 
@@ -843,47 +791,6 @@ export default function PatientDetailPage({
     </Dialog>
   );
 
-  // Telemedicine Dialog
-  const TelemedicineDialog = () => (
-    <Dialog open={isTelemedicineOpen} onOpenChange={setIsTelemedicineOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Start Telemedicine Session</DialogTitle>
-          <DialogDescription>
-            Initiate video call with {patientData.name}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="flex items-center justify-center p-8 bg-gray-100 rounded-lg">
-            <Video className="h-12 w-12 text-gray-400" />
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              The patient will receive a notification to join the video call.
-            </p>
-            <p className="text-xs text-gray-500">
-              Call will be recorded for medical records.
-            </p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setIsTelemedicineOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={() => setIsTelemedicineOpen(false)}
-            className="bg-blue-800 hover:bg-blue-700"
-          >
-            Start Call
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
   const VitalsTab = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -893,7 +800,6 @@ export default function PatientDetailPage({
           Record New Vitals
         </Button>
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Current Vitals */}
         <Card>
@@ -930,7 +836,6 @@ export default function PatientDetailPage({
             </div>
           </CardContent>
         </Card>
-
         {/* Vitals History Chart Placeholder */}
         <Card>
           <CardHeader>
@@ -955,7 +860,6 @@ export default function PatientDetailPage({
           Order Imaging Study
         </Button>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Recent Studies</CardTitle>
@@ -1044,7 +948,6 @@ export default function PatientDetailPage({
           New Clinical Note
         </Button>
       </div>
-
       <Card className="rounded-xl shadow-sm">
         <CardContent className="p-0">
           <div className="space-y-0">
@@ -1086,34 +989,39 @@ export default function PatientDetailPage({
 
   return (
     <MainLayout>
-      {/* Persistent Patient Banner */}
-      <div className="sticky top-0 z-40 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200 shadow-lg backdrop-blur-sm">
-        <div className="px-6 py-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-              <div className="flex items-center space-x-6">
-                <div className="relative">
-                  <Avatar className="w-16 h-16 ring-4 ring-blue-100 ring-offset-2">
-                    <AvatarImage src={patientData.avatar} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-800 text-white text-lg font-semibold">
+      {/* Modified Persistent Patient Banner - Removed sticky, moved content */}
+      <div className="z-40 w-full bg-white rounded-2xl border border-slate-200">
+        <div className="py-4 px-4 sm:px-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-8">
+              {/* --- Left Section: Patient Info --- */}
+              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <Avatar className="w-20 h-20 ring-4 ring-blue-100">
+                    <AvatarImage
+                      src={patientData.avatar}
+                      alt={patientData.name}
+                    />
+                    <AvatarFallback className="bg-blue-800 text-white text-2xl font-semibold">
                       {patientData.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-3 border-white flex items-center justify-center">
-                    <div className="w-3 h-3 bg-white rounded-full"></div>
-                  </div>
+                  {/* Online Status Indicator */}
+                  <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full ring-2 ring-white" />
                 </div>
 
+                {/* Patient Details */}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-2xl font-bold text-slate-900 truncate">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2 mb-3">
+                    <h1 className="text-3xl font-bold text-slate-800 truncate">
                       {patientData.name}
                     </h1>
                     <Badge
                       className={
                         patientData.dischargeDate
-                          ? "bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-medium"
-                          : "bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium"
+                          ? "bg-emerald-100 text-emerald-800 border-transparent"
+                          : "bg-blue-100 text-blue-800 border-transparent font-semibold"
                       }
                     >
                       {patientData.dischargeDate
@@ -1122,63 +1030,90 @@ export default function PatientDetailPage({
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
-                      <span className="font-medium">
+                  {/* --- Sub-details Grid --- */}
+                  {/* Text colors updated for readability on a white background. */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3 text-sm text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <span className="block w-2 h-2 bg-blue-800 rounded-full"></span>
+                      <span className="font-medium text-slate-700">
                         {patientData.gender}, {patientData.age} years
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <div className="flex items-center gap-2">
+                      <span className="block w-2 h-2 bg-blue-800 rounded-full"></span>
                       <span>
                         MRN:{" "}
-                        <span className="font-mono font-medium">
+                        <span className="font-mono font-medium tracking-wider text-slate-700">
                           {patientData.mrn}
                         </span>
                       </span>
                     </div>
-
-                    <div className="flex items-center gap-2 text-slate-600">
-                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-blue-800" />
                       <span className="truncate">{patientData.location}</span>
+                    </div>
+                  </div>
+
+                  {/* --- Contact Info Section --- */}
+                  {/* Border color updated. */}
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-3 text-slate-600 text-sm">
+                      <div className="flex items-start gap-2">
+                        <Phone className="h-4 w-4 text-blue-800 shrink-0 mt-0.5" />
+                        <span>{patientData.contact.phone}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Mail className="h-4 w-4 text-blue-800 shrink-0 mt-0.5" />
+                        <span className="truncate">
+                          {patientData.contact.email}
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2 col-span-1 sm:col-span-2 xl:col-span-1">
+                        <Home className="h-4 w-4 text-blue-800 shrink-0 mt-0.5" />
+                        <span>{patientData.contact.address}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Calendar className="h-4 w-4 text-blue-800 shrink-0 mt-0.5" />
+                        <span>DOB: {patientData.dob}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+              {/* --- Right Section: Actions & Quick Info --- */}
+              <div className="flex flex-col sm:flex-row xl:flex-col items-start sm:items-center xl:items-end gap-4 flex-shrink-0">
+                {/* Quick Info Boxes */}
+                {/* Updated background and text colors. */}
+                <div className="grid grid-cols-2 gap-3 text-sm w-full sm:w-auto">
+                  <div className="bg-slate-50 rounded-lg px-4 py-2 border border-slate-200">
                     <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">
+                      <Calendar className="h-4 w-4 text-blue-800" />
+                      <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
                         Admitted
                       </span>
                     </div>
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-semibold text-slate-800 text-base">
                       {patientData.admitDate}
                     </span>
                   </div>
-
-                  <div className="bg-slate-50 rounded-lg px-4 py-3 border border-slate-200">
+                  <div className="bg-slate-50 rounded-lg px-4 py-2 border border-slate-200">
                     <div className="flex items-center gap-2 mb-1">
-                      <Stethoscope className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-slate-500 text-xs font-medium uppercase tracking-wide">
+                      <Stethoscope className="h-4 w-4 text-blue-800" />
+                      <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
                         Primary MD
                       </span>
                     </div>
-                    <span className="font-semibold text-slate-900 truncate">
+                    <span className="font-semibold text-slate-800 text-base truncate">
                       {patientData.primaryPhysician}
                     </span>
                   </div>
                 </div>
-
-                <div className="flex gap-2">
+                {/* Action Buttons */}
+                <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     size="sm"
-                    className="bg-blue-800 hover:bg-blue-700 rounded-lg px-4 py-2 font-medium shadow-sm"
+                    className="w-full sm:w-auto bg-blue-800 text-white hover:bg-blue-700 rounded-lg px-4 py-2 font-bold shadow-sm text-sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Quick Order
@@ -1186,7 +1121,7 @@ export default function PatientDetailPage({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-lg px-4 py-2 font-medium border-slate-300 hover:bg-slate-50"
+                    className="w-full sm:w-auto rounded-lg px-4 py-2 font-semibold border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-800 text-sm"
                   >
                     <Phone className="h-4 w-4 mr-2" />
                     Contact
@@ -1199,7 +1134,7 @@ export default function PatientDetailPage({
       </div>
 
       <div className="space-y-6 md:space-y-8 p-4">
-        {/* Back Button */}
+        {/* Back Button - No changes needed */}
         <div>
           <Link href="/patients" className="inline-block">
             <Button
@@ -1211,57 +1146,12 @@ export default function PatientDetailPage({
           </Link>
         </div>
 
-        {/* Main Content Grid */}
+        {/* Modified Main Content Grid - Removed dedicated left column */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Left Sidebar: Patient Info & Alerts */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="rounded-xl shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">
-                  Contact & Demographics
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex">
-                  <Phone className="h-4 w-4 mr-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span>{patientData.contact.phone}</span>
-                </div>
-                <div className="flex">
-                  <Mail className="h-4 w-4 mr-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span className="truncate">{patientData.contact.email}</span>
-                </div>
-                <div className="flex">
-                  <Home className="h-4 w-4 mr-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span>{patientData.contact.address}</span>
-                </div>
-                <div className="flex">
-                  <Calendar className="h-4 w-4 mr-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span>DOB: {patientData.dob}</span>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Removed the lg:col-span-1 section for Contact & Demographics */}
 
-            <Card className="rounded-xl shadow-sm border-l-4 border-red-500">
-              <CardHeader>
-                <CardTitle className="text-base font-semibold flex items-center">
-                  <AlertTriangle className="h-4 w-4 mr-2 text-red-500" />
-                  Allergies & Alerts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {patientData.allergies.map((allergy) => (
-                    <Badge key={allergy} variant="destructive">
-                      {allergy}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content: Clinical Workflow Tabs */}
-          <div className="lg:col-span-3">
+          {/* Main Content: Clinical Workflow Tabs - Adjusted column span */}
+          <div className="lg:col-span-4">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-1 overflow-x-auto">
                 {clinicalTabs.map((tab) => {
@@ -1284,14 +1174,12 @@ export default function PatientDetailPage({
                 })}
               </nav>
             </div>
-
             <div className="mt-6">
               {activeTab === "overview" && <OverviewTab />}
               {activeTab === "medications" && <MedicationsTab />}
               {activeTab === "labs" && <LabsTab />}
               {activeTab === "notes" && <ClinicalNotesTab />}
               {activeTab === "vitals" && <VitalsTab />}
-              {activeTab === "telemedicine" && <TelemedicineTab />}
               {activeTab === "imaging" && <ImagingTab />}
               {activeTab === "billing" && <BillingTab />}
             </div>
@@ -1299,11 +1187,10 @@ export default function PatientDetailPage({
         </div>
       </div>
 
-      {/* All Dialogs */}
+      {/* All Dialogs - No changes needed */}
       <ClinicalNotesDialog />
       <OrderMedicationDialog />
       <OrderLabDialog />
-      <TelemedicineDialog />
     </MainLayout>
   );
 }

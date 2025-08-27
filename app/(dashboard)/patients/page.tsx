@@ -197,7 +197,7 @@ export default function PatientsPage() {
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
         {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+        <div className=" p-6 ">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -234,60 +234,6 @@ export default function PatientsPage() {
                     New Patient
                   </Button>
                 </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white rounded-xl p-4 border border-blue-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {patients.filter((p) => p.status === "active").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Active Patients</p>
-                </div>
-                <User className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 border border-red-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-red-600">
-                    {patients.filter((p) => p.priority === "high").length}
-                  </p>
-                  <p className="text-sm text-gray-600">High Priority</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 border border-yellow-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {
-                      patients.filter((p) => p.vitalStatus === "attention")
-                        .length
-                    }
-                  </p>
-                  <p className="text-sm text-gray-600">Need Attention</p>
-                </div>
-                <Heart className="h-8 w-8 text-yellow-500" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-4 border border-green-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-green-600">
-                    {patients.filter((p) => p.vitalStatus === "stable").length}
-                  </p>
-                  <p className="text-sm text-gray-600">Stable</p>
-                </div>
-                <Heart className="h-8 w-8 text-green-500" />
               </div>
             </div>
           </div>
@@ -380,16 +326,8 @@ export default function PatientsPage() {
                     </div>
                   </div>
 
-                  {/* Center: Priority & Status */}
+                  {/* Center: Last Activity */}
                   <div className="flex flex-col items-center gap-3 lg:min-w-0">
-                    <Badge
-                      className={`${getPriorityColor(
-                        patient.priority
-                      )} font-semibold px-3 py-1 border`}
-                    >
-                      {patient.priority.toUpperCase()} PRIORITY
-                    </Badge>
-
                     <div className="text-center">
                       <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
                         Last Activity
