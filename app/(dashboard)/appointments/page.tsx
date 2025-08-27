@@ -26,8 +26,13 @@ import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import {
   fetchAppointments,
   Appointment,
+  createAppointment,
 } from "@/app/redux/features/appointments/appointmentActions";
+import { fetchPatients } from "@/app/redux/features/patients/patientActions";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DialogPortal } from "@radix-ui/react-dialog";
 
 // --- Helper Functions & Types ---
 
@@ -88,6 +93,121 @@ const providerAvailability = [
 
 // --- Components ---
 
+const AppointmentDetailsModal = ({
+  isOpen,
+  onClose,
+  appointment,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  appointment: FormattedAppointment | null;
+}) => {
+  if (!appointment) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-4 h-4 rounded-full ${appointment.color.replace(
+                  "bg-",
+                  "bg-"
+                )}`}
+              />
+              <h2 className="text-xl font-semibold text-gray-900">
+                Appointment Details
+              </h2>
+            </div>
+          </div>
+
+          {/* Appointment Info */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${appointment.color.replace(
+                    "bg-",
+                    "bg-"
+                  )}`}
+                />
+                <span className="text-sm font-medium text-gray-600">
+                  Service
+                </span>
+              </div>
+              <p className="text-lg font-semibold text-gray-900">
+                {appointment.title}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 rounded-full bg-blue-500" />
+                  <span className="text-sm font-medium text-blue-700">
+                    Time
+                  </span>
+                </div>
+                <p className="font-semibold text-gray-900">
+                  {appointment.timeDisplay}
+                </p>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-4 h-4 rounded-full bg-green-500" />
+                  <span className="text-sm font-medium text-green-700">
+                    Date
+                  </span>
+                </div>
+                <p className="font-semibold text-gray-900">
+                  {appointment.date.toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {appointment.description && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-gray-400" />
+                  <span className="text-sm font-medium text-gray-600">
+                    Description
+                  </span>
+                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  {appointment.description}
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const AppointmentModal = ({
   isOpen,
   onClose,
@@ -95,234 +215,283 @@ const AppointmentModal = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
-  // This modal remains static for now as per the request
-  const [selectedDate, setSelectedDate] = useState<number | null>(18);
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(
-    "10:30 AM"
-  );
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 8)); // September 2025
-
-  const timeSlots = [
-    "8:30 AM",
-    "10:30 AM",
-    "12:30 PM",
-    "3:30 PM",
-    "6:30 PM",
-    "8:30 PM",
-  ];
-
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    const days = Array(startingDayOfWeek).fill(null);
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
-    }
-    return days;
-  };
-
-  const formatSelectedDate = () => {
-    if (!selectedDate) return "Select a date";
-    const date = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      selectedDate
-    );
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
-  };
-
-  const navigateMonth = (direction: "prev" | "next") => {
-    setCurrentMonth(
-      new Date(
-        currentMonth.setMonth(
-          currentMonth.getMonth() + (direction === "next" ? 1 : -1)
-        )
-      )
-    );
-  };
-
-  const monthName = currentMonth.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
+  const dispatch = useAppDispatch();
+  const { patients } = useAppSelector((state) => state.patient);
+  const [formData, setFormData] = useState<
+    Omit<NewAppointmentData, "appointment_datetime">
+  >({
+    patient_id: 0,
+    duration: 50,
+    location: "Telehealth",
+    services: ["Psychotherapy Session"],
+    appointment_fee: 250.0,
+    billing_type: "insurance",
+    repeat: false,
   });
-  const days = getDaysInMonth(currentMonth);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
+  const [time, setTime] = useState({ hour: "02", minute: "00", period: "PM" });
+
+  useEffect(() => {
+    if (patients.length === 0) {
+      dispatch(fetchPatients());
+    }
+  }, [dispatch, patients.length]);
+
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTimeChange = (
+    part: "hour" | "minute" | "period",
+    value: string
+  ) => {
+    setTime((prev) => ({ ...prev, [part]: value }));
+  };
+
+  const handleSubmit = () => {
+    if (!selectedDate || !formData.patient_id) {
+      alert("Please select a patient and a date.");
+      return;
+    }
+
+    let hour = parseInt(time.hour, 10);
+    if (time.period === "PM" && hour < 12) hour += 12;
+    if (time.period === "AM" && hour === 12) hour = 0;
+
+    const appointment_datetime = new Date(selectedDate);
+    appointment_datetime.setHours(hour, parseInt(time.minute, 10), 0, 0);
+
+    const submissionData: NewAppointmentData = {
+      ...formData,
+      appointment_datetime: appointment_datetime.toISOString(),
+    };
+
+    dispatch(createAppointment(submissionData));
+    onClose();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 gap-0 max-h-[90vh] overflow-hidden">
-        <div className="flex flex-col md:flex-row max-h-[90vh]">
-          {/* Left Side - Form */}
-          <div className="flex-1 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto">
-            {/* Header with logo */}
-            <div className="flex items-center gap-3 mb-4 md:mb-6">
-              <div className="flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 md:w-6 md:h-6 text-blue-800" />
-                <span className="text-lg md:text-xl font-bold text-blue-800">
-                  Daisy
-                </span>
-              </div>
-              <button
-                onClick={onClose}
-                className="ml-auto p-1 hover:bg-gray-100 rounded touch-manipulation"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <h2 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">
-              Add New
-            </h2>
-
-            {/* Upload Image */}
-            <div className="mb-4 md:mb-6">
-              <div className="w-12 h-12 md:w-16 md:h-16 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center mb-2">
-                <Plus className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
-              </div>
-              <p className="text-xs md:text-sm text-gray-500">
-                Upload Image here
-              </p>
-            </div>
-
-            {/* Form Fields */}
-            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
+      <DialogPortal>
+        <DialogContent className="w-full max-w-6xl max-h-[90vh] overflow-y-auto p-8 bg-white rounded-lg shadow-xl">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            New Appointment
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            <div className="space-y-4 flex flex-col">
               <div>
-                <Label className="text-xs md:text-sm text-gray-600 mb-1 block">
-                  Name*
-                </Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter name"
-                    className="pl-8 md:pl-10 border-gray-300 h-10 md:h-auto"
-                  />
-                  <div className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2">
-                    <div className="w-3 h-3 md:w-4 md:h-4 bg-gray-300 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs md:text-sm text-gray-600 mb-1 block">
-                  Role*
-                </Label>
-                <div className="relative">
-                  <Input
-                    placeholder="Enter Role"
-                    className="pl-8 md:pl-10 border-gray-300 h-10 md:h-auto"
-                  />
-                  <div className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2">
-                    <div className="w-3 h-3 md:w-4 md:h-4 bg-gray-300 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Selected Date Display */}
-            <div className="mb-3 md:mb-4">
-              <p className="font-medium text-sm md:text-base text-gray-900">
-                {formatSelectedDate()}
-              </p>
-            </div>
-
-            {/* Time Slots */}
-            <div className="space-y-2 max-h-48 md:max-h-none overflow-y-auto">
-              {timeSlots.map((time) => (
-                <Button
-                  key={time}
-                  variant={selectedTimeSlot === time ? "default" : "outline"}
-                  className={`w-full justify-start text-left h-10 md:h-auto touch-manipulation ${
-                    selectedTimeSlot === time
-                      ? "bg-blue-800 text-white"
-                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                  onClick={() => setSelectedTimeSlot(time)}
+                <Label
+                  htmlFor="patient_id"
+                  className="text-sm font-medium text-gray-700"
                 >
-                  {time}
-                </Button>
-              ))}
+                  Patient
+                </Label>
+                <Select
+                  onValueChange={(val) =>
+                    handleInputChange("patient_id", parseInt(val))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a patient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {patients.map((p) => (
+                      <SelectItem key={p.user_id} value={String(p.user_id)}>
+                        {p.first_name} {p.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Time
+                </Label>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <Input
+                    value={time.hour}
+                    onChange={(e) => handleTimeChange("hour", e.target.value)}
+                    className="w-16 text-center"
+                    maxLength={2}
+                    placeholder="HH"
+                  />
+                  <span className="font-bold">:</span>
+                  <Input
+                    value={time.minute}
+                    onChange={(e) => handleTimeChange("minute", e.target.value)}
+                    className="w-16 text-center"
+                    maxLength={2}
+                    placeholder="MM"
+                  />
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      onClick={() => handleTimeChange("period", "AM")}
+                      className={`w-12 ${
+                        time.period === "AM"
+                          ? "bg-blue-800 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      disabled={time.period === "AM"}
+                    >
+                      AM
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleTimeChange("period", "PM")}
+                      className={`w-12 ${
+                        time.period === "PM"
+                          ? "bg-blue-800 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                      disabled={time.period === "PM"}
+                    >
+                      PM
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="duration"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Duration (minutes)
+                </Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  value={formData.duration}
+                  onChange={(e) =>
+                    handleInputChange("duration", parseInt(e.target.value))
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="services"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Services (comma-separated)
+                </Label>
+                <Input
+                  id="services"
+                  value={formData.services.join(", ")}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "services",
+                      e.target.value.split(",").map((s) => s.trim())
+                    )
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="location"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Location
+                </Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) =>
+                    handleInputChange("location", e.target.value)
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="appointment_fee"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Fee
+                </Label>
+                <Input
+                  id="appointment_fee"
+                  type="number"
+                  value={formData.appointment_fee}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "appointment_fee",
+                      parseFloat(e.target.value)
+                    )
+                  }
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="billing_type"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Billing Type
+                </Label>
+                <Select
+                  value={formData.billing_type}
+                  onValueChange={(val) =>
+                    handleInputChange("billing_type", val)
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="insurance">Insurance</SelectItem>
+                    <SelectItem value="self-pay">Self-Pay</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center space-x-2 pt-4">
+                <Checkbox
+                  id="repeat"
+                  checked={formData.repeat}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("repeat", !!checked)
+                  }
+                />
+                <Label htmlFor="repeat">Repeat Appointment</Label>
+              </div>
+            </div>
+
+            <div className="w-full">
+              <Label className="mb-2 block text-sm font-medium text-gray-700">
+                Date
+              </Label>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-md border w-5xl"
+              />
             </div>
           </div>
 
-          {/* Right Side - Calendar */}
-          <div className="flex-1 p-4 md:p-6 border-t md:border-t-0 md:border-l border-gray-200 overflow-y-auto">
-            {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <button
-                onClick={() => navigateMonth("prev")}
-                className="p-2 hover:bg-gray-100 rounded touch-manipulation"
-              >
-                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
-              </button>
-              <h3 className="font-semibold text-sm md:text-base text-gray-900">
-                {monthName}
-              </h3>
-              <button
-                onClick={() => navigateMonth("next")}
-                className="p-2 hover:bg-gray-100 rounded touch-manipulation"
-              >
-                <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
-              </button>
-            </div>
-
-            {/* Calendar Grid */}
-            <div className="mb-4 md:mb-6">
-              {/* Day Headers */}
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                  <div
-                    key={day}
-                    className="text-center text-xs md:text-sm text-gray-500 py-1 md:py-2"
-                  >
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar Days */}
-              <div className="grid grid-cols-7 gap-1">
-                {days.map((day, index) => (
-                  <button
-                    key={index}
-                    onClick={() => day && setSelectedDate(day)}
-                    disabled={!day}
-                    className={`
-                      h-8 md:h-10 text-xs md:text-sm rounded-lg transition-colors touch-manipulation
-                      ${!day ? "invisible" : ""}
-                      ${
-                        selectedDate === day
-                          ? "bg-blue-800 text-white"
-                          : "hover:bg-gray-100 text-gray-700"
-                      }
-                      ${
-                        [14, 15, 16, 25, 26, 27, 28, 29, 30].includes(
-                          day || 0
-                        ) && selectedDate !== day
-                          ? "bg-gray-100 text-gray-900"
-                          : ""
-                      }
-                    `}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Add New Button */}
-            <Button className="w-full bg-blue-800 hover:bg-blue-700 text-white h-10 md:h-auto touch-manipulation">
-              <Plus className="w-4 h-4 mr-2" />
-              Add new
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="bg-blue-800 hover:bg-blue-700 text-white"
+            >
+              Create Appointment
             </Button>
           </div>
-        </div>
-      </DialogContent>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 };
@@ -332,12 +501,14 @@ const CustomWeekCalendar = ({
   currentWeek,
   setCurrentWeek,
   onAddNewClick,
+  onAppointmentClick,
   loading,
 }: {
   appointments: FormattedAppointment[];
   currentWeek: Date;
   setCurrentWeek: (date: Date) => void;
   onAddNewClick: () => void;
+  onAppointmentClick: (appointment: FormattedAppointment) => void;
   loading: boolean;
 }) => {
   const getWeekDays = (startDate: Date) => {
@@ -353,7 +524,8 @@ const CustomWeekCalendar = ({
   };
 
   const weekDays = getWeekDays(currentWeek);
-  const timeSlots = Array.from({ length: 10 }, (_, i) => {
+  // Reduced time range from 9 AM to 5 PM (8 hours instead of 10)
+  const timeSlots = Array.from({ length: 8 }, (_, i) => {
     const hour = 9 + i;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
@@ -363,9 +535,13 @@ const CustomWeekCalendar = ({
     const [endHour, endMin] = endTime.split(":").map(Number);
     const startMinutes = (startHour - 9) * 60 + startMin;
     const endMinutes = (endHour - 9) * 60 + endMin;
-    const top = (startMinutes / 60) * 60;
-    const height = ((endMinutes - startMinutes) / 60) * 60;
-    return { top: `${top}px`, height: `${Math.max(height, 48)}px` };
+    // Increased height multiplier from 60 to 80 for taller hour rows
+    const top = (startMinutes / 60) * 80;
+    const height = ((endMinutes - startMinutes) / 60) * 80;
+    return {
+      top: `${top}px`,
+      height: `${Math.max(height, 80)}px`, // Increased minimum height to match row height
+    };
   };
 
   const formatWeekRange = (startDate: Date) => {
@@ -384,13 +560,14 @@ const CustomWeekCalendar = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-blue-200 p-3 md:p-6">
+    <div className="bg-white rounded-2xl border border-blue-200 p-3 md:p-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="icon"
             onClick={() => navigateWeek("prev")}
+            className="hover:bg-blue-50"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -401,12 +578,13 @@ const CustomWeekCalendar = ({
             variant="outline"
             size="icon"
             onClick={() => navigateWeek("next")}
+            className="hover:bg-blue-50"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
         <Button
-          className="bg-blue-800 hover:bg-blue-700"
+          className="bg-blue-800 hover:bg-blue-700 shadow-md transition-all duration-200"
           onClick={onAddNewClick}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -436,8 +614,8 @@ const CustomWeekCalendar = ({
             {timeSlots.map((time) => (
               <div
                 key={time}
-                className="flex items-start pt-2 md:pt-3 text-xs text-gray-400 bg-white"
-                style={{ height: "60px" }}
+                className="flex items-start pt-3 md:pt-4 text-xs text-gray-400 bg-white"
+                style={{ height: "80px" }} // Increased from 60px to 80px
               >
                 {time}
               </div>
@@ -450,7 +628,7 @@ const CustomWeekCalendar = ({
               <div
                 key={index}
                 className="border-t border-gray-200"
-                style={{ height: "60px" }}
+                style={{ height: "80px" }} // Increased from 60px to 80px
               />
             ))}
 
@@ -465,7 +643,7 @@ const CustomWeekCalendar = ({
                     <div
                       key={hourIndex}
                       className="absolute left-0 right-0 border-t border-gray-100"
-                      style={{ top: `${hourIndex * 60}px`, height: "1px" }}
+                      style={{ top: `${hourIndex * 80}px`, height: "1px" }} // Updated spacing
                     />
                   ))}
 
@@ -484,22 +662,51 @@ const CustomWeekCalendar = ({
                         return (
                           <div
                             key={appointment.id}
-                            className={`absolute left-2 right-2 ${appointment.color} ${appointment.borderColor} border-l-4 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-all duration-200 z-20 flex flex-col justify-start p-2 overflow-hidden`}
+                            onClick={() => onAppointmentClick(appointment)}
+                            className={`
+                              absolute left-1 right-1 
+                              ${appointment.color} ${appointment.borderColor} 
+                              border-l-4 rounded-xl shadow-sm hover:shadow-lg 
+                              cursor-pointer transition-all duration-300 ease-in-out 
+                              hover:scale-[1.02] hover:-translate-y-0.5 
+                              z-20 flex flex-col justify-start 
+                              p-3 overflow-hidden
+                              backdrop-blur-sm border border-white/20
+                              transform-gpu
+                              active:scale-[0.98] select-none
+                            `}
                             style={{
                               top: position.top,
                               height: position.height,
-                              minHeight: "48px",
+                              minHeight: "80px", // Updated minimum height
                             }}
                           >
-                            <div className="text-xs text-gray-700 mb-1 flex items-center gap-1">
-                              <span className="w-2 h-2 rounded-full bg-current inline-block" />
-                              <span className="font-semibold leading-tight">
+                            {/* Time Header */}
+                            <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                              <div className="w-2 h-2 rounded-full bg-current opacity-80 flex-shrink-0" />
+                              <span className="text-xs font-semibold text-gray-700 leading-none">
                                 {appointment.timeDisplay}
                               </span>
                             </div>
-                            <div className="text-sm font-medium text-gray-900 leading-snug break-words overflow-hidden text-ellipsis line-clamp-2">
-                              {appointment.title}
+
+                            {/* Appointment Title */}
+                            <div className="flex-1 flex flex-col justify-start">
+                              <div className="text-sm font-medium text-gray-900 leading-tight mb-1 break-words">
+                                {appointment.title}
+                              </div>
+
+                              {/* Optional: Add description or patient name if available */}
+                              {appointment.description && (
+                                <div className="text-xs text-gray-600 leading-tight opacity-90 line-clamp-2">
+                                  {appointment.description}
+                                </div>
+                              )}
                             </div>
+
+                            {/* Removed status indicator section */}
+
+                            {/* Hover overlay effect */}
+                            <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200 rounded-xl pointer-events-none" />
                           </div>
                         );
                       })
@@ -516,6 +723,9 @@ const CustomWeekCalendar = ({
 
 export default function Appointments() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<FormattedAppointment | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const dispatch = useAppDispatch();
   const {
@@ -557,34 +767,40 @@ export default function Appointments() {
 
   const pendingAppointments = todaysAppointments.length - confirmedAppointments;
 
+  const handleAppointmentClick = (appointment: FormattedAppointment) => {
+    setSelectedAppointment(appointment);
+    setIsDetailsModalOpen(true);
+  };
+
   return (
     <MainLayout>
-      <div className="space-y-4 md:space-y-6 lg:space-y-8 p-4 md:p-0">
+      <div className="space-y-3 md:space-y-4 p-4 md:p-0 max-h-screen overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
             Scheduling
           </h1>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 h-[calc(100vh-120px)]">
+          <div className="lg:col-span-3">
             {error && <p className="text-red-500">Error: {error}</p>}
             <CustomWeekCalendar
               appointments={formattedAppointments}
               currentWeek={currentWeek}
               setCurrentWeek={setCurrentWeek}
               onAddNewClick={() => setIsModalOpen(true)}
+              onAppointmentClick={handleAppointmentClick}
               loading={loading}
             />
           </div>
-          <div className="lg:col-span-1 space-y-4 md:space-y-6">
+          <div className="lg:col-span-1 space-y-3 md:space-y-4 overflow-y-auto">
             {/* Today's Summary Card */}
             <Card className="rounded-xl shadow-sm">
-              <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">
                   Today's Summary
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 md:space-y-3 text-sm">
+              <CardContent className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total</span>
                   <span className="font-bold text-base">
@@ -608,12 +824,12 @@ export default function Appointments() {
 
             {/* Provider Availability Card */}
             <Card className="rounded-xl shadow-sm">
-              <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-base md:text-lg lg:text-xl font-semibold">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base md:text-lg font-semibold">
                   Provider Availability
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 md:space-y-3 text-sm">
+              <CardContent className="space-y-2 text-sm">
                 {providerAvailability.map((p) => (
                   <div
                     key={p.name}
@@ -635,9 +851,19 @@ export default function Appointments() {
             </Card>
           </div>
         </div>
+
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+        />
+
+        <AppointmentDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
         />
       </div>
     </MainLayout>
