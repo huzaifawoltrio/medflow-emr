@@ -275,7 +275,7 @@ const AppointmentModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogPortal>
-        <DialogContent className="w-full max-w-6xl max-h-[90vh] overflow-y-auto p-8 bg-white rounded-lg shadow-xl">
+        <DialogContent className="w-full max-w-7xl max-h-[90vh] overflow-y-auto  bg-white rounded-lg shadow-xl">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             New Appointment
           </h2>
