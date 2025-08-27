@@ -1134,20 +1134,8 @@ export default function PatientDetailPage({
       </div>
 
       <div className="space-y-6 md:space-y-8 p-4">
-        {/* Back Button - No changes needed */}
-        <div>
-          <Link href="/patients" className="inline-block">
-            <Button
-              variant="ghost"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to All Patients
-            </Button>
-          </Link>
-        </div>
-
         {/* Modified Main Content Grid - Removed dedicated left column */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-1">
           {/* Removed the lg:col-span-1 section for Contact & Demographics */}
 
           {/* Main Content: Clinical Workflow Tabs - Adjusted column span */}
