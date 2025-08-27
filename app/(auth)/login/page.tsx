@@ -28,18 +28,27 @@ export default function Login() {
 
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { loading, error, success } = useAppSelector((state) => state.auth);
+  // 1. Get the user object from the Redux store
+  const { loading, error, success, user } = useAppSelector(
+    (state) => state.auth
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(loginUser({ username, password }));
   };
 
+  // 2. Update the useEffect to handle role-based redirection
   useEffect(() => {
-    if (success) {
-      router.push("/");
+    if (success && user) {
+      if (user.role === "patient") {
+        router.push("/patient-portal");
+      } else {
+        // For 'doctor', 'superadmin', etc.
+        router.push("/");
+      }
     }
-  }, [success, router]);
+  }, [success, user, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

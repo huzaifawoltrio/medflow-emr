@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
 import { fetchPatientByUsername } from "../../../redux/features/patients/patientActions";
-import { MainLayout } from "@/components/layout/main-layout";
+import MainLayout from "@/components/layout/main-layout";
 import { PatientBanner } from "@/components/patient-detail/PatientBanner";
 import { ClinicalTabs } from "@/components/patient-detail/tabs/ClinicalTabs";
 import { OverviewTab } from "@/components/patient-detail/tabs/OverviewTab";

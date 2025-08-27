@@ -37,6 +37,16 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    // Add this new rehydrateAuth reducer
+    rehydrateAuth: (state) => {
+      // This check ensures localStorage is only accessed on the client-side
+      if (typeof window !== "undefined") {
+        const accessToken = localStorage.getItem("accessToken");
+        if (accessToken) {
+          state.accessToken = accessToken;
+        }
+      }
+    },
     // Reducer to log out the user
     logout: (state) => {
       localStorage.removeItem("accessToken");
@@ -46,7 +56,7 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.refreshToken = null;
       state.error = null;
-      state.success = false; // <-- FIX: Reset the success flag here
+      state.success = false;
     },
   },
   extraReducers: (builder) => {
@@ -88,5 +98,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+// Export the new action
+export const { logout, rehydrateAuth } = authSlice.actions;
 export default authSlice.reducer;

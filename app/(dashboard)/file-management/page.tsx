@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // For this standalone example, we assume they resolve correctly.
-import { MainLayout } from "@/components/layout/main-layout";
+import MainLayout from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type React from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
+import withAuth from "@/app/withAuth"; // Import the withAuth HOC
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ interface MainLayoutProps {
  * It manages the state for the mobile sidebar and orchestrates the
  * interaction between the Header and Sidebar components.
  */
-export function MainLayout({ children }: MainLayoutProps) {
+function MainLayout({ children }: MainLayoutProps) {
   // State to manage the sidebar's visibility on mobile screens.
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -35,3 +36,6 @@ export function MainLayout({ children }: MainLayoutProps) {
     </div>
   );
 }
+
+// Wrap MainLayout with the withAuth HOC before exporting
+export default withAuth(MainLayout);
