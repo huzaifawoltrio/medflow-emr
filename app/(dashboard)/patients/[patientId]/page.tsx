@@ -1009,8 +1009,6 @@ export default function PatientDetailPage({
                         {patientData.initials}
                       </AvatarFallback>
                     </Avatar>
-                    {/* Online Status Indicator */}
-                    <div className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full ring-2 ring-white" />
                   </div>
 
                   {/* Patient Details */}
