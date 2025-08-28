@@ -22,6 +22,7 @@ import {
   Stethoscope,
   ChevronLeft,
   ChevronRight,
+  TrendingUp, // Added icon for Results Review
 } from "lucide-react";
 
 const navigation = [
@@ -35,6 +36,7 @@ const navigation = [
   // { name: "e-Prescription", href: "/e-prescription", icon: Pill },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Documents", href: "/documents", icon: ClipboardList },
+  { name: "Results Review", href: "/results-review", icon: TrendingUp }, // Added new Results Review link
   { name: "File Management", href: "/file-management", icon: FolderOpen },
   { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
 ];
