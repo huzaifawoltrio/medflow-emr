@@ -1,8 +1,11 @@
 // components/appointments/AppointmentModal.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import { createAppointment } from "@/app/redux/features/appointments/appointmentActions";
-import { fetchPatients } from "@/app/redux/features/patients/patientActions";
+import {
+  fetchPatients,
+  Patient,
+} from "@/app/redux/features/patients/patientActions";
 import { Dialog, DialogContent, DialogPortal } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Search } from "lucide-react";
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -52,11 +56,28 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
   );
   const [time, setTime] = useState({ hour: "02", minute: "00", period: "PM" });
 
+  // --- State for Patient Search ---
+  const [patientSearch, setPatientSearch] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isPatientListVisible, setIsPatientListVisible] = useState(false);
+
   useEffect(() => {
     if (patients.length === 0) {
       dispatch(fetchPatients());
     }
   }, [dispatch, patients.length]);
+
+  // --- Filter patients based on search input ---
+  const filteredPatients = useMemo(() => {
+    if (!patientSearch) {
+      return [];
+    }
+    return patients.filter((p) =>
+      `${p.first_name} ${p.last_name}`
+        .toLowerCase()
+        .includes(patientSearch.toLowerCase())
+    );
+  }, [patients, patientSearch]);
 
   const handleInputChange = (field: keyof typeof formData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -67,6 +88,14 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
     value: string
   ) => {
     setTime((prev) => ({ ...prev, [part]: value }));
+  };
+
+  // --- Handler for selecting a patient from the search results ---
+  const handlePatientSelect = (patient: Patient) => {
+    setSelectedPatient(patient);
+    handleInputChange("patient_id", patient.user_id);
+    setPatientSearch(`${patient.first_name} ${patient.last_name}`);
+    setIsPatientListVisible(false);
   };
 
   const handleSubmit = () => {
@@ -94,35 +123,63 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogPortal>
-        <DialogContent className="w-full max-w-7xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl">
+        <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             New Appointment
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
             <div className="space-y-4 flex flex-col">
               <div>
                 <Label
-                  htmlFor="patient_id"
+                  htmlFor="patient_search"
                   className="text-sm font-medium text-gray-700"
                 >
                   Patient
                 </Label>
-                <Select
-                  onValueChange={(val) =>
-                    handleInputChange("patient_id", parseInt(val))
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select a patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map((p) => (
-                      <SelectItem key={p.user_id} value={String(p.user_id)}>
-                        {p.first_name} {p.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="relative mt-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="patient_search"
+                    placeholder="Search by name..."
+                    value={patientSearch}
+                    onChange={(e) => {
+                      setPatientSearch(e.target.value);
+                      // Clear selection if user starts typing again
+                      if (selectedPatient) {
+                        setSelectedPatient(null);
+                        handleInputChange("patient_id", 0);
+                      }
+                      setIsPatientListVisible(true);
+                    }}
+                    onFocus={() => setIsPatientListVisible(true)}
+                    // Use a timeout to allow click events on the list to register
+                    onBlur={() =>
+                      setTimeout(() => setIsPatientListVisible(false), 150)
+                    }
+                    className="pl-10 w-full"
+                    autoComplete="off"
+                  />
+                  {isPatientListVisible && patientSearch && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {filteredPatients.length > 0 ? (
+                        filteredPatients.map((p) => (
+                          <div
+                            key={p.user_id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            // Use onMouseDown to ensure it fires before onBlur
+                            onMouseDown={() => handlePatientSelect(p)}
+                          >
+                            {p.first_name} {p.last_name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-gray-500">
+                          No patients found.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -285,15 +342,15 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
               </div>
             </div>
 
-            <div className="w-full">
-              <Label className="mb-2 block text-sm font-medium text-gray-700">
+            <div className="w-full flex flex-col items-center">
+              <Label className="mb-2 block text-sm font-medium text-gray-700 self-start">
                 Date
               </Label>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="rounded-md border w-5xl"
+                className="rounded-md border"
               />
             </div>
           </div>

@@ -67,7 +67,7 @@ export default function PatientDetailPage() {
   const { selectedPatient, loading, error } = useSelector(
     (state: RootState) => state.patient
   );
-
+  console.log("selected patient is", selectedPatient);
   const [activeTab, setActiveTab] = useState("overview");
   const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
@@ -184,10 +184,30 @@ export default function PatientDetailPage() {
         return null;
     }
   };
+  const bannerData = {
+    name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+    avatar: "", // No avatar in the provided data
+    initials: `${selectedPatient.first_name?.[0] || ""}${
+      selectedPatient.last_name?.[0] || ""
+    }`,
+    gender: selectedPatient.gender,
+    age: calculateAge(selectedPatient.date_of_birth),
+    mrn: selectedPatient.user_id.toString(),
+    location: `${selectedPatient.city}, ${selectedPatient.state}`,
+    contact: {
+      phone: selectedPatient.phone_number,
+      email: selectedPatient.email,
+      address: selectedPatient.address,
+    },
+    dob: selectedPatient.date_of_birth,
+    admitDate: "2023-10-26", // Placeholder as this is not in the data
+    primaryPhysician: selectedPatient.primary_care_physician,
+    dischargeDate: null, // Assuming patient is active
+  };
 
   return (
     <MainLayout>
-      <PatientBanner patientData={patientData} />
+      <PatientBanner patientData={bannerData} />
 
       <div className="space-y-6 md:space-y-8 p-4">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-1">

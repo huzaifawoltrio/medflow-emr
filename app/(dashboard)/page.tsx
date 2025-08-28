@@ -1,6 +1,10 @@
 "use client";
 
-import MainLayout from "@/components/layout/main-layout"; // Corrected import
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../redux/store";
+import { getUserDetails } from "../redux/features/auth/authActions";
+import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +19,11 @@ import {
   CalendarCheck,
   ScanLine,
   FileText,
+  Loader2,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import Link from "next/link";
+
 // A helper component for Quick Action items
 const QuickActionButton = ({
   icon: Icon,
@@ -39,6 +45,20 @@ const QuickActionButton = ({
 );
 
 export default function Dashboard() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, loading, error } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  useEffect(() => {
+    // Fetch user details if not already present in the store
+    if (!user) {
+      dispatch(getUserDetails());
+    }
+  }, [dispatch, user]);
+
+  const doctorName = user ? `${user.first_name} ${user.last_name}` : "Doctor";
+
   return (
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
@@ -46,7 +66,11 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Good morning, Dr. Johnson
+              {loading ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : (
+                `Good morning, Dr. ${doctorName}`
+              )}
             </h1>
             <p className="text-gray-600 mt-1">
               Here's what's happening with your practice today.
