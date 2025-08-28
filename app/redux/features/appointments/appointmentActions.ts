@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import api from "../../../lib/axiosConfig";
+import api from "../../../../lib/axiosConfig";
 
 // Interface for the raw appointment data from the API
 export interface Appointment {

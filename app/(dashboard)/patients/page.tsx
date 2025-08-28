@@ -25,6 +25,7 @@ import {
   MapPin,
   Filter,
 } from "lucide-react";
+import withAuth from "@/app/withAuth";
 
 /**
  * Calculates age based on a date of birth string.

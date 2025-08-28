@@ -4,7 +4,6 @@ import { useState } from "react";
 import type React from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
-import withAuth from "@/app/withAuth"; // Import the withAuth HOC
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -38,4 +37,4 @@ function MainLayout({ children }: MainLayoutProps) {
 }
 
 // Wrap MainLayout with the withAuth HOC before exporting
-export default withAuth(MainLayout);
+export default MainLayout;

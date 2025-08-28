@@ -1,7 +1,7 @@
 // components/appointments/AppointmentDetailsModal.tsx
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FormattedAppointment } from "../../app/lib/appointment-utils";
+import { FormattedAppointment } from "../../lib/appointment-utils";
 import { useDispatch } from "react-redux";
 import { deleteAppointment } from "../../app/redux/features/appointments/appointmentActions"; // Adjust this import path as needed
 import { AppDispatch } from "../../app/redux/store"; // Adjust this import path as needed

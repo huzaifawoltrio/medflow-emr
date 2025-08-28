@@ -2,6 +2,7 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { loginUser, getUserDetails } from "./authActions";
+import Cookies from "js-cookie"; // Import js-cookie here as well
 
 // Define the type for the user object
 interface User {
@@ -49,8 +50,12 @@ const authSlice = createSlice({
     },
     // Reducer to log out the user
     logout: (state) => {
+      // Clear storage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      Cookies.remove("accessToken"); // Clear the cookie
+
+      // Reset state
       state.loading = false;
       state.user = null;
       state.accessToken = null;

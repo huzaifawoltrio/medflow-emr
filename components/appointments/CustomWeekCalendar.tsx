@@ -1,10 +1,7 @@
 // components/appointments/CustomWeekCalendar.tsx
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
-import {
-  isSameDay,
-  FormattedAppointment,
-} from "../../app/lib/appointment-utils";
+import { isSameDay, FormattedAppointment } from "../../lib/appointment-utils";
 
 interface CustomWeekCalendarProps {
   appointments: FormattedAppointment[];

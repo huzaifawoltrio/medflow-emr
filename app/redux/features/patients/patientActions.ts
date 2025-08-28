@@ -1,6 +1,6 @@
 // redux/features/patient/patientActions.ts
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../../lib/axiosConfig";
+import api from "../../../../lib/axiosConfig";
 
 // Define the type for the patient data
 interface Patient {

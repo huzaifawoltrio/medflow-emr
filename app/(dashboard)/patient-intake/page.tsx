@@ -26,7 +26,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import api from "@/app/lib/axiosConfig";
+import api from "@/lib/axiosConfig";
 import { useRouter } from "next/navigation";
 
 const sections = [

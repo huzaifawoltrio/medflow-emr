@@ -1,7 +1,8 @@
 // redux/features/auth/authActions.ts
 
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../../lib/axiosConfig"; // Using the configured axios instance
+import api from "../../../../lib/axiosConfig"; // Using the configured axios instance
+import Cookies from "js-cookie"; // 1. Import js-cookie
 
 // Define the type for the login credentials
 interface LoginCredentials {
@@ -36,25 +37,35 @@ export const loginUser = createAsyncThunk<
   LoginResponse, // Type for the successful return value
   LoginCredentials, // Type for the argument passed to the thunk
   { rejectValue: string } // Type for the value returned on rejection
->("auth/login", async ({ username, password }, { rejectWithValue }) => {
-  try {
-    const response = await api.post<LoginResponse>("/auth/login", {
-      username,
-      password,
-    });
-    // On success, store tokens in localStorage
-    localStorage.setItem("accessToken", response.data.access_token);
-    localStorage.setItem("refreshToken", response.data.refresh_token);
-    return response.data;
-  } catch (error: any) {
-    // Handle potential errors from the API call
-    if (error.response && error.response.data.message) {
-      return rejectWithValue(error.response.data.message);
-    } else {
-      return rejectWithValue(error.message);
+>(
+  "auth/login",
+  async ({ username, password }: any, { rejectWithValue }: any) => {
+    try {
+      const response = await api.post<LoginResponse>("/auth/login", {
+        username,
+        password,
+      });
+      // On success, store tokens in localStorage for client-side API calls
+      localStorage.setItem("accessToken", response.data.access_token);
+      localStorage.setItem("refreshToken", response.data.refresh_token);
+
+      // 2. ALSO, set the access token as a cookie for the middleware to read
+      Cookies.set("accessToken", response.data.access_token, {
+        expires: 1,
+        path: "/",
+      }); // Expires in 1 day
+
+      return response.data;
+    } catch (error: any) {
+      // Handle potential errors from the API call
+      if (error.response && error.response.data.message) {
+        return rejectWithValue(error.response.data.message);
+      } else {
+        return rejectWithValue(error.message);
+      }
     }
   }
-});
+);
 
 /**
  * Async thunk to fetch the current user's details.

@@ -41,12 +41,7 @@ export default function Login() {
   // 2. Update the useEffect to handle role-based redirection
   useEffect(() => {
     if (success && user) {
-      if (user.role === "patient") {
-        router.push("/patient-portal");
-      } else {
-        // For 'doctor', 'superadmin', etc.
-        router.push("/");
-      }
+      router.push("/");
     }
   }, [success, user, router]);
 

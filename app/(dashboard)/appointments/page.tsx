@@ -1,4 +1,3 @@
-// app/appointments/page.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -9,7 +8,7 @@ import {
   formatAppointmentsForCalendar,
   isSameDay,
   FormattedAppointment,
-} from "../../lib/appointment-utils";
+} from "../../../lib/appointment-utils";
 import CustomWeekCalendar from "@/components/appointments/CustomWeekCalendar";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import AppointmentDetailsModal from "@/components/appointments/AppointmentDetailsModal";
