@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import api from "../../../lib/axiosConfig";
 
 // Interface for the raw appointment data from the API
@@ -71,6 +71,29 @@ export const createAppointment = createAsyncThunk<
       return rejectWithValue(error.response.data.message);
     } else {
       return rejectWithValue(error.message || "Failed to create appointment");
+    }
+  }
+});
+
+/**
+ * Async thunk for deleting an appointment.
+ * It takes the appointment ID and returns the ID on success to be removed from the state.
+ */
+export const deleteAppointment = createAsyncThunk<
+  number, // This is the type of the returned payload on success (appointment ID)
+  number, // This is the type of the argument passed to the thunk (appointment ID)
+  { rejectValue: string }
+>("appointments/delete", async (appointmentId, { rejectWithValue }) => {
+  try {
+    // Make the DELETE request to the API endpoint
+    await api.delete(`/appointments/${appointmentId}`);
+    // On success, return the ID of the deleted appointment
+    return appointmentId;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message || "Failed to delete appointment");
     }
   }
 });

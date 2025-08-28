@@ -3,6 +3,7 @@ import {
   fetchAppointments,
   createAppointment,
   Appointment,
+  deleteAppointment,
 } from "./appointmentActions";
 
 // Interface for the appointment state
@@ -57,6 +58,28 @@ const appointmentSlice = createSlice({
       )
       .addCase(
         createAppointment.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        }
+      )
+      // Delete appointment
+      .addCase(deleteAppointment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        deleteAppointment.fulfilled,
+        (state, action: PayloadAction<number>) => {
+          state.loading = false;
+          // Filter out the deleted appointment using the ID from the payload
+          state.appointments = state.appointments.filter(
+            (appointment) => appointment.id !== action.payload
+          );
+        }
+      )
+      .addCase(
+        deleteAppointment.rejected,
         (state, action: PayloadAction<any>) => {
           state.loading = false;
           state.error = action.payload;
