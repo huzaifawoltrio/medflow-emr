@@ -35,8 +35,6 @@ const patientNavigation = [
     icon: ClipboardList,
   },
   { name: "Billing", href: "/patient-portal/billing", icon: DollarSign },
-  { name: "Prescriptions", href: "/patient-portal/prescriptions", icon: Pill },
-  { name: "Telehealth", href: "/patient-portal/telehealth", icon: Video },
 ];
 
 export function PatientSidebar({

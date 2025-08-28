@@ -91,13 +91,6 @@ const CustomWeekCalendar = ({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button
-          className="bg-blue-800 hover:bg-blue-700 shadow-md transition-all duration-200"
-          onClick={onAddNewClick}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add new
-        </Button>
       </div>
 
       <div className="relative overflow-x-auto">

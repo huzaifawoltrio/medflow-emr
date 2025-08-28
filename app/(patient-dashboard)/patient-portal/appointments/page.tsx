@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import MainLayout from "@/components/layout/main-layout";
+
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import { fetchAppointments } from "@/app/redux/features/appointments/appointmentActions";
 import {
@@ -9,13 +9,12 @@ import {
   isSameDay,
   FormattedAppointment,
 } from "../../../../lib/appointment-utils";
-import CustomWeekCalendar from "@/components/appointments/CustomWeekCalendar";
-import AppointmentModal from "@/components/appointments/AppointmentModal";
+import CustomWeekCalendar from "@/components/appointments/PatientWeekCalendar";
+
 import AppointmentDetailsModal from "@/components/appointments/AppointmentDetailsModal";
 import SidebarCards from "@/components/appointments/SidebarCards";
 
 export default function Appointments() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<FormattedAppointment | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -27,6 +26,9 @@ export default function Appointments() {
     error,
   } = useAppSelector((state: any) => state.appointment);
 
+  // Get user info from the auth state
+  const { userInfo } = useAppSelector((state: any) => state.auth);
+  console.log("user info is", userInfo);
   useEffect(() => {
     const start = new Date(currentWeek);
     start.setDate(start.getDate() - start.getDay());
@@ -92,11 +94,6 @@ export default function Appointments() {
           pendingAppointments={pendingAppointments}
         />
       </div>
-
-      <AppointmentModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
 
       <AppointmentDetailsModal
         isOpen={isDetailsModalOpen}
