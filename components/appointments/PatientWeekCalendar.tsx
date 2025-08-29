@@ -1,6 +1,6 @@
 // components/appointments/CustomWeekCalendar.tsx
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2, Clock } from "lucide-react";
 import { isSameDay, FormattedAppointment } from "../../lib/appointment-utils";
 
 interface CustomWeekCalendarProps {
@@ -10,7 +10,6 @@ interface CustomWeekCalendarProps {
   onAddNewClick: () => void;
   onAppointmentClick: (appointment: FormattedAppointment) => void;
   loading: boolean;
-  userRole?: string; // Add userRole to props
 }
 
 const CustomWeekCalendar = ({
@@ -34,7 +33,7 @@ const CustomWeekCalendar = ({
   };
 
   const weekDays = getWeekDays(currentWeek);
-  const timeSlots = Array.from({ length: 8 }, (_, i) => {
+  const timeSlots = Array.from({ length: 10 }, (_, i) => {
     const hour = 9 + i;
     return `${hour.toString().padStart(2, "0")}:00`;
   });
@@ -44,11 +43,11 @@ const CustomWeekCalendar = ({
     const [endHour, endMin] = endTime.split(":").map(Number);
     const startMinutes = (startHour - 9) * 60 + startMin;
     const endMinutes = (endHour - 9) * 60 + endMin;
-    const top = (startMinutes / 60) * 80;
-    const height = ((endMinutes - startMinutes) / 60) * 80;
+    const top = (startMinutes / 60) * 60;
+    const height = ((endMinutes - startMinutes) / 60) * 60;
     return {
       top: `${top}px`,
-      height: `${Math.max(height, 80)}px`,
+      height: `${Math.max(height, 60)}px`,
     };
   };
 
@@ -58,7 +57,7 @@ const CustomWeekCalendar = ({
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     const monthName = start.toLocaleDateString("en-US", { month: "long" });
-    return `${monthName} ${start.getDate()} - ${end.getDate()}, ${start.getFullYear()}`;
+    return `${monthName} ${start.getDate()}-${end.getDate()}`;
   };
 
   const navigateWeek = (direction: "prev" | "next") => {
@@ -67,152 +66,174 @@ const CustomWeekCalendar = ({
     setCurrentWeek(newDate);
   };
 
+  const today = new Date();
+
   return (
-    <div className="bg-white rounded-2xl border border-blue-200 p-3 md:p-6 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
-        <div className="flex items-center gap-2">
+    <div className="bg-white p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-1">
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="sm"
             onClick={() => navigateWeek("prev")}
-            className="hover:bg-blue-50"
+            className="p-1 hover:bg-gray-100 rounded"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 text-gray-600" />
           </Button>
-          <h2 className="text-lg md:text-xl font-semibold text-gray-900 text-center w-48">
+          <span className="text-base text-gray-700 mx-4 min-w-[120px] text-center">
             {formatWeekRange(currentWeek)}
-          </h2>
+          </span>
           <Button
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            size="sm"
             onClick={() => navigateWeek("next")}
-            className="hover:bg-blue-50"
+            className="p-1 hover:bg-gray-100 rounded"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 text-gray-600" />
           </Button>
         </div>
+
+        <div className="flex items-center gap-4"></div>
       </div>
 
-      <div className="relative overflow-x-auto">
-        <div className="grid grid-cols-8 border-b border-gray-200 pb-2 md:pb-4 mb-2 md:mb-4 min-w-[600px] md:min-w-0">
-          <div className="text-xs md:text-sm text-gray-500 font-medium px-1">
-            Time
+      {/* Calendar Grid */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Header Row */}
+        <div className="grid grid-cols-8 bg-gray-50 border-b border-gray-200">
+          <div className="p-4 text-sm font-medium text-gray-600 border-r border-gray-200">
+            Week
           </div>
-          {weekDays.map((day, index) => (
-            <div key={index} className="text-center px-1">
-              <div className="text-xs md:text-sm font-medium text-gray-900">
-                {day.getDate()}
+          {weekDays.map((day, index) => {
+            const isToday = isSameDay(day, today);
+            return (
+              <div key={index} className="p-4 text-center">
+                <div
+                  className={`text-lg font-medium ${
+                    isToday ? "text-blue-600" : "text-gray-900"
+                  }`}
+                >
+                  {day.getDate()}
+                </div>
+                <div
+                  className={`text-sm ${
+                    isToday ? "text-blue-600" : "text-gray-500"
+                  }`}
+                >
+                  {day.toLocaleDateString("en-US", { weekday: "short" })}
+                </div>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {day.toLocaleDateString("en-US", { weekday: "short" })}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="relative min-w-[600px] md:min-w-0">
-          <div className="absolute left-0 top-0 w-16 md:w-20 z-10">
-            {timeSlots.map((time) => (
-              <div
-                key={time}
-                className="flex items-start pt-3 md:pt-4 text-xs text-gray-400 bg-white"
-                style={{ height: "80px" }}
-              >
+        {/* Time Grid */}
+        <div className="relative">
+          {timeSlots.map((time, index) => (
+            <div
+              key={time}
+              className="grid grid-cols-8 border-b border-gray-200 last:border-b-0"
+              style={{ height: "60px" }}
+            >
+              {/* Time Label */}
+              <div className="p-4 text-sm text-gray-500 border-r border-gray-200 flex items-start pt-3 gap-2">
                 {time}
               </div>
-            ))}
-          </div>
 
-          <div className="ml-16 md:ml-20 relative">
-            {/* Background lines */}
-            {timeSlots.map((_, index) => (
-              <div
-                key={index}
-                className="border-t border-gray-200"
-                style={{ height: "80px" }}
-              />
-            ))}
-
-            <div className="absolute inset-0 grid grid-cols-7">
+              {/* Day Columns */}
               {weekDays.map((day, dayIndex) => (
                 <div
-                  key={dayIndex}
-                  className="relative bg-white border-r border-gray-100 last:border-r-0"
+                  key={`${time}-${dayIndex}`}
+                  className="relative hover:bg-gray-50 transition-colors"
                 >
-                  {/* Vertical hour lines */}
-                  {timeSlots.map((_, hourIndex) => (
-                    <div
-                      key={hourIndex}
-                      className="absolute left-0 right-0 border-t border-gray-100"
-                      style={{ top: `${hourIndex * 80}px`, height: "1px" }}
-                    />
-                  ))}
+                  {loading
+                    ? index === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                        </div>
+                      )
+                    : appointments
+                        .filter((apt) => isSameDay(apt.date, day))
+                        .map((appointment) => {
+                          const [startHour] = appointment.startTime
+                            .split(":")
+                            .map(Number);
+                          const appointmentHour = 9 + index;
 
-                  {loading ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-300" />
-                    </div>
-                  ) : (
-                    appointments
-                      .filter((apt) => isSameDay(apt.date, day))
-                      .map((appointment) => {
-                        const position = getAppointmentPosition(
-                          appointment.startTime,
-                          appointment.endTime
-                        );
-                        return (
-                          <div
-                            key={appointment.id}
-                            onClick={() => onAppointmentClick(appointment)}
-                            className={`
-                              absolute left-1 right-1
+                          // Only render on the hour where the appointment starts
+                          if (startHour !== appointmentHour) return null;
+
+                          const position = getAppointmentPosition(
+                            appointment.startTime,
+                            appointment.endTime
+                          );
+
+                          // Get bolder text color based on background
+                          const getBoldTextColor = (colorClass: string) => {
+                            if (colorClass.includes("bg-blue"))
+                              return "text-blue-800";
+                            if (colorClass.includes("bg-green"))
+                              return "text-green-800";
+                            if (colorClass.includes("bg-purple"))
+                              return "text-purple-800";
+                            if (colorClass.includes("bg-red"))
+                              return "text-red-800";
+                            if (colorClass.includes("bg-yellow"))
+                              return "text-yellow-800";
+                            if (colorClass.includes("bg-pink"))
+                              return "text-pink-800";
+                            if (colorClass.includes("bg-cyan"))
+                              return "text-cyan-800";
+                            return "text-gray-800";
+                          };
+
+                          return (
+                            <div
+                              key={appointment.id}
+                              onClick={() => onAppointmentClick(appointment)}
+                              className={`
+                              absolute left-1 right-1 top-1 
                               ${appointment.color} ${appointment.borderColor}
-                              border-l-4 rounded-xl shadow-sm hover:shadow-lg
-                              cursor-pointer transition-all duration-300 ease-in-out
-                              hover:scale-[1.02] hover:-translate-y-0.5
-                              z-20 flex flex-col justify-start
-                              p-3 overflow-hidden
-                              backdrop-blur-sm border border-white/20
-                              transform-gpu
-                              active:scale-[0.98] select-none
+                              border-l-4 rounded-lg shadow-sm hover:shadow-md
+                              cursor-pointer transition-all duration-200
+                              z-10 p-2 text-xs
                             `}
-                            style={{
-                              top: position.top,
-                              height: position.height,
-                              minHeight: "80px",
-                            }}
-                          >
-                            {/* Time Header */}
-                            <div className="flex items-center gap-2 mb-2 flex-shrink-0">
-                              <div className="w-2 h-2 rounded-full bg-current opacity-80 flex-shrink-0" />
-                              <span className="text-xs font-semibold text-gray-700 leading-none">
-                                {appointment.timeDisplay}
-                              </span>
-                            </div>
-
-                            {/* Appointment Title */}
-                            <div className="flex-1 flex flex-col justify-start">
-                              <div className="text-sm font-medium text-gray-900 leading-tight mb-1 break-words">
+                              style={{
+                                height: position.height,
+                                minHeight: "58px",
+                              }}
+                            >
+                              <div
+                                className={`font-medium leading-tight ${getBoldTextColor(
+                                  appointment.color
+                                )}`}
+                              >
                                 {appointment.title}
                               </div>
-
+                              <div
+                                className={`mt-1 flex items-center gap-1 ${getBoldTextColor(
+                                  appointment.color
+                                )} opacity-80`}
+                              >
+                                <Clock className="h-3 w-3 mt-0.5" />
+                                <span>{appointment.timeDisplay}</span>
+                              </div>
                               {appointment.description && (
-                                <div className="text-xs text-gray-600 leading-tight opacity-90 line-clamp-2">
+                                <div
+                                  className={`mt-1 line-clamp-1 ${getBoldTextColor(
+                                    appointment.color
+                                  )} opacity-70`}
+                                >
                                   {appointment.description}
                                 </div>
                               )}
                             </div>
-
-                            {/* Hover overlay effect */}
-                            <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200 rounded-xl pointer-events-none" />
-                          </div>
-                        );
-                      })
-                  )}
+                          );
+                        })}
                 </div>
               ))}
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

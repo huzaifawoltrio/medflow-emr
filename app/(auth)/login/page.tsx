@@ -38,6 +38,10 @@ export default function Login() {
     dispatch(loginUser({ username, password }));
   };
 
+  const handlePatientLogin = () => {
+    dispatch(loginUser({ username: "johnsmith", password: "tS~&<+U0w9V{" }));
+  };
+
   // 2. Update the useEffect to handle role-based redirection
   useEffect(() => {
     if (success && user) {
@@ -149,6 +153,19 @@ export default function Login() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Sign In →"
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handlePatientLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  "Temp Patient Login"
                 )}
               </Button>
             </form>

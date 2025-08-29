@@ -30,7 +30,6 @@ const navigation = [
   { name: "Appointments", href: "/appointments", icon: Calendar },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Patient Intake", href: "/patient-intake", icon: FileText },
-  { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
   // { name: "e-Prescription", href: "/e-prescription", icon: Pill },
