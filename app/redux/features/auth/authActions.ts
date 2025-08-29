@@ -45,15 +45,15 @@ export const loginUser = createAsyncThunk<
         username,
         password,
       });
-      // On success, store tokens in localStorage for client-side API calls
-      localStorage.setItem("accessToken", response.data.access_token);
-      localStorage.setItem("refreshToken", response.data.refresh_token);
-
-      // 2. ALSO, set the access token as a cookie for the middleware to read
+      // On success, store tokens in cookies
       Cookies.set("accessToken", response.data.access_token, {
         expires: 1,
         path: "/",
-      }); // Expires in 1 day
+      });
+      Cookies.set("refreshToken", response.data.refresh_token, {
+        expires: 7,
+        path: "/",
+      }); // Example: refresh token expires in 7 days
 
       return response.data;
     } catch (error: any) {
@@ -69,7 +69,7 @@ export const loginUser = createAsyncThunk<
 
 /**
  * Async thunk to fetch the current user's details.
- * It uses the access token stored in localStorage to make an authenticated request.
+ * It uses the access token stored in cookies to make an authenticated request.
  */
 export const getUserDetails = createAsyncThunk<
   UserData,

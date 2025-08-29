@@ -1,6 +1,7 @@
 // lib/axiosConfig.ts
 
 import axios from "axios";
+import Cookies from "js-cookie";
 
 // Create an Axios instance
 const api = axios.create({
@@ -12,14 +13,13 @@ const api = axios.create({
 
 /**
  * Interceptor to add the auth token to requests.
- * The token is retrieved from localStorage.
- * You can adapt this to however you choose to store the token.
+ * The token is retrieved from cookies.
  */
 api.interceptors.request.use(
   (config) => {
     // Check if window is defined (to ensure it's running on the client-side)
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("accessToken");
+      const token = Cookies.get("accessToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }

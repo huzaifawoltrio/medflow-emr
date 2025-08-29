@@ -12,6 +12,15 @@ const secret = new TextEncoder().encode(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  console.log(`\n--- Middleware running for path: ${pathname} ---`);
+
+  // --- ADD THIS LOG TO CHECK YOUR SECRET ---
+  // If this logs 'undefined', your .env file is not being read correctly.
+  console.log(
+    "Using JWT_SECRET:",
+    process.env.JWT_SECRET ? "Loaded from env" : "Using fallback secret"
+  );
+
   const token = request.cookies.get("accessToken")?.value;
 
   const publicPaths = ["/login", "/signup", "/forgot-password"];
@@ -19,28 +28,32 @@ export async function middleware(request: NextRequest) {
 
   // --- Logic for Authenticated Users ---
   if (token) {
+    console.log("Token found. Attempting to verify...");
     try {
       const { payload } = await jwtVerify(token, secret);
+      // --- THIS LOG IS KEY ---
+      // If you see this, the token was successfully verified and is NOT considered invalid/expired.
+      console.log("✅ Token verification SUCCEEDED. Payload:", payload);
+
       const userRole = payload.role as string;
 
-      // If an authenticated user tries to access a public path (e.g., /login), redirect them away
       if (isPublicPath) {
         const url =
           userRole === authConfig.roles.patient ? "/patient-portal" : "/";
         return NextResponse.redirect(new URL(url, request.url));
       }
 
-      // Check authorization for the requested protected route
       const allowedRoles = getAllowedRolesForPath(pathname);
       if (allowedRoles && !allowedRoles.includes(userRole)) {
-        // If their role is not allowed, redirect to their default dashboard
         const url =
           userRole === authConfig.roles.patient ? "/patient-portal" : "/";
         return NextResponse.redirect(new URL(url, request.url));
       }
     } catch (err) {
-      // This happens if the token is invalid or expired
-      // Redirect to the login page and clear the bad cookie
+      // --- THIS IS THE BLOCK YOU EXPECT TO RUN ---
+      // If the token is invalid, you should see this error log.
+      console.error("❌ TOKEN VERIFICATION FAILED:", err);
+
       const response = NextResponse.redirect(
         new URL(authConfig.pages.signIn, request.url)
       );
@@ -51,37 +64,38 @@ export async function middleware(request: NextRequest) {
 
   // --- Logic for Unauthenticated Users ---
   if (!token) {
-    // If an unauthenticated user tries to access a protected route, redirect to login
+    console.log("No token found.");
     if (!isPublicPath) {
+      console.log(
+        "Accessing protected route without token. Redirecting to login."
+      );
       return NextResponse.redirect(
         new URL(authConfig.pages.signIn, request.url)
       );
     }
   }
 
-  // If none of the above conditions are met, allow the request to proceed
+  console.log("Request allowed to proceed.");
   return NextResponse.next();
 }
 
+// ... (getAllowedRolesForPath and config functions remain the same)
+// Keep your existing getAllowedRolesForPath and config exports here
 /**
- * Finds the allowed roles for a given pathname by matching it against the protectedRoutes config.
- * This helper correctly handles dynamic routes like '/patients/[username]'.
- * @param pathname The path from the incoming request.
- * @returns An array of allowed roles, or undefined if the route is not protected.
+ * Finds the allowed roles for a given pathname...
  */
 function getAllowedRolesForPath(pathname: string): string[] | undefined {
+  // ... your implementation
   const { protectedRoutes } = authConfig;
-  // Find a protected route pattern that matches the current pathname
   for (const routePattern in protectedRoutes) {
     const regex = new RegExp(`^${routePattern.replace(/\[.*?\]/g, "[^/]+")}$`);
     if (regex.test(pathname)) {
       return protectedRoutes[routePattern as keyof typeof protectedRoutes];
     }
   }
-  return undefined; // Return undefined if no pattern matches (i.e., it's not a protected route)
+  return undefined;
 }
 
-// Configure which paths the middleware should run on
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

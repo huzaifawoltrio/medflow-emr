@@ -28,8 +28,8 @@ interface AuthState {
 const initialState: AuthState = {
   loading: false,
   user: null,
-  accessToken: null,
-  refreshToken: null,
+  accessToken: Cookies.get("accessToken") || null,
+  refreshToken: Cookies.get("refreshToken") || null,
   error: null,
   success: false,
 };
@@ -40,20 +40,16 @@ const authSlice = createSlice({
   reducers: {
     // Add this new rehydrateAuth reducer
     rehydrateAuth: (state) => {
-      // This check ensures localStorage is only accessed on the client-side
-      if (typeof window !== "undefined") {
-        const accessToken = localStorage.getItem("accessToken");
-        if (accessToken) {
-          state.accessToken = accessToken;
-        }
+      const accessToken = Cookies.get("accessToken");
+      if (accessToken) {
+        state.accessToken = accessToken;
       }
     },
     // Reducer to log out the user
     logout: (state) => {
       // Clear storage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      Cookies.remove("accessToken"); // Clear the cookie
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
 
       // Reset state
       state.loading = false;
