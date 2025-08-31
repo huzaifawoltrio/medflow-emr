@@ -88,3 +88,24 @@ export const getUserDetails = createAsyncThunk<
     }
   }
 });
+
+/**
+ * Async thunk to fetch the doctor's profile.
+ * It uses the access token stored in cookies to make an authenticated request.
+ */
+export const getDoctorProfile = createAsyncThunk<
+  any, // Replace 'any' with a specific DoctorProfile interface
+  void,
+  { rejectValue: string }
+>("auth/getDoctorProfile", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/doctors/profile");
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,52 +21,71 @@ import {
   Edit,
   Save,
   X,
+  Loader2,
 } from "lucide-react";
-
-// Sample doctor profile data
-const doctorProfile = {
-  first_name: "Jane",
-  last_name: "Doe",
-  email: "jane.doe@emr.com",
-  phone: "(555) 123-4567",
-  department: "Cardiology",
-  specialization: "Interventional Cardiology",
-  medical_license_number: "MD-UNIQUE-12345",
-  qualifications: "MD, FACC",
-  years_of_experience: 10,
-  npi_number: "1234567890",
-  dea_number: "JD1234567",
-  available_for_telehealth: true,
-  biography:
-    "Dr. Jane Doe is a leading expert in cardiology with over 10 years of experience in interventional procedures. She specializes in complex cardiac interventions and has published numerous research papers in cardiovascular medicine.",
-  languages_spoken: "English, Spanish",
-  address: "123 Medical Center Drive, Suite 200",
-  city: "San Francisco",
-  state: "CA",
-  zip_code: "94102",
-};
+import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
+import {
+  getDoctorProfile,
+  getUserDetails,
+} from "@/app/redux/features/auth/authActions";
 
 export default function ProfilePage() {
+  const dispatch = useAppDispatch();
+  const { user, doctorProfile, loading } = useAppSelector(
+    (state) => state.auth
+  );
+
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(doctorProfile);
+  const [profileData, setProfileData] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      dispatch(getUserDetails());
+    }
+    dispatch(getDoctorProfile());
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    if (doctorProfile) {
+      setProfileData({
+        ...user,
+        ...doctorProfile,
+      });
+    }
+  }, [user, doctorProfile]);
 
   const handleInputChange = (
     field: keyof typeof profileData,
     value: string | boolean
   ) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }));
+    setProfileData((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
     setIsEditing(false);
-    // Here you would typically save to a database
+    // Here you would typically dispatch an action to save the updated profile
     console.log("Profile saved:", profileData);
   };
 
   const handleCancel = () => {
-    setProfileData(doctorProfile);
+    if (user && doctorProfile) {
+      setProfileData({
+        ...user,
+        ...doctorProfile,
+      });
+    }
     setIsEditing(false);
   };
+
+  if (loading || !profileData) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-800" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -111,10 +130,15 @@ export default function ProfilePage() {
           <Card className="lg:col-span-1 rounded-xl shadow-sm h-fit">
             <CardContent className="p-4">
               <Avatar className="w-16 h-16 mx-auto mb-2">
-                <AvatarImage src="/professional-doctor-headshot.png" />
+                <AvatarImage
+                  src={
+                    profileData.profile_picture_url ||
+                    "/professional-doctor-headshot.png"
+                  }
+                />
                 <AvatarFallback className="text-lg bg-blue-100 text-blue-800">
-                  {profileData.first_name[0]}
-                  {profileData.last_name[0]}
+                  {profileData.first_name?.[0]}
+                  {profileData.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
               <h2 className="text-lg font-semibold text-gray-900 mb-1 text-center">
@@ -138,12 +162,14 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">{profileData.phone}</span>
+                  <span className="text-gray-600">
+                    {profileData.phone || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-3 w-3 text-gray-400 flex-shrink-0" />
                   <span className="text-gray-600">
-                    {profileData.city}, {profileData.state}
+                    {profileData.city || "N/A"}, {profileData.state || "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -237,14 +263,14 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="phone"
-                        value={profileData.phone}
+                        value={profileData.phone || ""}
                         onChange={(e) =>
                           handleInputChange("phone", e.target.value)
                         }
                       />
                     ) : (
                       <p className="text-gray-900 font-medium">
-                        {profileData.phone}
+                        {profileData.phone || "N/A"}
                       </p>
                     )}
                   </div>
@@ -254,14 +280,14 @@ export default function ProfilePage() {
                   {isEditing ? (
                     <Input
                       id="address"
-                      value={profileData.address}
+                      value={profileData.address || ""}
                       onChange={(e) =>
                         handleInputChange("address", e.target.value)
                       }
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">
-                      {profileData.address}
+                      {profileData.address || "N/A"}
                     </p>
                   )}
                 </div>
@@ -271,14 +297,14 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="city"
-                        value={profileData.city}
+                        value={profileData.city || ""}
                         onChange={(e) =>
                           handleInputChange("city", e.target.value)
                         }
                       />
                     ) : (
                       <p className="text-gray-900 font-medium">
-                        {profileData.city}
+                        {profileData.city || "N/A"}
                       </p>
                     )}
                   </div>
@@ -287,14 +313,14 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="state"
-                        value={profileData.state}
+                        value={profileData.state || ""}
                         onChange={(e) =>
                           handleInputChange("state", e.target.value)
                         }
                       />
                     ) : (
                       <p className="text-gray-900 font-medium">
-                        {profileData.state}
+                        {profileData.state || "N/A"}
                       </p>
                     )}
                   </div>
@@ -303,14 +329,14 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <Input
                         id="zipCode"
-                        value={profileData.zip_code}
+                        value={profileData.zip_code || ""}
                         onChange={(e) =>
                           handleInputChange("zip_code", e.target.value)
                         }
                       />
                     ) : (
                       <p className="text-gray-900 font-medium">
-                        {profileData.zip_code}
+                        {profileData.zip_code || "N/A"}
                       </p>
                     )}
                   </div>

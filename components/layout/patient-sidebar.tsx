@@ -35,6 +35,11 @@ const patientNavigation = [
     icon: ClipboardList,
   },
   { name: "Billing", href: "/patient-portal/billing", icon: DollarSign },
+  {
+    name: "Insurance Billing",
+    href: "/patient-portal/insurance-billing",
+    icon: DollarSign,
+  },
 ];
 
 export function PatientSidebar({

@@ -1,7 +1,7 @@
 // redux/features/auth/authSlice.ts
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { loginUser, getUserDetails } from "./authActions";
+import { loginUser, getUserDetails, getDoctorProfile } from "./authActions";
 import Cookies from "js-cookie"; // Import js-cookie here as well
 
 // Define the type for the user object
@@ -15,10 +15,30 @@ interface User {
   profile_picture_url?: string;
 }
 
+// Define the type for the doctor profile object
+interface DoctorProfile {
+  available_for_telehealth: boolean;
+  biography: string;
+  dea_number: string;
+  department: string;
+  email: string;
+  first_name: string;
+  is_active: boolean;
+  languages_spoken: string;
+  last_name: string;
+  medical_license_number: string;
+  npi_number: string;
+  qualifications: string;
+  specialization: string;
+  user_id: number;
+  years_of_experience: number;
+}
+
 // Define the shape of the auth state
 interface AuthState {
   loading: boolean;
   user: User | null; // Store user information
+  doctorProfile: DoctorProfile | null; // Store doctor profile information
   accessToken: string | null;
   refreshToken: string | null;
   error: string | null;
@@ -28,6 +48,7 @@ interface AuthState {
 const initialState: AuthState = {
   loading: false,
   user: null,
+  doctorProfile: null,
   accessToken: Cookies.get("accessToken") || null,
   refreshToken: Cookies.get("refreshToken") || null,
   error: null,
@@ -54,6 +75,7 @@ const authSlice = createSlice({
       // Reset state
       state.loading = false;
       state.user = null;
+      state.doctorProfile = null;
       state.accessToken = null;
       state.refreshToken = null;
       state.error = null;
@@ -93,6 +115,20 @@ const authSlice = createSlice({
       })
       // When getUserDetails is rejected
       .addCase(getUserDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // When getDoctorProfile is pending
+      .addCase(getDoctorProfile.pending, (state) => {
+        state.loading = true;
+      })
+      // When getDoctorProfile is fulfilled
+      .addCase(getDoctorProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.doctorProfile = action.payload;
+      })
+      // When getDoctorProfile is rejected
+      .addCase(getDoctorProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
