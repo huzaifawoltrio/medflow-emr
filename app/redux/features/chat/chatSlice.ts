@@ -111,9 +111,10 @@ const chatSlice = createSlice({
       state.isConnected = false;
     },
 
-    // Message management
+    // Message management - FIXED to prevent duplicates
     addMessage: (state, action: PayloadAction<Message>) => {
       const message = action.payload;
+      console.log("Adding message to Redux:", message.id, message.content);
 
       // Update conversations list
       const conversationIndex = state.conversations.findIndex(
@@ -127,13 +128,20 @@ const chatSlice = createSlice({
         const isFromOtherUser =
           conversation.other_user_id === message.sender_id;
 
-        // Update last message info
-        conversation.last_message = {
-          content: message.content,
-          sender_id: message.sender_id,
-          sent_at: message.sent_at,
-        };
-        conversation.last_message_at = message.sent_at;
+        // Update last message info only if this message is newer
+        const currentLastMessageTime = conversation.last_message_at
+          ? new Date(conversation.last_message_at).getTime()
+          : 0;
+        const newMessageTime = new Date(message.sent_at).getTime();
+
+        if (newMessageTime >= currentLastMessageTime) {
+          conversation.last_message = {
+            content: message.content,
+            sender_id: message.sender_id,
+            sent_at: message.sent_at,
+          };
+          conversation.last_message_at = message.sent_at;
+        }
 
         // Update unread count only if message is from other user and not currently viewing
         if (
@@ -151,15 +159,35 @@ const chatSlice = createSlice({
           if (!state.selectedConversation.messages) {
             state.selectedConversation.messages = [];
           }
-          state.selectedConversation.messages.push(message);
+
+          // CHECK FOR DUPLICATES BEFORE ADDING - Use both ID and content/timestamp
+          const messageExists = state.selectedConversation.messages.some(
+            (existingMessage) =>
+              existingMessage.id === message.id ||
+              (existingMessage.content === message.content &&
+                existingMessage.sender_id === message.sender_id &&
+                Math.abs(
+                  new Date(existingMessage.sent_at).getTime() -
+                    new Date(message.sent_at).getTime()
+                ) < 1000)
+          );
+
+          if (!messageExists) {
+            console.log("Adding new message to conversation:", message.id);
+            state.selectedConversation.messages.push(message);
+          } else {
+            console.log("Duplicate message detected, skipping:", message.id);
+          }
         }
 
-        // Move conversation to top
-        const updatedConversation = state.conversations.splice(
-          conversationIndex,
-          1
-        )[0];
-        state.conversations.unshift(updatedConversation);
+        // Move conversation to top only if this is a new message
+        if (newMessageTime >= currentLastMessageTime) {
+          const updatedConversation = state.conversations.splice(
+            conversationIndex,
+            1
+          )[0];
+          state.conversations.unshift(updatedConversation);
+        }
       }
     },
 

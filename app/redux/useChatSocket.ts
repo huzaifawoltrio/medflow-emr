@@ -39,6 +39,7 @@ export const useChatSocket = (): UseChatSocketReturn => {
   const dispatch = useAppDispatch();
   const { isConnected } = useAppSelector((state) => state.chat);
   const socketRef = useRef<Socket | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
 
   const getAuthToken = useCallback(() => {
     return Cookies.get("accessToken");
@@ -46,6 +47,11 @@ export const useChatSocket = (): UseChatSocketReturn => {
 
   // Initialize socket connection
   useEffect(() => {
+    // Prevent multiple initializations
+    if (isInitializedRef.current) {
+      return;
+    }
+
     const token = getAuthToken();
     if (!token) {
       dispatch(setConnectionError("Authentication token not found"));
@@ -62,6 +68,7 @@ export const useChatSocket = (): UseChatSocketReturn => {
     });
 
     socketRef.current = socket;
+    isInitializedRef.current = true;
 
     // Connection events
     socket.on("connect", () => {
@@ -93,16 +100,21 @@ export const useChatSocket = (): UseChatSocketReturn => {
       console.log("Successfully authenticated:", data);
     });
 
-    // Message events
-    socket.on("new_message", (message: Message) => {
+    // Message events - FIXED to handle duplicates
+    const handleNewMessage = (message: Message) => {
       console.log("New message received:", message);
       dispatch(addMessage(message));
-    });
+    };
 
-    socket.on("message_sent", (message: Message) => {
+    const handleMessageSent = (message: Message) => {
       console.log("Message sent confirmation:", message);
+      // Only add to state if it's our own message and doesn't exist yet
       dispatch(addMessage(message));
-    });
+    };
+
+    // Use named functions to ensure proper cleanup
+    socket.on("new_message", handleNewMessage);
+    socket.on("message_sent", handleMessageSent);
 
     socket.on(
       "message_read",
@@ -125,10 +137,25 @@ export const useChatSocket = (): UseChatSocketReturn => {
 
     // Cleanup on unmount
     return () => {
+      console.log("Cleaning up socket connection");
+
+      // Remove all event listeners
+      socket.off("connect");
+      socket.off("connect_error");
+      socket.off("disconnect");
+      socket.off("error");
+      socket.off("connected");
+      socket.off("new_message", handleNewMessage);
+      socket.off("message_sent", handleMessageSent);
+      socket.off("message_read");
+      socket.off("online_status");
+
       if (socket.connected) {
         socket.disconnect();
       }
+
       socketRef.current = null;
+      isInitializedRef.current = false;
     };
   }, [dispatch, getAuthToken]);
 
@@ -146,6 +173,7 @@ export const useChatSocket = (): UseChatSocketReturn => {
         message_type: "text",
       };
 
+      console.log("Sending message:", messageData);
       socketRef.current.emit("send_message", messageData);
     },
     [dispatch]
