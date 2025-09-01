@@ -4,10 +4,10 @@
 import { useEffect, useState } from "react";
 
 import { MainLayout } from "@/components/layout/main-layout";
-import { PatientBanner } from "@/components/patient-detail/PatientBanner";
+import { PatientBanner } from "../../../../components/patient-detail/patientBanner";
 import { ClinicalTabs } from "@/components/patient-detail/tabs/ClinicalTabs";
 import { OverviewTab } from "@/components/patient-detail/tabs/OverviewTab";
-import { PatientInfoTab } from "@/components/patient-detail/tabs/PatientInfoTab";
+import { PatientInfoTab } from "../../../../components/patient-detail/tabs/PatientInfoTab";
 import { MedicationsTab } from "@/components/patient-detail/tabs/MedicationsTab";
 import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";

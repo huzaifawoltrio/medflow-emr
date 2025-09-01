@@ -22,7 +22,8 @@ import {
   Stethoscope,
   ChevronLeft,
   ChevronRight,
-  TrendingUp, // Added icon for Results Review
+  TrendingUp,
+  Handshake, // Added icon for Results Review
 } from "lucide-react";
 
 const navigation = [
@@ -33,7 +34,11 @@ const navigation = [
   { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
-  // { name: "e-Prescription", href: "/e-prescription", icon: Pill },
+  {
+    name: "Patient Provider Relationships",
+    href: "/relationships",
+    icon: Handshake,
+  },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Documents", href: "/documents", icon: ClipboardList },
   { name: "Results Review", href: "/results-review", icon: TrendingUp }, // Added new Results Review link
