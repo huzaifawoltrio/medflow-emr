@@ -7,6 +7,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { PatientBanner } from "@/components/patient-detail/PatientBanner";
 import { ClinicalTabs } from "@/components/patient-detail/tabs/ClinicalTabs";
 import { OverviewTab } from "@/components/patient-detail/tabs/OverviewTab";
+import { PatientInfoTab } from "@/components/patient-detail/tabs/PatientInfoTab";
 import { MedicationsTab } from "@/components/patient-detail/tabs/MedicationsTab";
 import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";
@@ -19,6 +20,7 @@ import { OrderLabDialog } from "@/components/patient-detail/dialogs/OrderLabDial
 import {
   Loader2,
   LayoutDashboard,
+  User,
   Pill,
   FlaskConical,
   FileText,
@@ -31,6 +33,7 @@ import { patientData } from "./data";
 // Static data for UI elements like tabs, now with icons
 const clinicalTabs = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "patient-info", label: "Patient Information", icon: User },
   { id: "medications", label: "Medications", icon: Pill },
   { id: "labs", label: "Lab Results", icon: FlaskConical },
   { id: "notes", label: "Clinical Notes", icon: FileText },
@@ -99,6 +102,8 @@ export default function PatientDetailPage() {
             setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
+      case "patient-info":
+        return <PatientInfoTab patientData={patientData} />;
       case "medications":
         return (
           <MedicationsTab

@@ -8,6 +8,7 @@ import {
   Camera,
   Receipt,
   ClipboardList,
+  User,
 } from "lucide-react";
 
 export const patientData = {
@@ -30,6 +31,39 @@ export const patientData = {
   },
   allergies: ["Penicillin", "Peanuts"],
   currentMedications: ["Lisinopril 10mg daily", "Atorvastatin 20mg daily"],
+  // Extended patient information from intake form
+  personalInfo: {
+    firstName: "John",
+    lastName: "Doe",
+    dateOfBirth: "1985-03-15",
+    gender: "Male",
+    phoneNumber: "(555) 123-4567",
+    emailAddress: "john.doe@email.com",
+    address: "123 Main St",
+    city: "Anytown",
+    state: "CA",
+    zipCode: "12345",
+    emergencyContactName: "Jane Doe",
+    emergencyContactPhone: "(555) 987-6543",
+  },
+  insurance: {
+    insuranceProvider: "Blue Cross Blue Shield",
+    policyNumber: "BC123456789",
+    groupNumber: "GRP001",
+    policyHolderName: "John Doe",
+    policyHolderDob: "1985-03-15",
+    relationshipToPatient: "self",
+  },
+  medicalHistory: {
+    primaryCarePhysician: "Dr. Robert Johnson",
+    allergies: ["Penicillin", "Peanuts"],
+    currentMedications: "Lisinopril 10mg daily, Atorvastatin 20mg daily",
+    previousSurgeries: "Appendectomy (2018)",
+    familyMedicalHistory: "Father: Hypertension, Mother: Diabetes Type 2",
+    smokingStatus: "never",
+    alcoholConsumption: "occasional",
+    exerciseFrequency: "1-3-week",
+  },
   vitals: {
     bp: "120/80 mmHg",
     hr: "72 bpm",
@@ -102,6 +136,7 @@ export const patientData = {
 
 export const clinicalTabs = [
   { id: "overview", label: "Overview", icon: ClipboardList },
+  { id: "patient-info", label: "Patient Information", icon: User },
   { id: "medications", label: "Medications", icon: Pill },
   { id: "labs", label: "Labs & Diagnostics", icon: FlaskConical },
   { id: "notes", label: "Clinical Notes", icon: FileText },
