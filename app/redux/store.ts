@@ -3,6 +3,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import patientReducer from "./features/patients/patientSlice";
 import appointmentReducer from "./features/appointments/appointmentSlice"; // Added appointment reducer
+import chatReducer from "./features/chat/chatSlice";
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -11,6 +12,7 @@ export const makeStore = () => {
       auth: authReducer,
       patient: patientReducer,
       appointment: appointmentReducer, // Register the new reducer
+      chat: chatReducer,
     },
   });
 };

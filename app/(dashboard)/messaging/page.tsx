@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,249 +30,183 @@ import {
   Send,
   MessageSquare,
   Shield,
-  Clock,
+  Loader2,
   ArrowLeft,
+  Circle,
+  X,
+  AlertCircle,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import MainLayout from "@/components/layout/main-layout";
-
-// Sample conversation data
-const sampleConversations = [
-  {
-    id: 1,
-    participant: "Dr. Smith",
-    participantType: "provider",
-    lastMessage:
-      "Your lab results look good. Let me know if you have any questions.",
-    timestamp: "8/12/2025",
-    time: "2:30 PM",
-    unread: 2,
-    messages: [
-      {
-        id: 1,
-        sender: "Dr. Smith",
-        senderType: "provider",
-        content: "Hello! I wanted to follow up on your recent lab work.",
-        timestamp: "8/12/2025 1:15 PM",
-        isOwn: false,
-      },
-      {
-        id: 2,
-        sender: "You",
-        senderType: "patient",
-        content:
-          "Hi Dr. Smith! I've been waiting for the results. How do they look?",
-        timestamp: "8/12/2025 1:45 PM",
-        isOwn: true,
-      },
-      {
-        id: 3,
-        sender: "Dr. Smith",
-        senderType: "provider",
-        content:
-          "Great news! Your CBC panel shows all normal values. Your hemoglobin levels have improved since the last test.",
-        timestamp: "8/12/2025 2:15 PM",
-        isOwn: false,
-      },
-      {
-        id: 4,
-        sender: "Dr. Smith",
-        senderType: "provider",
-        content:
-          "Your lab results look good. Let me know if you have any questions.",
-        timestamp: "8/12/2025 2:30 PM",
-        isOwn: false,
-      },
-    ],
-  },
-  {
-    id: 2,
-    participant: "Sarah Johnson",
-    participantType: "patient",
-    lastMessage:
-      "I've been experiencing some dizziness since starting the new medication.",
-    timestamp: "8/11/2025",
-    time: "10:15 AM",
-    unread: 1,
-    messages: [
-      {
-        id: 1,
-        sender: "Sarah Johnson",
-        senderType: "patient",
-        content:
-          "Hi! I started taking the new medication you prescribed yesterday.",
-        timestamp: "8/11/2025 9:30 AM",
-        isOwn: false,
-      },
-      {
-        id: 2,
-        sender: "Sarah Johnson",
-        senderType: "patient",
-        content:
-          "I've been experiencing some dizziness since starting the new medication. Is this normal?",
-        timestamp: "8/11/2025 10:15 AM",
-        isOwn: false,
-      },
-    ],
-  },
-  {
-    id: 3,
-    participant: "Billing Department",
-    participantType: "staff",
-    lastMessage: "Thank you for your payment!",
-    timestamp: "8/10/2025",
-    time: "9:00 AM",
-    unread: 0,
-    messages: [
-      {
-        id: 1,
-        sender: "Billing Department",
-        senderType: "staff",
-        content:
-          "This is a friendly reminder that you have an outstanding balance of $150.00.",
-        timestamp: "8/10/2025 8:00 AM",
-        isOwn: false,
-      },
-      {
-        id: 2,
-        sender: "You",
-        senderType: "patient",
-        content: "I just made the payment online. Can you confirm receipt?",
-        timestamp: "8/10/2025 8:30 AM",
-        isOwn: true,
-      },
-      {
-        id: 3,
-        sender: "Billing Department",
-        senderType: "staff",
-        content:
-          "Thank you for your payment! We have received your payment of $150.00. Your account is now current.",
-        timestamp: "8/10/2025 9:00 AM",
-        isOwn: false,
-      },
-    ],
-  },
-];
+import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
+import { fetchPatients } from "@/app/redux/features/patients/patientActions";
+// Import the same Redux actions and hooks as the patient page
+import {
+  fetchConversations,
+  fetchChatHistory,
+  fetchChateableUsers,
+} from "@/app/redux/features/chat/chatActions";
+import {
+  setSelectedConversation,
+  clearUnreadCount,
+  clearChatError,
+} from "@/app/redux/features/chat/chatSlice";
+import { useChatSocket } from "../../redux/useChatSocket";
 
 export default function SecureMessaging() {
+  const dispatch = useAppDispatch();
+
+  // Use Redux state instead of local state
+  const { user: currentUser } = useAppSelector((state) => state.auth);
+  const {
+    patients,
+    loading: patientsLoading,
+    error: patientsError,
+  } = useAppSelector((state) => state.patient);
+  const {
+    conversations,
+    selectedConversation,
+    chateableUsers,
+    loading,
+    error,
+    isConnected,
+  } = useAppSelector((state) => state.chat);
+
+  // Use the same socket hook as patient page
+  const { sendMessage, markAsRead, getOnlineStatus } = useChatSocket();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
-  const [isComposeOpen, setIsComposeOpen] = useState(false);
-  const [conversations, setConversations] = useState(sampleConversations);
   const [newMessageText, setNewMessageText] = useState("");
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [newConversationRecipient, setNewConversationRecipient] = useState("");
+  const [newConversationMessage, setNewConversationMessage] = useState("");
 
-  const [newMessage, setNewMessage] = useState({
-    recipient: "",
-    recipientType: "",
-    subject: "",
-    content: "",
-    priority: "normal",
-  });
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const filteredConversations = conversations.filter((conversation) => {
-    const matchesSearch =
-      conversation.participant
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      conversation.lastMessage.toLowerCase().includes(searchTerm.toLowerCase());
+  const getInitials = (name: string = "") => {
+    return (
+      name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase() || "U"
+    );
+  };
 
-    const matchesFilter =
-      filterType === "all" || conversation.participantType === filterType;
+  // Initialize data on component mount
+  useEffect(() => {
+    dispatch(fetchPatients());
+    dispatch(fetchConversations());
+    dispatch(fetchChateableUsers());
+  }, [dispatch]);
 
-    return matchesSearch && matchesFilter;
-  });
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [selectedConversation?.messages]);
 
-  const handleSendMessage = () => {
-    if (newMessage.recipient && newMessage.content) {
-      const newConversation = {
-        id: Date.now(),
-        participant: newMessage.recipient,
-        participantType: newMessage.recipientType,
-        lastMessage: newMessage.content,
-        timestamp: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        unread: 0,
-        messages: [
-          {
-            id: 1,
-            sender: "You",
-            senderType: "patient",
-            content: newMessage.content,
-            timestamp: new Date().toLocaleString(),
-            isOwn: true,
-          },
-        ],
-      };
-      setConversations([newConversation, ...conversations]);
-      setIsComposeOpen(false);
-      setNewMessage({
-        recipient: "",
-        recipientType: "",
-        subject: "",
-        content: "",
-        priority: "normal",
-      });
+  // Get online status for all conversation participants
+  useEffect(() => {
+    if (isConnected && conversations.length > 0) {
+      const userIds = conversations.map((c) => c.other_user_id);
+      getOnlineStatus(userIds);
+    }
+  }, [isConnected, conversations, getOnlineStatus]);
+
+  const handleSelectConversation = async (conversation: any) => {
+    // Clear any previous errors
+    dispatch(clearChatError("chatHistory"));
+
+    // Set selected conversation and clear unread count
+    dispatch(setSelectedConversation(conversation));
+    dispatch(clearUnreadCount(conversation.other_user_id));
+
+    // Fetch chat history
+    await dispatch(
+      fetchChatHistory({
+        userId: conversation.other_user_id,
+      })
+    );
+
+    // Mark unread messages as read
+    const unreadMessages = conversation.messages?.filter(
+      (m: any) => !m.is_read && m.sender_id === conversation.other_user_id
+    );
+
+    if (unreadMessages?.length > 0) {
+      const messageIds = unreadMessages.map((m: any) => m.id);
+      markAsRead(messageIds);
     }
   };
 
   const handleSendChatMessage = () => {
-    if (newMessageText.trim() && selectedConversation) {
-      const newMsg = {
-        id: Date.now(),
-        sender: "You",
-        senderType: "patient",
-        content: newMessageText.trim(),
-        timestamp: new Date().toLocaleString(),
-        isOwn: true,
-      };
+    if (!newMessageText.trim() || !selectedConversation) {
+      return;
+    }
 
-      const updatedConversations = conversations.map((conv) => {
-        if (conv.id === selectedConversation.id) {
-          return {
-            ...conv,
-            messages: [...conv.messages, newMsg],
-            lastMessage: newMessageText.trim(),
-            timestamp: new Date().toLocaleDateString(),
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-        }
-        return conv;
+    sendMessage(selectedConversation.other_user_id, newMessageText.trim());
+    setNewMessageText("");
+  };
+
+  const handleStartNewConversation = () => {
+    if (!newConversationRecipient || !newConversationMessage.trim()) {
+      return;
+    }
+
+    const recipientId = parseInt(newConversationRecipient, 10);
+    if (isNaN(recipientId)) return;
+
+    // Check if conversation already exists
+    const existingConversation = conversations.find(
+      (c) => c.other_user_id === recipientId
+    );
+
+    if (existingConversation) {
+      handleSelectConversation(existingConversation);
+    } else {
+      // Send message to start new conversation
+      sendMessage(recipientId, newConversationMessage.trim());
+    }
+
+    // Reset form and close dialog
+    setIsComposeOpen(false);
+    setNewConversationRecipient("");
+    setNewConversationMessage("");
+
+    // Refresh conversations after sending
+    setTimeout(() => {
+      dispatch(fetchConversations());
+    }, 1000);
+  };
+
+  const filteredConversations = conversations.filter(
+    (conversation) =>
+      conversation.other_user_username
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (conversation.last_message?.content || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+  );
+
+  // Use chateableUsers from Redux instead of filtering patients
+  const availableUsers = chateableUsers.filter(
+    (user) => !conversations.some((convo) => convo.other_user_id === user.id)
+  );
+
+  const formatMessageTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
       });
-
-      setConversations(updatedConversations);
-      setSelectedConversation((prev) => ({
-        ...prev,
-        messages: [...prev.messages, newMsg],
-      }));
-      setNewMessageText("");
+    } else {
+      return date.toLocaleDateString([], { month: "short", day: "numeric" });
     }
-  };
-
-  const getSenderTypeColor = (type: string) => {
-    switch (type) {
-      case "provider":
-        return "bg-blue-100 text-blue-800";
-      case "patient":
-        return "bg-green-100 text-green-800";
-      case "staff":
-        return "bg-purple-100 text-purple-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
   };
 
   return (
@@ -288,69 +222,60 @@ export default function SecureMessaging() {
               <div className="flex items-center mt-2 text-sm text-gray-600">
                 <Shield className="h-4 w-4 mr-2 text-green-600" />
                 <span>End-to-end encrypted • HIPAA compliant</span>
+                {isConnected && (
+                  <span className="ml-2 text-green-600">• Connected</span>
+                )}
               </div>
             </div>
             <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Chat
+                <Button
+                  onClick={() => setIsComposeOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!isConnected}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> New Chat
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                   <DialogTitle>Start New Conversation</DialogTitle>
                   <DialogDescription>
-                    Send a secure, HIPAA-compliant message.
+                    Select a patient to start a new secure chat.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="recipient">Recipient</Label>
-                      <Input
-                        id="recipient"
-                        placeholder="Enter recipient name"
-                        value={newMessage.recipient}
-                        onChange={(e) =>
-                          setNewMessage({
-                            ...newMessage,
-                            recipient: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="recipientType">Recipient Type</Label>
-                      <Select
-                        value={newMessage.recipientType}
-                        onValueChange={(value) =>
-                          setNewMessage({ ...newMessage, recipientType: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="patient">Patient</SelectItem>
-                          <SelectItem value="provider">Provider</SelectItem>
-                          <SelectItem value="staff">Staff</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recipient">Recipient</Label>
+                    <Select
+                      value={newConversationRecipient}
+                      onValueChange={setNewConversationRecipient}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a patient..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableUsers.map((user) => (
+                          <SelectItem key={user.id} value={String(user.id)}>
+                            {user.full_name} ({user.username})
+                          </SelectItem>
+                        ))}
+                        {availableUsers.length === 0 && (
+                          <div className="p-2 text-sm text-gray-500">
+                            No available patients to message
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="content">Message</Label>
                     <Textarea
                       id="content"
-                      placeholder="Type your message here..."
-                      value={newMessage.content}
+                      placeholder="Type your first message here..."
+                      value={newConversationMessage}
                       onChange={(e) =>
-                        setNewMessage({
-                          ...newMessage,
-                          content: e.target.value,
-                        })
+                        setNewConversationMessage(e.target.value)
                       }
                       rows={6}
                     />
@@ -364,11 +289,14 @@ export default function SecureMessaging() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleSendMessage}
+                    onClick={handleStartNewConversation}
                     className="bg-blue-600 hover:bg-blue-700"
+                    disabled={
+                      !newConversationRecipient ||
+                      !newConversationMessage.trim()
+                    }
                   >
-                    <Send className="mr-2 h-4 w-4" />
-                    Start Chat
+                    <Send className="mr-2 h-4 w-4" /> Start Chat
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -376,9 +304,33 @@ export default function SecureMessaging() {
           </div>
         </div>
 
+        {/* Error Alerts */}
+        {error.connection && (
+          <Alert className="mx-6 mt-4 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {error.connection}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {error.conversations && (
+          <Alert className="mx-6 mt-4 border-orange-200 bg-orange-50">
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <AlertDescription className="text-orange-800">
+              {error.conversations}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Conversations List */}
-          <div className="w-80 bg-white border-r flex flex-col">
+          {/* Conversations Sidebar */}
+          <div
+            className={`w-full lg:w-96 bg-white border-r flex-col ${
+              selectedConversation ? "hidden lg:flex" : "flex"
+            }`}
+          >
             {/* Search */}
             <div className="p-4 border-b">
               <div className="relative mb-3">
@@ -390,72 +342,89 @@ export default function SecureMessaging() {
                   className="pl-10"
                 />
               </div>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Contacts</SelectItem>
-                  <SelectItem value="provider">Providers</SelectItem>
-                  <SelectItem value="patient">Patients</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
-            {/* Conversations */}
+            {/* Conversations List */}
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedConversation?.id === conversation.id
-                      ? "bg-blue-50"
-                      : ""
-                  }`}
-                  onClick={() => setSelectedConversation(conversation)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarFallback className="bg-blue-100 text-blue-700">
-                        {getInitials(conversation.participant)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {conversation.participant}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {conversation.time}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-sm text-gray-600 truncate">
-                          {conversation.lastMessage}
-                        </p>
-                        {conversation.unread > 0 && (
-                          <div className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">
-                            {conversation.unread}
-                          </div>
+              {loading.conversations ? (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : filteredConversations.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  {conversations.length === 0 ? (
+                    <div>
+                      <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <p>No conversations yet</p>
+                      <p className="text-xs">Start a new chat with a patient</p>
+                    </div>
+                  ) : (
+                    <p>No conversations match your search</p>
+                  )}
+                </div>
+              ) : (
+                filteredConversations.map((convo) => (
+                  <div
+                    key={`${convo.room_id}-${convo.other_user_id}`}
+                    className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
+                      selectedConversation?.other_user_id ===
+                      convo.other_user_id
+                        ? "bg-blue-50 border-l-4 border-l-blue-500"
+                        : ""
+                    }`}
+                    onClick={() => handleSelectConversation(convo)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback className="bg-blue-100 text-blue-700">
+                            {getInitials(convo.other_user_username)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {convo.is_online && (
+                          <Circle className="absolute bottom-0 right-0 h-3.5 w-3.5 fill-green-500 stroke-2 stroke-white" />
                         )}
                       </div>
-                      <Badge
-                        className={`text-xs mt-2 ${getSenderTypeColor(
-                          conversation.participantType
-                        )}`}
-                      >
-                        {conversation.participantType}
-                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {convo.other_user_username}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatMessageTime(convo.last_message_at)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-sm text-gray-600 truncate">
+                            {convo.last_message?.content || "No messages yet"}
+                          </p>
+                          {convo.unread_count > 0 && (
+                            <div className="bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
+                              {convo.unread_count > 99
+                                ? "99+"
+                                : convo.unread_count}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {convo.other_user_role}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
+          <div
+            className={`flex-1 flex-col ${
+              selectedConversation ? "flex" : "hidden lg:flex"
+            }`}
+          >
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
@@ -464,73 +433,105 @@ export default function SecureMessaging() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="lg:hidden"
-                      onClick={() => setSelectedConversation(null)}
+                      className="lg:hidden p-2 -ml-2"
+                      onClick={() => dispatch(setSelectedConversation(null))}
                     >
-                      <ArrowLeft className="h-4 w-4" />
+                      <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-blue-100 text-blue-700">
-                        {getInitials(selectedConversation.participant)}
+                        {getInitials(selectedConversation.other_user_username)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {selectedConversation.participant}
+                        {selectedConversation.other_user_username}
                       </h3>
-                      <Badge
-                        className={`text-xs ${getSenderTypeColor(
-                          selectedConversation.participantType
-                        )}`}
-                      >
-                        {selectedConversation.participantType}
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        <p
+                          className={`text-xs ${
+                            selectedConversation.is_online
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {selectedConversation.is_online
+                            ? "Online"
+                            : "Offline"}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {selectedConversation.other_user_role}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {selectedConversation.messages.map((message: any) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.isOwn ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`flex space-x-2 max-w-xs lg:max-w-md ${
-                          message.isOwn
-                            ? "flex-row-reverse space-x-reverse"
-                            : ""
-                        }`}
-                      >
-                        {!message.isOwn && (
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback className="bg-gray-100 text-gray-700 text-xs">
-                              {getInitials(message.sender)}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div
-                          className={`rounded-lg px-4 py-2 ${
-                            message.isOwn
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-900"
-                          }`}
-                        >
-                          <p className="text-sm">{message.content}</p>
-                          <p
-                            className={`text-xs mt-1 ${
-                              message.isOwn ? "text-blue-100" : "text-gray-500"
-                            }`}
-                          >
-                            {message.timestamp}
-                          </p>
-                        </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                  {loading.chatHistory ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : selectedConversation.messages?.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <div className="text-center">
+                        <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                        <p>No messages yet</p>
+                        <p className="text-sm">Start the conversation below</p>
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    selectedConversation.messages?.map((message) => {
+                      const isOwn = message.sender_id === currentUser?.id;
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex ${
+                            isOwn ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          <div
+                            className={`flex items-end space-x-2 max-w-xs lg:max-w-md ${
+                              isOwn ? "flex-row-reverse space-x-reverse" : ""
+                            }`}
+                          >
+                            {!isOwn && (
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
+                                  {getInitials(
+                                    selectedConversation.other_user_username
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            <div
+                              className={`rounded-lg px-4 py-2 ${
+                                isOwn
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-white text-gray-900 shadow-sm border"
+                              }`}
+                            >
+                              <p className="text-sm whitespace-pre-wrap">
+                                {message.content}
+                              </p>
+                              <div
+                                className={`text-xs mt-1 flex items-center ${
+                                  isOwn ? "text-blue-100" : "text-gray-500"
+                                }`}
+                              >
+                                {formatMessageTime(message.sent_at)}
+                                {isOwn && message.is_read && (
+                                  <span className="ml-2 text-xs">Read</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Input */}
@@ -541,32 +542,49 @@ export default function SecureMessaging() {
                       value={newMessageText}
                       onChange={(e) => setNewMessageText(e.target.value)}
                       onKeyPress={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
                           handleSendChatMessage();
                         }
                       }}
                       className="flex-1"
+                      disabled={!isConnected}
                     />
                     <Button
                       onClick={handleSendChatMessage}
-                      disabled={!newMessageText.trim()}
+                      disabled={!newMessageText.trim() || !isConnected}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
+                  {!isConnected && (
+                    <p className="text-xs text-red-500 mt-2">
+                      Connection lost. Messages cannot be sent.
+                    </p>
+                  )}
                 </div>
               </>
             ) : (
+              /* Empty State */
               <div className="flex-1 flex items-center justify-center bg-gray-50">
                 <div className="text-center">
                   <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-medium text-gray-900 mb-2">
                     Select a conversation
                   </h3>
-                  <p className="text-gray-600">
-                    Choose a conversation from the list to start messaging
+                  <p className="text-gray-600 mb-4">
+                    Choose a patient from the list to start messaging.
                   </p>
+                  {conversations.length === 0 && (
+                    <Button
+                      onClick={() => setIsComposeOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                      disabled={!isConnected}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Start Your First Chat
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
