@@ -361,7 +361,10 @@ export default function InsuranceBilling() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Shield className="h-5 w-5 text-blue-600 mr-2" />
+              <Shield
+                className="h-5 w-5 text-
+blue-800 mr-2"
+              />
               <div>
                 <p className="font-medium text-blue-900">
                   Claims Processing Status
@@ -567,7 +570,10 @@ export default function InsuranceBilling() {
                   <TableCell className="font-medium">
                     ${claim.totalCharges.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-blue-600">
+                  <TableCell
+                    className="text-
+blue-800"
+                  >
                     ${claim.approvedAmount.toFixed(2)}
                   </TableCell>
                   <TableCell className="text-green-600">
@@ -716,7 +722,10 @@ export default function InsuranceBilling() {
 
               <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="flex items-center">
-                  <HelpCircle className="h-4 w-4 text-blue-600 mr-2" />
+                  <HelpCircle
+                    className="h-4 w-4 text-
+blue-800 mr-2"
+                  />
                   <p className="text-sm text-blue-800">
                     Include any corrected codes, additional documentation, or
                     authorization numbers
@@ -830,7 +839,10 @@ export default function InsuranceBilling() {
                         <p className="font-medium">
                           ${code.charges.toFixed(2)}
                         </p>
-                        <p className="text-sm text-blue-600">
+                        <p
+                          className="text-sm text-
+blue-800"
+                        >
                           Approved: ${code.approved.toFixed(2)}
                         </p>
                       </div>
@@ -849,7 +861,10 @@ export default function InsuranceBilling() {
                   </div>
                   <div>
                     <p className="font-medium">Approved Amount</p>
-                    <p className="text-blue-600">
+                    <p
+                      className="text-
+blue-800"
+                    >
                       ${selectedClaim.approvedAmount.toFixed(2)}
                     </p>
                   </div>

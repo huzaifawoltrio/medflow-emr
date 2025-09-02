@@ -270,7 +270,10 @@ export default function PatientBilling() {
         {/* Insurance Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center">
-            <Shield className="h-5 w-5 text-blue-600 mr-2" />
+            <Shield
+              className="h-5 w-5 text-
+blue-800 mr-2"
+            />
             <div>
               <p className="font-medium text-blue-900">Insurance Coverage</p>
               <p className="text-sm text-blue-700">
@@ -611,7 +614,10 @@ export default function PatientBilling() {
 
               <div className="bg-blue-50 p-3 rounded-lg">
                 <div className="flex items-center">
-                  <Shield className="h-4 w-4 text-blue-600 mr-2" />
+                  <Shield
+                    className="h-4 w-4 text-
+blue-800 mr-2"
+                  />
                   <p className="text-sm text-blue-800">
                     Your payment is secured with 256-bit encryption
                   </p>

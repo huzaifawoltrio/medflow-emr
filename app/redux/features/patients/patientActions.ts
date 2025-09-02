@@ -39,6 +39,30 @@ interface Patient {
   profile_picture_url?: string;
 }
 
+// Define the type for the doctor data
+interface Doctor {
+  available_for_telehealth: boolean;
+  biography: string;
+  created_at: string;
+  dea_number: string;
+  department: string;
+  email: string;
+  first_name: string;
+  is_active: boolean;
+  languages_spoken: string;
+  last_login: string;
+  last_name: string;
+  medical_license_number: string;
+  npi_number: string;
+  profile_picture_url: string;
+  qualifications: string;
+  specialization: string;
+  updated_at: string;
+  user_id: number;
+  username: string;
+  years_of_experience: number;
+}
+
 // Extended interface for detailed patient data
 interface DetailedPatient extends Patient {
   created_at: string;
@@ -133,5 +157,26 @@ export const registerPatient = createAsyncThunk<
   }
 });
 
+/**
+ * Async thunk for fetching the patient's doctors.
+ * It returns an array of doctor objects on success.
+ */
+export const fetchMyDoctors = createAsyncThunk<
+  Doctor[],
+  void,
+  { rejectValue: string }
+>("patient/fetchMyDoctors", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/patients/my-doctors");
+    return response.data.doctors;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});
+
 // Export the DetailedPatient type for use in other files
-export type { DetailedPatient };
+export type { DetailedPatient, Doctor };

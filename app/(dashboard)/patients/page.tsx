@@ -266,7 +266,10 @@ export default function PatientsPage() {
         {/* Enhanced Patient Cards */}
         {loading && (
           <div className="text-center p-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-
+blue-800 mx-auto mb-4"
+            ></div>
             <p>Loading patient data...</p>
           </div>
         )}

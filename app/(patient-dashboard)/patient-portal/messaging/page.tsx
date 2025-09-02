@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Search,
   Plus,
@@ -53,10 +53,12 @@ import {
   clearChatError,
 } from "@/app/redux/features/chat/chatSlice";
 import { useChatSocket } from "../../../redux/useChatSocket";
+import { fetchMyDoctors } from "@/app/redux/features/patients/patientActions";
 
 export default function PatientSecureMessaging() {
   const dispatch = useAppDispatch();
   const { user: currentUser } = useAppSelector((state) => state.auth);
+  const { doctors } = useAppSelector((state) => state.patient);
   const {
     conversations,
     selectedConversation,
@@ -83,6 +85,7 @@ export default function PatientSecureMessaging() {
 
   // Initialize data on component mount
   useEffect(() => {
+    dispatch(fetchMyDoctors());
     dispatch(fetchConversations());
     dispatch(fetchChateableUsers());
   }, [dispatch]);
@@ -496,80 +499,89 @@ export default function PatientSecureMessaging() {
                 )}
               </div>
             ) : (
-              filteredConversations.map((convo) => (
-                <div
-                  key={`${convo.room_id}-${convo.other_user_id}`}
-                  className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedConversation?.other_user_id === convo.other_user_id
-                      ? "bg-blue-50 border-l-4 border-l-blue-800"
-                      : ""
-                  } ${convo.unread_count > 0 ? "bg-blue-50/30" : ""}`}
-                  onClick={() => handleSelectConversation(convo)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-blue-100 text-blue-700">
-                          {getInitials(convo.other_user_username)}
-                        </AvatarFallback>
-                      </Avatar>
-                      {convo.is_online && (
-                        <Circle className="absolute bottom-0 right-0 h-3.5 w-3.5 fill-green-500 stroke-2 stroke-white" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p
-                          className={`text-sm font-medium ${
-                            convo.unread_count > 0
-                              ? "text-gray-900"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {convo.other_user_username}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {formatMessageTime(convo.last_message_at)}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p
-                          className={`text-sm truncate ${
-                            convo.unread_count > 0
-                              ? "font-medium text-gray-900"
-                              : "text-gray-600"
-                          }`}
-                        >
-                          {convo.last_message?.content || "No messages yet"}
-                        </p>
-                        {convo.unread_count > 0 && (
-                          <div className="bg-blue-800 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
-                            {convo.unread_count > 99
-                              ? "99+"
-                              : convo.unread_count}
-                          </div>
+              filteredConversations.map((convo) => {
+                const doctorDetails = doctors.find(
+                  (d) => d.user_id === convo.other_user_id
+                );
+                return (
+                  <div
+                    key={`${convo.room_id}-${convo.other_user_id}`}
+                    className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
+                      selectedConversation?.other_user_id ===
+                      convo.other_user_id
+                        ? "bg-blue-50 border-l-4 border-l-blue-800"
+                        : ""
+                    } ${convo.unread_count > 0 ? "bg-blue-50/30" : ""}`}
+                    onClick={() => handleSelectConversation(convo)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="relative">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage
+                            src={doctorDetails?.profile_picture_url}
+                          />
+                          <AvatarFallback className="bg-blue-100 text-blue-700">
+                            {getInitials(convo.other_user_username)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {convo.is_online && (
+                          <Circle className="absolute bottom-0 right-0 h-3.5 w-3.5 fill-green-500 stroke-2 stroke-white" />
                         )}
                       </div>
-                      <div className="mt-1">
-                        <Badge
-                          className={`text-xs ${getSenderTypeColor(
-                            convo.other_user_role
-                          )}`}
-                        >
-                          {getSenderTypeIcon(convo.other_user_role)}
-                          <span className="ml-1">
-                            {convo.other_user_role === "doctor"
-                              ? "Healthcare Provider"
-                              : convo.other_user_role === "nurse"
-                              ? "Nurse"
-                              : "Healthcare Staff"}
-                          </span>
-                        </Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p
+                            className={`text-sm font-medium ${
+                              convo.unread_count > 0
+                                ? "text-gray-900"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {convo.other_user_username}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatMessageTime(convo.last_message_at)}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <p
+                            className={`text-sm truncate ${
+                              convo.unread_count > 0
+                                ? "font-medium text-gray-900"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {convo.last_message?.content || "No messages yet"}
+                          </p>
+                          {convo.unread_count > 0 && (
+                            <div className="bg-blue-800 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
+                              {convo.unread_count > 99
+                                ? "99+"
+                                : convo.unread_count}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-1">
+                          <Badge
+                            className={`text-xs ${getSenderTypeColor(
+                              convo.other_user_role
+                            )}`}
+                          >
+                            {getSenderTypeIcon(convo.other_user_role)}
+                            <span className="ml-1">
+                              {convo.other_user_role === "doctor"
+                                ? "Healthcare Provider"
+                                : convo.other_user_role === "nurse"
+                                ? "Nurse"
+                                : "Healthcare Staff"}
+                            </span>
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -594,6 +606,14 @@ export default function PatientSecureMessaging() {
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                   <Avatar className="h-10 w-10">
+                    <AvatarImage
+                      src={
+                        doctors.find(
+                          (d) =>
+                            d.user_id === selectedConversation.other_user_id
+                        )?.profile_picture_url
+                      }
+                    />
                     <AvatarFallback className="bg-blue-100 text-blue-700">
                       {getInitials(selectedConversation.other_user_username)}
                     </AvatarFallback>
@@ -650,6 +670,9 @@ export default function PatientSecureMessaging() {
                 ) : (
                   selectedConversation.messages?.map((message) => {
                     const isOwn = message.sender_id === currentUser?.id;
+                    const senderDetails = doctors.find(
+                      (d) => d.user_id === message.sender_id
+                    );
                     return (
                       <div
                         key={message.id}
@@ -664,6 +687,9 @@ export default function PatientSecureMessaging() {
                         >
                           {!isOwn && (
                             <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={senderDetails?.profile_picture_url}
+                              />
                               <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
                                 {getInitials(
                                   selectedConversation.other_user_username

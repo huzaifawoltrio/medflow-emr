@@ -119,7 +119,10 @@ export function PatientSidebar({
           {isCollapsed && !isMobile ? (
             /* Collapsed state - Logo and arrow together */
             <div className="flex items-center justify-center space-x-1">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div
+                className="w-8 h-8 bg-
+blue-800 rounded-lg flex items-center justify-center"
+              >
                 <Stethoscope className="h-5 w-5 text-white" />
               </div>
               <Button
@@ -136,7 +139,10 @@ export function PatientSidebar({
             /* Expanded state - Logo with text and separate arrow */
             <>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div
+                  className="w-8 h-8 bg-
+blue-800 rounded-lg flex items-center justify-center"
+                >
                   <Stethoscope className="h-6 w-6 text-white p-0.5" />
                 </div>
                 {!isMobile && (
@@ -197,7 +203,7 @@ export function PatientSidebar({
                   <item.icon
                     className={cn(
                       isCollapsed && !isMobile ? "h-6 w-6" : "h-5 w-5 mr-3",
-                      isActive ? "text-blue-800" : "text-blue-600"
+                      isActive ? "text-blue-800" : "text-blue-800"
                     )}
                   />
                   {(!isCollapsed || isMobile) && item.name}

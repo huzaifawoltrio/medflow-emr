@@ -118,14 +118,14 @@ const CustomWeekCalendar = ({
               <div key={index} className="p-4 text-center">
                 <div
                   className={`text-lg font-medium ${
-                    isToday ? "text-blue-600" : "text-gray-900"
+                    isToday ? "text-blue-800" : "text-gray-900"
                   }`}
                 >
                   {day.getDate()}
                 </div>
                 <div
                   className={`text-sm ${
-                    isToday ? "text-blue-600" : "text-gray-500"
+                    isToday ? "text-blue-800" : "text-gray-500"
                   }`}
                 >
                   {day.toLocaleDateString("en-US", { weekday: "short" })}

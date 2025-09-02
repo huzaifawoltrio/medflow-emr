@@ -66,7 +66,12 @@ const AppointmentDetailsModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Time */}
               <div className="bg-blue-50 rounded-xl p-4">
-                <p className="text-sm font-medium text-blue-600 mb-1">Time</p>
+                <p
+                  className="text-sm font-medium text-
+blue-800 mb-1"
+                >
+                  Time
+                </p>
                 <p className="font-semibold text-gray-900 text-lg">
                   {appointment.timeDisplay}
                 </p>
@@ -98,7 +103,8 @@ const AppointmentDetailsModal = ({
             <div className="flex gap-4 pt-6 border-t mt-6">
               <Button
                 onClick={handleUpdate}
-                className="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-
+blue-800 text-white hover:bg-blue-700 transition-colors"
               >
                 Update
               </Button>

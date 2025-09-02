@@ -5,7 +5,9 @@ import {
   fetchPatients,
   fetchPatientByUsername,
   fetchDetailedPatients,
+  fetchMyDoctors, // Import the new action
   DetailedPatient,
+  Doctor, // Import the new type
 } from "./patientActions";
 
 interface Patient {
@@ -48,6 +50,7 @@ interface PatientState {
   patients: Patient[];
   detailedPatients: DetailedPatient[];
   selectedPatient: Patient | null;
+  doctors: Doctor[]; // Add doctors to the state
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -57,6 +60,7 @@ const initialState: PatientState = {
   patients: [],
   detailedPatients: [],
   selectedPatient: null,
+  doctors: [], // Initialize doctors array
   loading: false,
   error: null,
   success: false,
@@ -135,7 +139,23 @@ const patientSlice = createSlice({
           state.loading = false;
           state.error = action.payload;
         }
-      );
+      )
+      // Add reducers for fetchMyDoctors
+      .addCase(fetchMyDoctors.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchMyDoctors.fulfilled,
+        (state, action: PayloadAction<Doctor[]>) => {
+          state.loading = false;
+          state.doctors = action.payload;
+        }
+      )
+      .addCase(fetchMyDoctors.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
