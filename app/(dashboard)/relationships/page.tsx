@@ -136,14 +136,6 @@ const patientRelationships = [
   },
 ];
 
-const careTeamStats = {
-  totalProviders: 4,
-  activeRelationships: 3,
-  consultingProviders: 1,
-  averageRating: 4.8,
-  lastTeamMeeting: "2024-08-15",
-};
-
 const recentInteractions = [
   {
     type: "Appointment",
@@ -171,149 +163,512 @@ const recentInteractions = [
 export default function RelationshipsPage() {
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <div className="min-h-screen bg-slate-50">
+        <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
           {/* Header Section */}
-          <div className="p-6">
-            <div>
-              <h1 className="text-3xl font-bold text-black">
-                Patient Relationships
-              </h1>
-              <p className="text-slate-600 mt-2 text-lg">
-                Comprehensive care coordination and relationship management
-              </p>
-            </div>
-          </div>
-
-          {/* Care Team Overview */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-blue-800 text-white rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-semibold">
-                      Care Team Overview
-                    </CardTitle>
-                    <p className="text-blue-100 text-sm">
-                      Your coordinated healthcare providers
-                    </p>
-                  </div>
-                </div>
-                <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
+          <div className="rounded-xl p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  Patient Relationships
+                </h1>
+                <p className="text-slate-600 mt-2 text-sm sm:text-base">
+                  Comprehensive care coordination and relationship management
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button className="bg-blue-800 hover:bg-blue-700 text-white">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Provider
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            </div>
+          </div>
+
+          {/* Rest of the content remains the same */}
+          {/* Care Team Overview */}
+          <div className="bg-white rounded-xl shadow-sm">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-6 w-6 text-blue-800" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Care Team Overview
+                  </h2>
+                  <p className="text-slate-600 text-sm">
+                    Your coordinated healthcare providers
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {providerRelationships.map((provider) => (
-                  <Card
+                  <div
                     key={provider.name}
-                    className={`hover:shadow-lg transition-all duration-300 border-l-4 ${
+                    className={`p-5 rounded-xl border-l-4 transition-all duration-300 hover:shadow-md ${
                       provider.isPrimary
-                        ? "border-l-amber-400 bg-gradient-to-r from-amber-50 to-yellow-50"
+                        ? "border-l-amber-400 bg-amber-50"
                         : provider.status === "Active"
-                        ? "border-l-emerald-400 bg-gradient-to-r from-emerald-50 to-green-50"
-                        : "border-l-blue-400 bg-gradient-to-r from-blue-50 to-indigo-50"
+                        ? "border-l-blue-800 bg-blue-50"
+                        : "border-l-slate-400 bg-slate-50"
                     }`}
                   >
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="w-14 h-14 ring-2 ring-white shadow-md">
-                            <AvatarImage src={provider.avatar} />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold">
-                              {provider.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-semibold text-slate-800">
-                                {provider.name}
-                              </h3>
-                              {provider.isPrimary && (
-                                <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-                                  <Star className="h-3 w-3 mr-1" />
-                                  Primary
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm font-medium text-blue-600">
-                              {provider.role}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {provider.specialty}
-                            </p>
+                    <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="w-12 h-12 sm:w-14 sm:h-14 ring-2 ring-white shadow-md">
+                          <AvatarImage src={provider.avatar} />
+                          <AvatarFallback className="bg-blue-800 text-white font-semibold">
+                            {provider.initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <h3 className="font-semibold text-slate-800 truncate">
+                              {provider.name}
+                            </h3>
+                            {provider.isPrimary && (
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs w-fit">
+                                <Star className="h-3 w-3 mr-1" />
+                                Primary
+                              </Badge>
+                            )}
                           </div>
+                          <p className="text-sm font-medium text-blue-800">
+                            {provider.role}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {provider.specialty}
+                          </p>
                         </div>
-                        <Badge
-                          variant={
-                            provider.status === "Active"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className={
-                            provider.status === "Active"
-                              ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                              : "bg-blue-100 text-blue-700 border-blue-200"
-                          }
-                        >
-                          {provider.status}
-                        </Badge>
                       </div>
+                      <Badge
+                        variant={
+                          provider.status === "Active" ? "default" : "secondary"
+                        }
+                        className={
+                          provider.status === "Active"
+                            ? "bg-blue-800 text-white"
+                            : "bg-slate-200 text-slate-700"
+                        }
+                      >
+                        {provider.status}
+                      </Badge>
+                    </div>
 
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-xs text-slate-600">
-                          <Building2 className="h-3 w-3 mr-1" />
-                          {provider.facility}
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center text-xs text-slate-600">
+                        <Building2 className="h-3 w-3 mr-2 text-blue-800 flex-shrink-0" />
+                        <span className="truncate">{provider.facility}</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600">
+                        <div className="flex items-center">
+                          <Clock className="h-3 w-3 mr-2 text-blue-800 flex-shrink-0" />
+                          <span>{provider.yearsWorking}</span>
                         </div>
-                        <div className="flex items-center text-xs text-slate-600">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Working together: {provider.yearsWorking}
+                        <div className="flex items-center">
+                          <Star className="h-3 w-3 mr-2 text-blue-800 fill-current flex-shrink-0" />
+                          <span>{provider.rating}/5.0</span>
                         </div>
-                        <div className="flex items-center text-xs text-slate-600">
-                          <Calendar className="h-3 w-3 mr-1" />
+                      </div>
+                      <div className="flex items-center text-xs text-slate-600">
+                        <Calendar className="h-3 w-3 mr-2 text-blue-800 flex-shrink-0" />
+                        <span>
                           Last contact:{" "}
                           {new Date(provider.lastContact).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white"
+                        >
+                          <Phone className="h-3 w-3 mr-1" />
+                          Call
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white"
+                        >
+                          <Mail className="h-3 w-3 mr-1" />
+                          Email
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-3 text-xs border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white"
+                        >
+                          <Video className="h-3 w-3 mr-1" />
+                          Meet
+                        </Button>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-800"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Care Coordination */}
+          <div className="bg-white rounded-xl shadow-sm">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <MessageSquare className="h-6 w-6 text-blue-800" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Recent Care Coordination
+                  </h2>
+                  <p className="text-slate-600 text-sm">
+                    Latest provider interactions and updates
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {recentInteractions.map((interaction, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-slate-50 rounded-xl"
+                  >
+                    <div
+                      className={`p-3 rounded-lg self-start ${
+                        interaction.status === "Completed"
+                          ? "bg-blue-800 text-white"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {interaction.type === "Appointment" && (
+                        <Calendar className="h-5 w-5" />
+                      )}
+                      {interaction.type === "Care Coordination" && (
+                        <Users className="h-5 w-5" />
+                      )}
+                      {interaction.type === "Therapy Session" && (
+                        <Heart className="h-5 w-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <h4 className="font-semibold text-slate-800">
+                            {interaction.description}
+                          </h4>
+                          <p className="text-sm text-slate-600">
+                            with {interaction.provider}
+                          </p>
                         </div>
-                        <div className="flex items-center text-xs text-emerald-600">
-                          <Star className="h-3 w-3 mr-1 fill-current" />
-                          Rating: {provider.rating}/5.0
+                        <div className="flex flex-col sm:items-end gap-1">
+                          <p className="text-sm font-medium text-slate-700">
+                            {new Date(interaction.date).toLocaleDateString()}
+                          </p>
+                          <Badge
+                            variant={
+                              interaction.status === "Completed"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className={
+                              interaction.status === "Completed"
+                                ? "bg-blue-800 text-white"
+                                : "bg-amber-100 text-amber-800"
+                            }
+                          >
+                            {interaction.status}
+                          </Badge>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                      <div className="flex items-center justify-between">
+          {/* Patient Support Network - Mobile Responsive Cards */}
+          <div className="bg-white rounded-xl shadow-sm">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Shield className="h-6 w-6 text-blue-800" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      Patient Support Network
+                    </h2>
+                    <p className="text-slate-600 text-sm">
+                      Family, emergency contacts, and support persons
+                    </p>
+                  </div>
+                </div>
+                <Button className="bg-blue-800 hover:bg-blue-700 text-white w-full sm:w-auto">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Contact
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="p-6 block lg:hidden">
+              <div className="space-y-4">
+                {patientRelationships.map((contact, index) => (
+                  <div
+                    key={contact.name}
+                    className="p-5 bg-slate-50 rounded-xl space-y-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Badge
+                          variant="outline"
+                          className={
+                            contact.type === "Family"
+                              ? "border-purple-200 text-purple-700 bg-purple-50"
+                              : contact.type === "Emergency Contact"
+                              ? "border-red-200 text-red-700 bg-red-50"
+                              : "border-blue-200 text-blue-700 bg-blue-50"
+                          }
+                        >
+                          {contact.type}
+                        </Badge>
+                        {contact.isPrimary && (
+                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+                            <Star className="h-3 w-3 mr-1" />
+                            Primary
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold text-slate-800 text-lg">
+                        {contact.name}
+                      </h3>
+                      <p className="text-slate-600">{contact.relation}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-slate-600">
+                        <Phone className="h-4 w-4 mr-2 text-blue-800" />
+                        {contact.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-slate-600">
+                        <Mail className="h-4 w-4 mr-2 text-blue-800" />
+                        {contact.email}
+                      </div>
+                      <div className="flex items-start text-sm text-slate-600">
+                        <MapPin className="h-4 w-4 mr-2 mt-0.5 text-blue-800 flex-shrink-0" />
+                        <span>{contact.address}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="text-xs bg-slate-200 text-slate-700">
+                        Prefers: {contact.preferredContact}
+                      </Badge>
+                      {contact.canMakeDecisions && (
+                        <Badge className="bg-blue-800 text-white text-xs">
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Decision Maker
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-slate-600 bg-white p-3 rounded-lg">
+                      <div className="flex items-start space-x-1">
+                        <FileText className="h-3 w-3 mt-0.5 text-slate-400 flex-shrink-0" />
+                        <span>{contact.notes}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white"
+                      >
+                        <Phone className="h-3 w-3 mr-1" />
+                        Call
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-800 text-blue-800 hover:bg-blue-800 hover:text-white"
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        Email
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="hover:bg-slate-100"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold text-slate-700 py-4">
+                      Contact Type
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Name & Relation
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Contact Information
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Address
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Permissions
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Notes
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-slate-700">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {patientRelationships.map((contact, index) => (
+                    <TableRow
+                      key={contact.name}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
+                      <TableCell className="py-4">
                         <div className="flex items-center space-x-2">
-                          <Button
+                          <Badge
                             variant="outline"
-                            size="sm"
-                            className="h-8 px-3 hover:bg-blue-50 border-blue-200"
+                            className={
+                              contact.type === "Family"
+                                ? "border-purple-200 text-purple-700 bg-purple-50"
+                                : contact.type === "Emergency Contact"
+                                ? "border-red-200 text-red-700 bg-red-50"
+                                : "border-blue-200 text-blue-700 bg-blue-50"
+                            }
                           >
-                            <Phone className="h-3 w-3 mr-1" />
-                            Call
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 hover:bg-blue-50 border-blue-200"
-                          >
-                            <Mail className="h-3 w-3 mr-1" />
-                            Email
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 hover:bg-blue-50 border-blue-200"
-                          >
-                            <Video className="h-3 w-3 mr-1" />
-                            Meet
-                          </Button>
+                            {contact.type}
+                          </Badge>
+                          {contact.isPrimary && (
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+                              <Star className="h-3 w-3 mr-1" />
+                              Primary
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-1">
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            {contact.name}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {contact.relation}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-sm text-slate-600">
+                            <Phone className="h-3 w-3 mr-2 text-blue-800" />
+                            {contact.phone}
+                          </div>
+                          <div className="flex items-center text-sm text-slate-600">
+                            <Mail className="h-3 w-3 mr-2 text-blue-800" />
+                            {contact.email}
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-slate-300 text-slate-600"
+                          >
+                            Prefers: {contact.preferredContact}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-start space-x-1 text-sm text-slate-600">
+                          <MapPin className="h-3 w-3 mt-0.5 text-blue-800 flex-shrink-0" />
+                          <span className="leading-tight">
+                            {contact.address}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {contact.canMakeDecisions && (
+                            <Badge className="bg-blue-800 text-white text-xs">
+                              <UserCheck className="h-3 w-3 mr-1" />
+                              Decision Maker
+                            </Badge>
+                          )}
+                          <div className="flex items-center text-xs text-slate-500">
+                            <Shield className="h-3 w-3 mr-1 text-blue-800" />
+                            {contact.canMakeDecisions
+                              ? "Healthcare Decisions"
+                              : "Contact Only"}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-start space-x-1 text-xs text-slate-600">
+                          <FileText className="h-3 w-3 mt-0.5 text-blue-800 flex-shrink-0" />
+                          <span className="leading-tight max-w-32">
+                            {contact.notes}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-800"
+                          >
+                            <Phone className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-800"
+                          >
+                            <Mail className="h-3 w-3" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -329,295 +684,38 @@ export default function RelationshipsPage() {
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Care Coordination */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-blue-800 text-white rounded-t-2xl">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <MessageSquare className="h-6 w-6" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-semibold">
-                    Recent Care Coordination
-                  </CardTitle>
-                  <p className="text-blue-100 text-sm">
-                    Latest provider interactions and updates
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {recentInteractions.map((interaction, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-4 p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200/60"
-                  >
-                    <div
-                      className={`p-2 rounded-lg ${
-                        interaction.status === "Completed"
-                          ? "bg-emerald-100 text-emerald-600"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      {interaction.type === "Appointment" && (
-                        <Calendar className="h-5 w-5" />
-                      )}
-                      {interaction.type === "Care Coordination" && (
-                        <Users className="h-5 w-5" />
-                      )}
-                      {interaction.type === "Therapy Session" && (
-                        <Heart className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-semibold text-slate-800">
-                            {interaction.description}
-                          </h4>
-                          <p className="text-sm text-slate-600">
-                            with {interaction.provider}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-slate-700">
-                            {new Date(interaction.date).toLocaleDateString()}
-                          </p>
-                          <Badge
-                            variant={
-                              interaction.status === "Completed"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className={
-                              interaction.status === "Completed"
-                                ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                                : "bg-amber-100 text-amber-700 border-amber-200"
-                            }
-                          >
-                            {interaction.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Patient Support Network */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-blue-800 text-white rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Shield className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-semibold">
-                      Patient Support Network
-                    </CardTitle>
-                    <p className="text-blue-100 text-sm">
-                      Family, emergency contacts, and support persons
-                    </p>
-                  </div>
-                </div>
-                <Button className="bg-white/20 hover:bg-white/30 text-white border-white/30">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Contact
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50/80">
-                      <TableHead className="font-semibold text-slate-700 py-4">
-                        Contact Type
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-700">
-                        Name & Relation
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-700">
-                        Contact Information
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-700">
-                        Address
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-700">
-                        Permissions
-                      </TableHead>
-                      <TableHead className="font-semibold text-slate-700">
-                        Notes
-                      </TableHead>
-                      <TableHead className="text-right font-semibold text-slate-700">
-                        Actions
-                      </TableHead>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {patientRelationships.map((contact, index) => (
-                      <TableRow
-                        key={contact.name}
-                        className="hover:bg-slate-50/60 transition-colors"
-                      >
-                        <TableCell className="py-4">
-                          <div className="flex items-center space-x-2">
-                            <Badge
-                              variant="outline"
-                              className={
-                                contact.type === "Family"
-                                  ? "border-purple-200 text-purple-700 bg-purple-50"
-                                  : contact.type === "Emergency Contact"
-                                  ? "border-red-200 text-red-700 bg-red-50"
-                                  : "border-blue-200 text-blue-700 bg-blue-50"
-                              }
-                            >
-                              {contact.type}
-                            </Badge>
-                            {contact.isPrimary && (
-                              <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-                                <Star className="h-3 w-3 mr-1" />
-                                Primary
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-semibold text-slate-800">
-                              {contact.name}
-                            </p>
-                            <p className="text-sm text-slate-600">
-                              {contact.relation}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm text-slate-600">
-                              <Phone className="h-3 w-3 mr-2 text-blue-500" />
-                              {contact.phone}
-                            </div>
-                            <div className="flex items-center text-sm text-slate-600">
-                              <Mail className="h-3 w-3 mr-2 text-blue-500" />
-                              {contact.email}
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className="text-xs border-slate-300 text-slate-600"
-                            >
-                              Prefers: {contact.preferredContact}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-start space-x-1 text-sm text-slate-600">
-                            <MapPin className="h-3 w-3 mt-0.5 text-slate-400 flex-shrink-0" />
-                            <span className="leading-tight">
-                              {contact.address}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            {contact.canMakeDecisions && (
-                              <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                                <UserCheck className="h-3 w-3 mr-1" />
-                                Decision Maker
-                              </Badge>
-                            )}
-                            <div className="flex items-center text-xs text-slate-500">
-                              <Shield className="h-3 w-3 mr-1" />
-                              {contact.canMakeDecisions
-                                ? "Healthcare Decisions"
-                                : "Contact Only"}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-start space-x-1 text-xs text-slate-600">
-                            <FileText className="h-3 w-3 mt-0.5 text-slate-400 flex-shrink-0" />
-                            <span className="leading-tight max-w-32">
-                              {contact.notes}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Phone className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                            >
-                              <Mail className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-slate-100"
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
 
           {/* Care Coordination Alerts */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-t-2xl">
+          <div className="bg-white rounded-xl shadow-sm">
+            <div className="p-6 border-b border-slate-200">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <AlertCircle className="h-6 w-6" />
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-semibold">
+                  <h2 className="text-xl font-semibold text-slate-900">
                     Care Coordination Alerts
-                  </CardTitle>
-                  <p className="text-amber-100 text-sm">
+                  </h2>
+                  <p className="text-slate-600 text-sm">
                     Important updates and action items
                   </p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-6">
+            </div>
+            <div className="p-6">
               <div className="space-y-4">
-                <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/60">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 bg-blue-50 rounded-xl border-l-4 border-l-blue-800">
+                  <div className="p-2 bg-blue-800 text-white rounded-lg self-start">
+                    <Calendar className="h-4 w-4" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-slate-800">
                       Upcoming Care Team Meeting
                     </h4>
@@ -631,11 +729,11 @@ export default function RelationshipsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-200/60">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <FileText className="h-4 w-4 text-amber-600" />
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 bg-amber-50 rounded-xl border-l-4 border-l-amber-400">
+                  <div className="p-2 bg-amber-500 text-white rounded-lg self-start">
+                    <FileText className="h-4 w-4" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-slate-800">
                       Insurance Authorization Pending
                     </h4>
@@ -649,11 +747,11 @@ export default function RelationshipsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border border-emerald-200/60">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <UserCheck className="h-4 w-4 text-emerald-600" />
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4 p-4 bg-emerald-50 rounded-xl border-l-4 border-l-emerald-500">
+                  <div className="p-2 bg-emerald-500 text-white rounded-lg self-start">
+                    <UserCheck className="h-4 w-4" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-slate-800">
                       Emergency Contact Updated
                     </h4>
@@ -666,35 +764,33 @@ export default function RelationshipsPage() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Quick Actions */}
-          <Card className="rounded-2xl shadow-lg border-0 bg-gradient-to-r from-slate-800 to-slate-700 text-white">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 justify-start h-12">
+          <div className="bg-blue-800 text-white rounded-xl shadow-sm">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Button className="bg-blue-700 hover:bg-blue-600 text-white justify-start h-12 w-full">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Provider
                 </Button>
-                <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 justify-start h-12">
+                <Button className="bg-blue-700 hover:bg-blue-600 text-white justify-start h-12 w-full">
                   <Users className="mr-2 h-4 w-4" />
                   Schedule Meeting
                 </Button>
-                <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 justify-start h-12">
+                <Button className="bg-blue-700 hover:bg-blue-600 text-white justify-start h-12 w-full">
                   <FileText className="mr-2 h-4 w-4" />
                   Update Records
                 </Button>
-                <Button className="bg-white/10 hover:bg-white/20 text-white border-white/20 justify-start h-12">
+                <Button className="bg-blue-700 hover:bg-blue-600 text-white justify-start h-12 w-full">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Send Message
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </MainLayout>
