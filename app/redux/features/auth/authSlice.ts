@@ -1,7 +1,12 @@
 // redux/features/auth/authSlice.ts
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { loginUser, getUserDetails, getDoctorProfile } from "./authActions";
+import {
+  loginUser,
+  getUserDetails,
+  getDoctorProfile,
+  uploadProfilePicture,
+} from "./authActions";
 import Cookies from "js-cookie"; // Import js-cookie here as well
 
 // Define the type for the user object
@@ -43,6 +48,8 @@ interface AuthState {
   refreshToken: string | null;
   error: string | null;
   success: boolean; // for monitoring the registration process.
+  uploadingPicture: boolean; // New state for picture upload
+  uploadError: string | null; // Separate error state for uploads
 }
 
 const initialState: AuthState = {
@@ -53,6 +60,8 @@ const initialState: AuthState = {
   refreshToken: Cookies.get("refreshToken") || null,
   error: null,
   success: false,
+  uploadingPicture: false,
+  uploadError: null,
 };
 
 const authSlice = createSlice({
@@ -65,6 +74,10 @@ const authSlice = createSlice({
       if (accessToken) {
         state.accessToken = accessToken;
       }
+    },
+    // Reducer to clear upload error
+    clearUploadError: (state) => {
+      state.uploadError = null;
     },
     // Reducer to log out the user
     logout: (state) => {
@@ -80,6 +93,8 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.error = null;
       state.success = false;
+      state.uploadingPicture = false;
+      state.uploadError = null;
     },
   },
   extraReducers: (builder) => {
@@ -131,10 +146,32 @@ const authSlice = createSlice({
       .addCase(getDoctorProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // When uploadProfilePicture is pending
+      .addCase(uploadProfilePicture.pending, (state) => {
+        state.uploadingPicture = true;
+        state.uploadError = null;
+      })
+      // When uploadProfilePicture is fulfilled
+      .addCase(uploadProfilePicture.fulfilled, (state, action) => {
+        state.uploadingPicture = false;
+        // Update both user and doctorProfile with new picture URL
+        if (state.user) {
+          state.user.profile_picture_url = action.payload.profile_picture_url;
+        }
+        if (state.doctorProfile) {
+          state.doctorProfile.profile_picture_url =
+            action.payload.profile_picture_url;
+        }
+      })
+      // When uploadProfilePicture is rejected
+      .addCase(uploadProfilePicture.rejected, (state, action) => {
+        state.uploadingPicture = false;
+        state.uploadError = action.payload as string;
       });
   },
 });
 
-// Export the new action
-export const { logout, rehydrateAuth } = authSlice.actions;
+// Export the new actions
+export const { logout, rehydrateAuth, clearUploadError } = authSlice.actions;
 export default authSlice.reducer;

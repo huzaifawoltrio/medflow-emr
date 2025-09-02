@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,21 +22,28 @@ import {
   Save,
   X,
   Loader2,
+  Camera,
+  Upload,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import {
   getDoctorProfile,
   getUserDetails,
+  uploadProfilePicture,
 } from "@/app/redux/features/auth/authActions";
+import { clearUploadError } from "@/app/redux/features/auth/authSlice";
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
-  const { user, doctorProfile, loading } = useAppSelector(
-    (state) => state.auth
-  );
+  const { user, doctorProfile, loading, uploadingPicture, uploadError } =
+    useAppSelector((state) => state.auth);
 
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<any | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -76,6 +83,67 @@ export default function ProfilePage() {
     }
     setIsEditing(false);
   };
+
+  const handlePictureUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      // You might want to add a toast notification here instead
+      alert("Please select a valid image file (JPG, PNG, GIF, etc.)");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size must be less than 5MB");
+      return;
+    }
+
+    // Clear any previous upload errors
+    dispatch(clearUploadError());
+
+    try {
+      const result = await dispatch(uploadProfilePicture(file)).unwrap();
+      if (result.success) {
+        setUploadSuccess(true);
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => setUploadSuccess(false), 3000);
+      }
+    } catch (error) {
+      // Error is already handled by Redux
+      console.error("Upload failed:", error);
+    } finally {
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Clear upload success message after some time
+  useEffect(() => {
+    if (uploadSuccess) {
+      const timer = setTimeout(() => {
+        setUploadSuccess(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [uploadSuccess]);
+
+  // Clear upload error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearUploadError());
+    };
+  }, [dispatch]);
 
   if (loading || !profileData) {
     return (
@@ -129,18 +197,86 @@ export default function ProfilePage() {
           {/* Profile Overview Card */}
           <Card className="lg:col-span-1 rounded-xl shadow-sm h-fit">
             <CardContent className="p-4">
-              <Avatar className="w-16 h-16 mx-auto mb-2">
-                <AvatarImage
-                  src={
-                    profileData.profile_picture_url ||
-                    "/professional-doctor-headshot.png"
-                  }
-                />
-                <AvatarFallback className="text-lg bg-blue-100 text-blue-800">
-                  {profileData.first_name?.[0]}
-                  {profileData.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              {/* Profile Picture Upload Section */}
+              <div className="relative group mb-4">
+                <Avatar className="w-16 h-16 mx-auto">
+                  <AvatarImage
+                    src={
+                      profileData.profile_picture_url ||
+                      "/professional-doctor-headshot.png"
+                    }
+                  />
+                  <AvatarFallback className="text-lg bg-blue-100 text-blue-800">
+                    {profileData.first_name?.[0]}
+                    {profileData.last_name?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Upload Button Overlay */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={triggerFileInput}
+                >
+                  {uploadingPicture ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </div>
+              </div>
+
+              {/* Upload Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={triggerFileInput}
+                disabled={uploadingPicture}
+                className="w-full mb-2 text-xs"
+              >
+                {uploadingPicture ? (
+                  <>
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-1 h-3 w-3" />
+                    Upload Picture
+                  </>
+                )}
+              </Button>
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePictureUpload}
+                className="hidden"
+              />
+
+              {/* Upload Status */}
+              {(uploadSuccess || uploadError) && (
+                <div
+                  className={`flex items-center space-x-1 mb-2 p-2 rounded text-xs ${
+                    uploadSuccess
+                      ? "bg-green-50 text-green-700"
+                      : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {uploadSuccess ? (
+                    <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                  )}
+                  <span className="text-xs">
+                    {uploadSuccess
+                      ? "Profile picture updated successfully!"
+                      : uploadError}
+                  </span>
+                </div>
+              )}
+
               <h2 className="text-lg font-semibold text-gray-900 mb-1 text-center">
                 Dr. {profileData.first_name} {profileData.last_name}
               </h2>
@@ -201,6 +337,119 @@ export default function ProfilePage() {
 
           {/* Profile Details Cards */}
           <div className="lg:col-span-3 space-y-6">
+            {/* Profile Picture Upload Card (Larger version for better UX) */}
+            <Card className="rounded-xl shadow-sm">
+              <CardContent className="p-6">
+                <CardTitle className="text-xl font-semibold mb-4 flex items-center">
+                  <Camera className="mr-2 h-5 w-5" />
+                  Profile Picture
+                </CardTitle>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                  {/* Current Picture */}
+                  <div className="flex flex-col items-center">
+                    <Avatar className="w-24 h-24 mb-3">
+                      <AvatarImage
+                        src={
+                          profileData.profile_picture_url ||
+                          "/professional-doctor-headshot.png"
+                        }
+                      />
+                      <AvatarFallback className="text-2xl bg-blue-100 text-blue-800">
+                        {profileData.first_name?.[0]}
+                        {profileData.last_name?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm text-gray-500 text-center">
+                      Current Picture
+                    </p>
+                  </div>
+
+                  {/* Upload Controls */}
+                  <div className="flex-1">
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium">
+                          Upload New Picture
+                        </Label>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Choose a professional headshot. Accepted formats: JPG,
+                          PNG, GIF. Max size: 5MB.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                        <Button
+                          variant="outline"
+                          onClick={triggerFileInput}
+                          disabled={uploadingPicture}
+                          className="flex items-center justify-center"
+                        >
+                          {uploadingPicture ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="mr-2 h-4 w-4" />
+                              Choose File
+                            </>
+                          )}
+                        </Button>
+
+                        {profileData.profile_picture_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setProfileData((prev: any) => ({
+                                ...prev,
+                                profile_picture_url: null,
+                              }));
+                            }}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            Remove Picture
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Upload Status */}
+                      {(uploadSuccess || uploadError) && (
+                        <div
+                          className={`flex items-center space-x-2 p-3 rounded-lg ${
+                            uploadSuccess
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : "bg-red-50 text-red-700 border border-red-200"
+                          }`}
+                        >
+                          {uploadSuccess ? (
+                            <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                          )}
+                          <span className="text-sm">
+                            {uploadSuccess
+                              ? "Profile picture updated successfully!"
+                              : uploadError}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hidden File Input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePictureUpload}
+                  className="hidden"
+                />
+              </CardContent>
+            </Card>
+
             {/* Personal Information */}
             <Card className="rounded-xl shadow-sm">
               <CardContent className="p-6">

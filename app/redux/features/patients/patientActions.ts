@@ -39,6 +39,15 @@ interface Patient {
   profile_picture_url?: string;
 }
 
+// Extended interface for detailed patient data
+interface DetailedPatient extends Patient {
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  last_login: string;
+  previous_treatment_for_condition: string;
+}
+
 /**
  * Async thunk for fetching patients.
  * It returns an array of patients on success.
@@ -50,6 +59,27 @@ export const fetchPatients = createAsyncThunk<
 >("patient/fetchAll", async (_, { rejectWithValue }) => {
   try {
     const response = await api.get("/patients");
+    return response.data.patients;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});
+
+/**
+ * Async thunk for fetching detailed patients.
+ * It returns an array of detailed patient objects on success.
+ */
+export const fetchDetailedPatients = createAsyncThunk<
+  DetailedPatient[],
+  void,
+  { rejectValue: string }
+>("patient/fetchDetailed", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/patients/detailed");
     return response.data.patients;
   } catch (error: any) {
     if (error.response && error.response.data.message) {
@@ -102,3 +132,6 @@ export const registerPatient = createAsyncThunk<
     }
   }
 });
+
+// Export the DetailedPatient type for use in other files
+export type { DetailedPatient };

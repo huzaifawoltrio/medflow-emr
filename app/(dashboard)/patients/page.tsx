@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../redux/store";
-import { fetchPatients } from "../../redux/features/patients/patientActions";
+import { fetchDetailedPatients } from "../../redux/features/patients/patientActions";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,8 +24,8 @@ import {
   User,
   MapPin,
   Filter,
+  Clock,
 } from "lucide-react";
-import withAuth from "@/app/withAuth";
 
 /**
  * Calculates age based on a date of birth string.
@@ -44,55 +44,117 @@ const calculateAge = (dobString: string | undefined): number => {
   return age;
 };
 
+/**
+ * Formats a date string to a more readable format
+ * @param dateString - ISO date string
+ * @returns Formatted date string
+ */
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+/**
+ * Calculates time difference from now
+ * @param dateString - ISO date string
+ * @returns Human readable time difference
+ */
+const getTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInHours < 1) return "Just now";
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return formatDate(dateString);
+};
+
+/**
+ * Determines patient priority based on pain level and other factors
+ */
+const getPatientPriority = (painLevel: number, allergies: string): string => {
+  if (painLevel >= 8) return "high";
+  if (painLevel >= 5 || allergies.toLowerCase().includes("severe"))
+    return "medium";
+  return "low";
+};
+
+/**
+ * Determines vital status based on pain level
+ */
+const getVitalStatus = (painLevel: number): string => {
+  if (painLevel >= 8) return "critical";
+  if (painLevel >= 5) return "attention";
+  return "stable";
+};
+
 export default function PatientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const router = useRouter();
 
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    patients: patientsFromState,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.patient);
+  const { detailedPatients, loading, error } = useSelector(
+    (state: RootState) => state.patient
+  );
 
   useEffect(() => {
-    dispatch(fetchPatients());
+    dispatch(fetchDetailedPatients());
   }, [dispatch]);
 
-  // Transform backend data to match the structure expected by the UI components
+  // Transform detailed backend data to match the structure expected by the UI components
   const transformedPatients =
-    patientsFromState?.map((patient) => ({
-      id: patient.user_id.toString(),
-      name: `${patient.first_name} ${patient.last_name}`,
-      username: patient.username,
-      email: patient.email,
-      phone: patient.phone_number,
-      age: calculateAge(patient.date_of_birth),
-      gender: patient.gender,
-      lastActivity: "2025-08-21", // Mocked data
-      lastActivityType: "Vital Signs", // Mocked data
-      status: "active", // Mocked data
-      priority: ["high", "medium", "low"][patient.user_id % 3], // Mocked data
-      location: patient.address ? `${patient.address}, ${patient.city}` : "N/A",
-      primaryDoctor: patient.primary_care_physician || "Dr. Unassigned",
-      condition: patient.chief_complaint || "General Checkup",
-      avatar: patient.profile_picture_url,
-      initials: `${patient.first_name?.[0] || ""}${
-        patient.last_name?.[0] || ""
-      }`.toUpperCase(),
-      vitalStatus: ["stable", "attention", "critical"][patient.user_id % 3], // Mocked data
-      nextAppt: "2025-09-01", // Mocked data
-      allergies: patient.allergies
-        ? patient.allergies.split(",").map((a) => a.trim())
-        : [],
-    })) || [];
+    detailedPatients?.map((patient) => {
+      const priority = getPatientPriority(
+        patient.current_pain_level,
+        patient.allergies
+      );
+      const vitalStatus = getVitalStatus(patient.current_pain_level);
+      return {
+        id: patient.user_id.toString(),
+        name: `${patient.first_name} ${patient.last_name}`,
+        username: patient.username,
+        email: patient.email,
+        phone: patient.phone_number,
+        age: calculateAge(patient.date_of_birth),
+        gender: patient.gender,
+        lastActivity: formatDate(patient.last_login),
+        lastActivityType: "Last Login",
+        status: patient.is_active ? "active" : "inactive",
+        priority: priority,
+        location: patient.address
+          ? `${patient.address}, ${patient.city}`
+          : "N/A",
+        primaryDoctor: patient.primary_care_physician || "Dr. Unassigned",
+        condition: patient.chief_complaint || "General Checkup",
+        avatar: patient.profile_picture_url,
+        initials: `${patient.first_name?.[0] || ""}${
+          patient.last_name?.[0] || ""
+        }`.toUpperCase(),
+        vitalStatus: vitalStatus,
+        nextAppt: "Pending", // Could be calculated from appointments if available
+        allergies: patient.allergies
+          ? patient.allergies.split(",").map((a) => a.trim())
+          : [],
+        painLevel: patient.current_pain_level,
+        lastLogin: getTimeAgo(patient.last_login),
+        createdAt: formatDate(patient.created_at),
+      };
+    }) || [];
 
   const filteredPatients = transformedPatients.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.condition.toLowerCase().includes(searchTerm.toLowerCase());
+      p.condition.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.username.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter = filterStatus === "all" || p.status === filterStatus;
 
@@ -116,7 +178,7 @@ export default function PatientsPage() {
     switch (status) {
       case "active":
         return "bg-blue-100 text-blue-800";
-      case "discharged":
+      case "inactive":
         return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -148,7 +210,7 @@ export default function PatientsPage() {
         return "bg-gray-100";
     }
   };
-
+  console.log("the patient details are ", filteredPatients);
   return (
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
@@ -162,6 +224,12 @@ export default function PatientsPage() {
               <p className="text-gray-600">
                 Manage and monitor all patients across your practice
               </p>
+              {detailedPatients.length > 0 && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {detailedPatients.length} total patients •{" "}
+                  {filteredPatients.length} showing
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 lg:min-w-0 lg:flex-1 lg:max-w-2xl lg:ml-8">
@@ -198,12 +266,20 @@ export default function PatientsPage() {
         {/* Enhanced Patient Cards */}
         {loading && (
           <div className="text-center p-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p>Loading patient data...</p>
           </div>
         )}
         {error && (
-          <div className="text-center p-10 text-red-600">
-            <p>Error fetching data: {error}</p>
+          <div className="text-center p-10">
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-6">
+                <AlertTriangle className="h-8 w-8 text-red-600 mx-auto mb-4" />
+                <p className="text-red-600 font-medium">
+                  Error fetching data: {error}
+                </p>
+              </CardContent>
+            </Card>
           </div>
         )}
         {!loading && !error && (
@@ -264,13 +340,19 @@ export default function PatientsPage() {
                               Allergies
                             </Badge>
                           )}
+                          {patient.painLevel >= 8 && (
+                            <Badge className="bg-red-100 text-red-700">
+                              Pain: {patient.painLevel}/10
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4 text-gray-400" />
                             <span>
-                              {patient.gender}, {patient.age}y • P{patient.id}
+                              {patient.gender}, {patient.age}y • @
+                              {patient.username}
                             </span>
                           </div>
 
@@ -280,8 +362,8 @@ export default function PatientsPage() {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
-                            <span>Next: {patient.nextAppt}</span>
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span>Last login: {patient.lastLogin}</span>
                           </div>
                         </div>
 
@@ -293,10 +375,27 @@ export default function PatientsPage() {
                             {patient.condition}
                           </span>
                         </div>
+
+                        {patient.painLevel > 0 && (
+                          <div className="mt-1 text-sm">
+                            <span className="text-gray-500">Pain level: </span>
+                            <span
+                              className={`font-medium ${
+                                patient.painLevel >= 8
+                                  ? "text-red-600"
+                                  : patient.painLevel >= 5
+                                  ? "text-yellow-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {patient.painLevel}/10
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Center: Last Activity */}
+                    {/* Center: Activity & Registration Info */}
                     <div className="flex flex-col items-center gap-3 lg:min-w-0">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
@@ -307,6 +406,15 @@ export default function PatientsPage() {
                         </p>
                         <p className="text-xs text-gray-500">
                           {patient.lastActivity}
+                        </p>
+                      </div>
+
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">
+                          Patient Since
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {patient.createdAt}
                         </p>
                       </div>
                     </div>
@@ -346,6 +454,15 @@ export default function PatientsPage() {
                         <p className="text-gray-500">Primary Physician</p>
                       </div>
 
+                      {/* Priority Badge */}
+                      <Badge
+                        className={`${getPriorityColor(
+                          patient.priority
+                        )} text-xs font-medium`}
+                      >
+                        {patient.priority.toUpperCase()} Priority
+                      </Badge>
+
                       <div className="flex items-center text-blue-800 group-hover:text-blue-700 font-medium">
                         <span className="text-sm mr-2">View Details</span>
                         <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -359,7 +476,25 @@ export default function PatientsPage() {
         )}
 
         {/* Empty State */}
-        {!loading && transformedPatients.length === 0 && (
+        {!loading && !error && filteredPatients.length === 0 && searchTerm && (
+          <Card className="rounded-xl shadow-sm">
+            <CardContent className="py-16 text-center">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No patients found
+              </h3>
+              <p className="text-gray-600 mb-6">
+                No patients match your search criteria. Try adjusting your
+                search terms.
+              </p>
+              <Button variant="outline" onClick={() => setSearchTerm("")}>
+                Clear Search
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {!loading && !error && detailedPatients.length === 0 && !searchTerm && (
           <Card className="rounded-xl shadow-sm">
             <CardContent className="py-16 text-center">
               <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />

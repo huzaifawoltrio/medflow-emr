@@ -28,6 +28,13 @@ interface LoginResponse {
   user: UserData;
 }
 
+// Define the type for the upload picture response
+interface UploadPictureResponse {
+  success: boolean;
+  profile_picture_url: string;
+  message?: string;
+}
+
 /**
  * Async thunk for user login.
  * It takes login credentials and returns the user data and tokens on success.
@@ -106,6 +113,39 @@ export const getDoctorProfile = createAsyncThunk<
       return rejectWithValue(error.response.data.message);
     } else {
       return rejectWithValue(error.message);
+    }
+  }
+});
+
+/**
+ * Async thunk to upload profile picture.
+ * It takes a File object and uploads it to the server.
+ */
+export const uploadProfilePicture = createAsyncThunk<
+  UploadPictureResponse,
+  File,
+  { rejectValue: string }
+>("auth/uploadProfilePicture", async (file, { rejectWithValue }) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post<UploadPictureResponse>(
+      "/profile/picture",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message || "Failed to upload picture");
     }
   }
 });

@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../redux/store"; // Adjust path as needed
+import {
+  getUserDetails,
+  uploadProfilePicture,
+} from "../../redux/features/auth/authActions"; // Adjust path as needed
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,11 +22,74 @@ import {
   Download,
   Eye,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PatientPortal() {
   const [activeTab, setActiveTab] = useState("overview");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Redux state
+  const { user, loading, uploadingPicture, uploadError } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  // Fetch user details on component mount
+  useEffect(() => {
+    if (!user) {
+      dispatch(getUserDetails());
+    }
+  }, [dispatch, user]);
+
+  // Handle profile picture upload
+  const handleProfilePictureUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        alert("Please select a valid image file (JPEG, PNG, or GIF)");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        alert("File size must be less than 5MB");
+        return;
+      }
+
+      dispatch(uploadProfilePicture(file));
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Trigger file input click
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+  const getPatientDisplayName = () => {
+    if (user?.first_name && user?.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    if (user?.username) {
+      return user.username;
+    }
+    return "Patient";
+  };
 
   const renderOverview = () => (
     <>
@@ -128,18 +197,64 @@ export default function PatientPortal() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div>
-                <span className="text-gray-500">Name</span>
-                <p className="font-medium">John Doe</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Patient ID</span>
-                <p className="font-medium">P001</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Date of Birth</span>
-                <p className="font-medium">3/15/1985</p>
-              </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <>
+                  {/* Profile Picture Section */}
+                  <div className="flex flex-col items-center space-y-3 py-4 border-b">
+                    <div className="relative">
+                      {user?.profile_picture_url ? (
+                        <img
+                          src={user.profile_picture_url}
+                          alt="Profile"
+                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center border-2 border-gray-200">
+                          <span className="text-2xl font-semibold text-blue-800">
+                            {getPatientDisplayName().charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      {uploadingPicture && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={triggerFileUpload}
+                      disabled={uploadingPicture}
+                      className="text-xs"
+                    >
+                      {uploadingPicture ? "Uploading..." : "Change Photo"}
+                    </Button>
+                    {uploadError && (
+                      <p className="text-red-500 text-xs text-center">
+                        {uploadError}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="text-gray-500">Name</span>
+                    <p className="font-medium">{getPatientDisplayName()}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Patient ID</span>
+                    <p className="font-medium">P001</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Date of Birth</span>
+                    <p className="font-medium">3/15/1985</p>
+                  </div>
+                </>
+              )}
               <Button variant="outline" className="w-full mt-4">
                 Update Information
               </Button>
@@ -369,6 +484,15 @@ export default function PatientPortal() {
 
   const tabs = ["overview", "appointments", "records", "messages", "billing"];
 
+  if (loading && !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -376,7 +500,9 @@ export default function PatientPortal() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Patient Portal
           </h1>
-          <p className="text-gray-600 mt-1">Welcome back, John Doe</p>
+          <p className="text-gray-600 mt-1">
+            Welcome back, {getPatientDisplayName()}
+          </p>
         </div>
         <Button className="bg-blue-800 hover:bg-blue-700 w-full md:w-auto">
           <Bell className="mr-2 h-4 w-4" /> Notifications
@@ -403,6 +529,16 @@ export default function PatientPortal() {
       </div>
 
       {renderContent()}
+
+      {/* Hidden file input for profile picture upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleProfilePictureUpload}
+        accept="image/jpeg,image/jpg,image/png,image/gif"
+        className="hidden"
+        aria-label="Upload profile picture"
+      />
     </div>
   );
 }

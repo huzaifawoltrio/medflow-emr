@@ -4,6 +4,8 @@ import {
   registerPatient,
   fetchPatients,
   fetchPatientByUsername,
+  fetchDetailedPatients,
+  DetailedPatient,
 } from "./patientActions";
 
 interface Patient {
@@ -44,6 +46,7 @@ interface Patient {
 
 interface PatientState {
   patients: Patient[];
+  detailedPatients: DetailedPatient[];
   selectedPatient: Patient | null;
   loading: boolean;
   error: string | null;
@@ -52,6 +55,7 @@ interface PatientState {
 
 const initialState: PatientState = {
   patients: [],
+  detailedPatients: [],
   selectedPatient: null,
   loading: false,
   error: null,
@@ -95,6 +99,24 @@ const patientSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(fetchDetailedPatients.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchDetailedPatients.fulfilled,
+        (state, action: PayloadAction<DetailedPatient[]>) => {
+          state.loading = false;
+          state.detailedPatients = action.payload;
+        }
+      )
+      .addCase(
+        fetchDetailedPatients.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        }
+      )
       .addCase(fetchPatientByUsername.pending, (state) => {
         state.loading = true;
         state.error = null;
