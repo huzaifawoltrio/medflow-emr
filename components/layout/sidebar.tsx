@@ -22,7 +22,10 @@ import {
   Stethoscope,
   ChevronLeft,
   ChevronRight,
-  TrendingUp, // Added icon for Results Review
+  TrendingUp,
+  Handshake,
+  Zap,
+  PanelLeft, // Lucide logo
 } from "lucide-react";
 
 const navigation = [
@@ -30,12 +33,17 @@ const navigation = [
   { name: "Appointments", href: "/appointments", icon: Calendar },
   { name: "Patients", href: "/patients", icon: Users },
   { name: "Patient Intake", href: "/patient-intake", icon: FileText },
+  { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
-  // { name: "e-Prescription", href: "/e-prescription", icon: Pill },
+  {
+    name: "Patient Provider Relationships",
+    href: "/relationships",
+    icon: Handshake,
+  },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Documents", href: "/documents", icon: ClipboardList },
-  { name: "Results Review", href: "/results-review", icon: TrendingUp }, // Added new Results Review link
+  { name: "Results Review", href: "/results-review", icon: TrendingUp },
   { name: "File Management", href: "/file-management", icon: FolderOpen },
   { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
 ];
@@ -57,6 +65,7 @@ export function Sidebar({
     }
     return false;
   });
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     // Check if window is available (client-side)
@@ -93,6 +102,9 @@ export function Sidebar({
     }
   };
 
+  // Determine if sidebar should show expanded content
+  const shouldShowExpanded = !isCollapsed || isMobile || isHovered;
+
   return (
     <Fragment>
       {/* Overlay for mobile */}
@@ -115,67 +127,69 @@ export function Sidebar({
           isMobile && "w-64",
           // Desktop behavior
           !isMobile && "relative translate-x-0 flex",
-          !isMobile && (isCollapsed ? "w-16" : "w-64")
+          !isMobile && (shouldShowExpanded ? "w-64" : "w-16")
         )}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center justify-center px-4 border-b border-gray-200 shrink-0">
-          {isCollapsed && !isMobile ? (
-            /* Collapsed state - Logo and arrow together */
-            <div className="flex items-center justify-center space-x-1">
-              <div className="w-8 h-8 bg-blue-800 rounded-lg flex items-center justify-center">
-                <Stethoscope className="h-5 w-5 text-white" />
-              </div>
+        <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200 shrink-0">
+          <div className="flex items-center space-x-2 min-w-0">
+            {/* Logo - changes based on collapsed state and hover */}
+            <div className="w-8 h-8 bg-blue-800 rounded-lg flex items-center justify-center shrink-0">
+              {isCollapsed && !isMobile && !isHovered ? (
+                <PanelLeft className="h-5 w-5 text-white" />
+              ) : (
+                <Stethoscope className="h-6 w-6 text-white p-0.5" />
+              )}
+            </div>
+
+            {/* App name - show/hide with smooth transition */}
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-300 ease-in-out",
+                shouldShowExpanded ? "w-auto opacity-100" : "w-0 opacity-0"
+              )}
+            >
+              <h1 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
+                Daisy
+              </h1>
+            </div>
+          </div>
+
+          {/* Close button (mobile) / Collapse button (desktop) */}
+          <div
+            className={cn(
+              "transition-all duration-300 ease-in-out shrink-0",
+              shouldShowExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"
+            )}
+          >
+            {isMobile ? (
+              <Button
+                onClick={onClose}
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Close sidebar"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            ) : (
               <Button
                 onClick={toggleCollapse}
                 variant="ghost"
                 size="icon"
-                className="w-6 h-6 p-0 hover:bg-gray-100"
-                aria-label="Expand sidebar"
+                className="hidden md:flex hover:bg-gray-100"
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               >
-                <ChevronRight className="h-4 w-4 text-gray-600" />
-              </Button>
-            </div>
-          ) : (
-            /* Expanded state - Logo with text and separate arrow */
-            <>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-800 rounded-lg flex items-center justify-center">
-                  <Stethoscope className="h-6 w-6 text-white p-0.5" />
-                </div>
-                {!isMobile && (
-                  <div>
-                    <h1 className="text-lg font-semibold text-gray-900">
-                      Daisy
-                    </h1>
-                  </div>
-                )}
-              </div>
-
-              {/* Close button (mobile) / Collapse button (desktop) */}
-              {isMobile ? (
-                <Button
-                  onClick={onClose}
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden"
-                  aria-label="Close sidebar"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={toggleCollapse}
-                  variant="ghost"
-                  size="icon"
-                  className="hidden md:flex"
-                  aria-label="Collapse sidebar"
-                >
+                {isCollapsed ? (
+                  <ChevronRight className="h-5 w-5" />
+                ) : (
                   <ChevronLeft className="h-5 w-5" />
-                </Button>
-              )}
-            </>
-          )}
+                )}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Navigation Links */}
@@ -184,13 +198,13 @@ export function Sidebar({
             const isActive = pathname === item.href;
 
             return (
-              <div key={item.name} className="relative group">
+              <div key={item.name} className="relative">
                 <Link
                   href={item.href}
                   onClick={handleNavClick}
                   className={cn(
-                    "flex items-center text-sm font-medium rounded-lg transition-colors relative",
-                    isCollapsed && !isMobile
+                    "flex items-center text-sm font-medium rounded-lg transition-all duration-200 ease-in-out relative group",
+                    isCollapsed && !isMobile && !isHovered
                       ? "px-2 py-3 justify-center w-12 h-12 mx-auto"
                       : "px-3 py-2",
                     isActive
@@ -200,15 +214,30 @@ export function Sidebar({
                 >
                   <item.icon
                     className={cn(
-                      isCollapsed && !isMobile ? "h-6 w-6" : "h-5 w-5 mr-3",
+                      "transition-all duration-200 ease-in-out shrink-0",
+                      isCollapsed && !isMobile && !isHovered
+                        ? "h-6 w-6"
+                        : "h-5 w-5",
+                      (!isCollapsed || isMobile || isHovered) && "mr-3",
                       isActive ? "text-blue-800" : "text-gray-400"
                     )}
                   />
-                  {(!isCollapsed || isMobile) && item.name}
+
+                  {/* Text with smooth transition */}
+                  <span
+                    className={cn(
+                      "transition-all duration-300 ease-in-out whitespace-nowrap",
+                      shouldShowExpanded
+                        ? "opacity-100 w-auto"
+                        : "opacity-0 w-0 overflow-hidden"
+                    )}
+                  >
+                    {item.name}
+                  </span>
                 </Link>
 
-                {/* Tooltip for collapsed state */}
-                {isCollapsed && !isMobile && (
+                {/* Tooltip for collapsed state when not hovering */}
+                {isCollapsed && !isMobile && !isHovered && (
                   <div className="absolute left-16 top-1/2 -translate-y-1/2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-[60] pointer-events-none shadow-lg">
                     {item.name}
                     <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
