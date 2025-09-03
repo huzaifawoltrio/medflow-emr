@@ -50,15 +50,13 @@ export const checkGoogleConnection = createAsyncThunk<
 });
 
 export const initiateGoogleAuth = createAsyncThunk<
-  string,
+  void,
   void,
   { rejectValue: string }
 >("googleCalendar/initiateAuth", async (_, { rejectWithValue }) => {
   try {
-    const authUrl = await googleCalendarService.initiateGoogleAuth();
-    // Redirect to Google OAuth
-    window.location.href = authUrl;
-    return authUrl;
+    await googleCalendarService.initiateGoogleAuth();
+    // The service will handle the redirect, so we don't return anything
   } catch (error: any) {
     return rejectWithValue(error.message);
   }

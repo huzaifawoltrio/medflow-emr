@@ -38,18 +38,34 @@ export interface RescheduleMeetingRequest {
 class GoogleCalendarService {
   /**
    * Initiates Google OAuth flow for calendar access
+   * This should redirect the browser to Google OAuth, not make an AJAX call
    */
-  async initiateGoogleAuth(): Promise<string> {
+  async initiateGoogleAuth(): Promise<void> {
     try {
+      // Get the authorization URL from the backend
       const response = await api.get("/google/authorize");
-      // The backend should return a redirect URL or handle the redirect
-      return response.data.authorization_url || response.request.responseURL;
+
+      // Check if we got a redirect response or authorization URL
+      if (response.data && response.data.authorization_url) {
+        // Redirect the browser to Google OAuth
+        window.location.href = response.data.authorization_url;
+      } else {
+        // If the backend redirects automatically, we shouldn't reach here
+        // But if we do, redirect to the authorize endpoint directly
+        window.location.href = `${api.defaults.baseURL}/google/authorize`;
+      }
     } catch (error: any) {
       console.error("Error initiating Google auth:", error);
-      throw new Error(
-        error.response?.data?.message ||
-          "Failed to initiate Google authentication"
-      );
+
+      // If AJAX fails, try direct redirect as fallback
+      if (error.code === "ERR_NETWORK" || error.response?.status === 302) {
+        window.location.href = `${api.defaults.baseURL}/google/authorize`;
+      } else {
+        throw new Error(
+          error.response?.data?.message ||
+            "Failed to initiate Google authentication"
+        );
+      }
     }
   }
 
@@ -113,7 +129,6 @@ class GoogleCalendarService {
 
   /**
    * Gets all meetings/sessions for the current user
-   * Note: You'll need to add this endpoint to your backend
    */
   async getMeetings(): Promise<Meeting[]> {
     try {
@@ -129,7 +144,6 @@ class GoogleCalendarService {
 
   /**
    * Checks if user has Google Calendar connected
-   * You'll need to add this endpoint to check session/token status
    */
   async checkGoogleConnection(): Promise<{
     isConnected: boolean;

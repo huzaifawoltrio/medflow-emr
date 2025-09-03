@@ -50,7 +50,6 @@ import {
   clearError,
 } from "../../redux/features/googleCalendar/googleCalendarSlice";
 import { RootState, AppDispatch } from "../../redux/store";
-import MainLayout from "@/components/layout/main-layout";
 
 export default function GoogleTelemedicine() {
   const dispatch = useDispatch<AppDispatch>();
@@ -157,7 +156,11 @@ export default function GoogleTelemedicine() {
 
   // Event handlers
   const handleGoogleConnect = () => {
-    dispatch(initiateGoogleAuth());
+    // Instead of using Redux thunk, redirect directly to the backend endpoint
+    // This avoids CORS issues with OAuth redirects
+    const baseUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    window.location.href = `${baseUrl}/google/authorize`;
   };
 
   const handleGoogleDisconnect = async () => {
@@ -364,296 +367,652 @@ export default function GoogleTelemedicine() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Google Telemedicine
-              </h1>
-              <div className="flex items-start mt-2 text-sm text-gray-600">
-                <Shield className="h-4 w-4 mr-2 text-green-600 shrink-0 mt-0.5" />
-                <span>
-                  HIPAA compliant with Google Meet integration and Calendar sync
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => dispatch(fetchMeetings())}
-                variant="outline"
-                disabled={loading || !isConnected}
-              >
-                <RefreshCw
-                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
-              {!showScheduleForm && (
-                <Button
-                  onClick={() => setShowScheduleForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={!isConnected}
-                >
-                  <Plus className="mr-2 h-4 w-4" /> Schedule Session
-                </Button>
-              )}
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Google Telemedicine
+            </h1>
+            <div className="flex items-start mt-2 text-sm text-gray-600">
+              <Shield className="h-4 w-4 mr-2 text-green-600 shrink-0 mt-0.5" />
+              <span>
+                HIPAA compliant with Google Meet integration and Calendar sync
+              </span>
             </div>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                {error}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearErrorMessage}
-                  className="ml-2 text-red-600 hover:text-red-800"
-                >
-                  Dismiss
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => dispatch(fetchMeetings())}
+              variant="outline"
+              disabled={loading || !isConnected}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+            {!showScheduleForm && (
+              <Button
+                onClick={() => setShowScheduleForm(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+                disabled={!isConnected}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Schedule Session
+              </Button>
+            )}
+          </div>
+        </div>
 
-          {/* Google Account Connection */}
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Chrome className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      Google Account Integration
-                    </h3>
-                    {isConnected && googleUser ? (
-                      <div className="flex items-center space-x-2 mt-1">
-                        {googleUser.picture && (
-                          <img
-                            src={googleUser.picture}
-                            alt="Profile"
-                            className="w-6 h-6 rounded-full"
-                          />
-                        )}
-                        <span className="text-sm text-gray-600">
-                          {googleUser.name}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          ({googleUser.email})
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Connect your Google account to use Calendar and Meet
-                      </p>
-                    )}
-                  </div>
+        {/* Error Alert */}
+        {error && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {error}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearErrorMessage}
+                className="ml-2 text-red-600 hover:text-red-800"
+              >
+                Dismiss
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Google Account Connection */}
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Chrome className="h-6 w-6 text-blue-600" />
                 </div>
-
-                <div className="flex items-center space-x-3">
-                  {getStatusBadge(isConnected ? "connected" : "disconnected")}
-                  {loading ? (
-                    <Button disabled size="sm">
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Connecting...
-                    </Button>
-                  ) : isConnected ? (
-                    <Button
-                      variant="outline"
-                      onClick={handleGoogleDisconnect}
-                      size="sm"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Disconnect
-                    </Button>
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    Google Account Integration
+                  </h3>
+                  {isConnected && googleUser ? (
+                    <div className="flex items-center space-x-2 mt-1">
+                      {googleUser.picture && (
+                        <img
+                          src={googleUser.picture}
+                          alt="Profile"
+                          className="w-6 h-6 rounded-full"
+                        />
+                      )}
+                      <span className="text-sm text-gray-600">
+                        {googleUser.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        ({googleUser.email})
+                      </span>
+                    </div>
                   ) : (
-                    <Button onClick={handleGoogleConnect} size="sm">
-                      <Chrome className="mr-2 h-4 w-4" />
-                      Connect Google
-                    </Button>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Connect your Google account to use Calendar and Meet
+                    </p>
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                {getStatusBadge(isConnected ? "connected" : "disconnected")}
+                {loading ? (
+                  <Button disabled size="sm">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting...
+                  </Button>
+                ) : isConnected ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleGoogleDisconnect}
+                    size="sm"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Disconnect
+                  </Button>
+                ) : (
+                  <Button onClick={handleGoogleConnect} size="sm">
+                    <Chrome className="mr-2 h-4 w-4" />
+                    Connect Google
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Schedule New Session Form */}
+        {showScheduleForm && (
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CalendarDays className="mr-2 h-5 w-5" />
+                Schedule New Telemedicine Session
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleScheduleSession} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="patientName">Patient Name *</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="patientName"
+                        className="pl-10"
+                        value={scheduleForm.patientName}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            patientName: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="patientEmail">Patient Email *</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="patientEmail"
+                        type="email"
+                        className="pl-10"
+                        value={scheduleForm.patientEmail}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            patientEmail: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="date">Date *</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={scheduleForm.date}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) =>
+                        setScheduleForm({
+                          ...scheduleForm,
+                          date: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="time">Time *</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={scheduleForm.time}
+                      onChange={(e) =>
+                        setScheduleForm({
+                          ...scheduleForm,
+                          time: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <select
+                      id="duration"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={scheduleForm.duration}
+                      onChange={(e) =>
+                        setScheduleForm({
+                          ...scheduleForm,
+                          duration: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="45">45 minutes</option>
+                      <option value="60">60 minutes</option>
+                      <option value="90">90 minutes</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="type">Session Type</Label>
+                    <select
+                      id="type"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={scheduleForm.type}
+                      onChange={(e) =>
+                        setScheduleForm({
+                          ...scheduleForm,
+                          type: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="Initial Consultation">
+                        Initial Consultation
+                      </option>
+                      <option value="Follow-up">Follow-up</option>
+                      <option value="Therapy Session">Therapy Session</option>
+                      <option value="Regular Checkup">Regular Checkup</option>
+                      <option value="Emergency Consultation">
+                        Emergency Consultation
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Session Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any special notes or preparation instructions..."
+                    value={scheduleForm.notes}
+                    onChange={(e) =>
+                      setScheduleForm({
+                        ...scheduleForm,
+                        notes: e.target.value,
+                      })
+                    }
+                    className="h-20"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700"
+                    disabled={!isConnected || creatingMeeting}
+                  >
+                    {creatingMeeting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating Meeting...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Create Google Meet Session
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowScheduleForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upcoming Sessions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Video className="mr-2 h-5 w-5" />
+              Upcoming Sessions ({getUpcomingSessions().length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading && meetings.length === 0 ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">Loading sessions...</p>
+              </div>
+            ) : getUpcomingSessions().length > 0 ? (
+              <div className="space-y-4">
+                {getUpcomingSessions().map((meeting) => (
+                  <div
+                    key={meeting.id}
+                    className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Video className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {meeting.summary}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatDateTime(meeting.start_time)} -{" "}
+                          {formatDateTime(meeting.end_time)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Attendees: {meeting.attendees.join(", ")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      {getStatusBadge("scheduled")}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={reschedulingMeeting === meeting.event_id}
+                        onClick={() => setEditingMeeting(meeting)}
+                      >
+                        <Edit3 className="mr-1 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={cancelingMeeting === meeting.event_id}
+                        onClick={() =>
+                          handleCancelMeeting(
+                            meeting.event_id,
+                            extractPatientName(meeting.summary)
+                          )
+                        }
+                      >
+                        {cancelingMeeting === meeting.event_id ? (
+                          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-1 h-4 w-4" />
+                        )}
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => window.open(meeting.meet_link, "_blank")}
+                      >
+                        <ExternalLink className="mr-1 h-4 w-4" />
+                        Join Meet
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No upcoming sessions scheduled</p>
+                {isConnected && (
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setShowScheduleForm(true)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Schedule New Session
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* System Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>System & Integration Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { name: "Camera Access", icon: Camera },
+                { name: "Microphone Access", icon: Mic },
+                { name: "Internet Connection", icon: Wifi },
+                { name: "Browser Compatibility", icon: Monitor },
+                { name: "Google Calendar API", icon: Calendar },
+                { name: "Google Meet Integration", icon: Video },
+              ].map((check) => {
+                const Icon = check.icon;
+                const actualStatus = systemStatus[check.name] || "checking";
+                return (
+                  <div
+                    key={check.name}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className="h-5 w-5 text-gray-600" />
+                      <span className="font-medium text-gray-900 text-sm">
+                        {check.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(actualStatus)}
+                      {getStatusBadge(actualStatus)}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="pt-3 border-t">
+                <Button variant="outline" className="w-full">
+                  <Play className="mr-2 h-4 w-4" /> Test Audio/Video
+                </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Schedule New Session Form */}
-          {showScheduleForm && (
-            <Card className="border-l-4 border-l-green-500">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button
+                className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+                onClick={() => setShowScheduleForm(true)}
+                disabled={!isConnected}
+              >
+                <Plus className="mr-3 h-4 w-4" />
+                Schedule Google Meet Session
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() =>
+                  window.open("https://calendar.google.com", "_blank")
+                }
+                disabled={!isConnected}
+              >
+                <Calendar className="mr-3 h-4 w-4" />
+                View Google Calendar
+              </Button>
+
+              <Button variant="outline" className="w-full justify-start">
+                <Users className="mr-3 h-4 w-4" />
+                Join Waiting Room
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => window.open("https://meet.google.com", "_blank")}
+                disabled={!isConnected}
+              >
+                <Video className="mr-3 h-4 w-4" />
+                Start Instant Google Meet
+              </Button>
+
+              <Button variant="outline" className="w-full justify-start">
+                <Settings className="mr-3 h-4 w-4" />
+                Google Integration Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Sessions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Recent Sessions ({getRecentSessions().length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {getRecentSessions().length > 0 ? (
+              <div className="space-y-4">
+                {getRecentSessions().map((meeting) => (
+                  <div
+                    key={meeting.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {meeting.summary}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatDateTime(meeting.start_time)} -{" "}
+                          {formatDateTime(meeting.end_time)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Attendees: {meeting.attendees.join(", ")}
+                        </p>
+                        {meeting.description && (
+                          <p className="text-xs text-gray-500 mt-1 truncate max-w-md">
+                            {meeting.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      {getStatusBadge("completed")}
+                      <Button variant="outline" size="sm">
+                        <FileText className="mr-2 h-4 w-4" />
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No recent sessions</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Edit Meeting Modal */}
+        {editingMeeting && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-md">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <CalendarDays className="mr-2 h-5 w-5" />
-                  Schedule New Telemedicine Session
-                </CardTitle>
+                <CardTitle>Reschedule Meeting</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleScheduleSession} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="patientName">Patient Name *</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="patientName"
-                          className="pl-10"
-                          value={scheduleForm.patientName}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              patientName: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target as HTMLFormElement);
+                    const date = formData.get("date") as string;
+                    const time = formData.get("time") as string;
+                    const duration =
+                      (formData.get("duration") as string) || "30";
 
-                    <div>
-                      <Label htmlFor="patientEmail">Patient Email *</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          id="patientEmail"
-                          type="email"
-                          className="pl-10"
-                          value={scheduleForm.patientEmail}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              patientEmail: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
+                    const startDateTime = new Date(
+                      `${date}T${time}:00`
+                    ).toISOString();
+                    const endDateTime = new Date(
+                      new Date(startDateTime).getTime() +
+                        parseInt(duration) * 60000
+                    ).toISOString();
 
-                    <div>
-                      <Label htmlFor="date">Date *</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={scheduleForm.date}
-                        min={new Date().toISOString().split("T")[0]}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            date: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="time">Time *</Label>
-                      <Input
-                        id="time"
-                        type="time"
-                        value={scheduleForm.time}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            time: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="duration">Duration (minutes)</Label>
-                      <select
-                        id="duration"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={scheduleForm.duration}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            duration: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">60 minutes</option>
-                        <option value="90">90 minutes</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="type">Session Type</Label>
-                      <select
-                        id="type"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={scheduleForm.type}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            type: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="Initial Consultation">
-                          Initial Consultation
-                        </option>
-                        <option value="Follow-up">Follow-up</option>
-                        <option value="Therapy Session">Therapy Session</option>
-                        <option value="Regular Checkup">Regular Checkup</option>
-                        <option value="Emergency Consultation">
-                          Emergency Consultation
-                        </option>
-                      </select>
-                    </div>
+                    handleRescheduleMeeting(
+                      editingMeeting.event_id,
+                      startDateTime,
+                      endDateTime
+                    );
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <Label htmlFor="edit-date">New Date</Label>
+                    <Input
+                      id="edit-date"
+                      name="date"
+                      type="date"
+                      min={new Date().toISOString().split("T")[0]}
+                      defaultValue={editingMeeting.start_time.split("T")[0]}
+                      required
+                    />
                   </div>
 
                   <div>
-                    <Label htmlFor="notes">Session Notes (Optional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Any special notes or preparation instructions..."
-                      value={scheduleForm.notes}
-                      onChange={(e) =>
-                        setScheduleForm({
-                          ...scheduleForm,
-                          notes: e.target.value,
-                        })
-                      }
-                      className="h-20"
+                    <Label htmlFor="edit-time">New Time</Label>
+                    <Input
+                      id="edit-time"
+                      name="time"
+                      type="time"
+                      defaultValue={editingMeeting.start_time
+                        .split("T")[1]
+                        .substring(0, 5)}
+                      required
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-duration">Duration (minutes)</Label>
+                    <select
+                      id="edit-duration"
+                      name="duration"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      defaultValue={Math.round(
+                        (new Date(editingMeeting.end_time).getTime() -
+                          new Date(editingMeeting.start_time).getTime()) /
+                          60000
+                      )}
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="45">45 minutes</option>
+                      <option value="60">60 minutes</option>
+                      <option value="90">90 minutes</option>
+                    </select>
                   </div>
 
                   <div className="flex space-x-3 pt-4">
                     <Button
                       type="submit"
-                      className="bg-green-600 hover:bg-green-700"
-                      disabled={!isConnected || creatingMeeting}
+                      className="bg-blue-600 hover:bg-blue-700"
+                      disabled={reschedulingMeeting === editingMeeting.event_id}
                     >
-                      {creatingMeeting ? (
+                      {reschedulingMeeting === editingMeeting.event_id ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating Meeting...
+                          Rescheduling...
                         </>
                       ) : (
                         <>
                           <Calendar className="mr-2 h-4 w-4" />
-                          Create Google Meet Session
+                          Reschedule
                         </>
                       )}
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setShowScheduleForm(false)}
+                      onClick={() => setEditingMeeting(null)}
                     >
                       Cancel
                     </Button>
@@ -661,377 +1020,9 @@ export default function GoogleTelemedicine() {
                 </form>
               </CardContent>
             </Card>
-          )}
-
-          {/* Upcoming Sessions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Video className="mr-2 h-5 w-5" />
-                Upcoming Sessions ({getUpcomingSessions().length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading && meetings.length === 0 ? (
-                <div className="text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600">Loading sessions...</p>
-                </div>
-              ) : getUpcomingSessions().length > 0 ? (
-                <div className="space-y-4">
-                  {getUpcomingSessions().map((meeting) => (
-                    <div
-                      key={meeting.id}
-                      className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Video className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {meeting.summary}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatDateTime(meeting.start_time)} -{" "}
-                            {formatDateTime(meeting.end_time)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Attendees: {meeting.attendees.join(", ")}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        {getStatusBadge("scheduled")}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={reschedulingMeeting === meeting.event_id}
-                          onClick={() => setEditingMeeting(meeting)}
-                        >
-                          <Edit3 className="mr-1 h-4 w-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={cancelingMeeting === meeting.event_id}
-                          onClick={() =>
-                            handleCancelMeeting(
-                              meeting.event_id,
-                              extractPatientName(meeting.summary)
-                            )
-                          }
-                        >
-                          {cancelingMeeting === meeting.event_id ? (
-                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="mr-1 h-4 w-4" />
-                          )}
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                          onClick={() =>
-                            window.open(meeting.meet_link, "_blank")
-                          }
-                        >
-                          <ExternalLink className="mr-1 h-4 w-4" />
-                          Join Meet
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">
-                    No upcoming sessions scheduled
-                  </p>
-                  {isConnected && (
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => setShowScheduleForm(true)}
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Schedule New Session
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* System Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>System & Integration Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  { name: "Camera Access", icon: Camera },
-                  { name: "Microphone Access", icon: Mic },
-                  { name: "Internet Connection", icon: Wifi },
-                  { name: "Browser Compatibility", icon: Monitor },
-                  { name: "Google Calendar API", icon: Calendar },
-                  { name: "Google Meet Integration", icon: Video },
-                ].map((check) => {
-                  const Icon = check.icon;
-                  const actualStatus = systemStatus[check.name] || "checking";
-                  return (
-                    <div
-                      key={check.name}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Icon className="h-5 w-5 text-gray-600" />
-                        <span className="font-medium text-gray-900 text-sm">
-                          {check.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(actualStatus)}
-                        {getStatusBadge(actualStatus)}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div className="pt-3 border-t">
-                  <Button variant="outline" className="w-full">
-                    <Play className="mr-2 h-4 w-4" /> Test Audio/Video
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  className="w-full justify-start bg-blue-600 hover:bg-blue-700"
-                  onClick={() => setShowScheduleForm(true)}
-                  disabled={!isConnected}
-                >
-                  <Plus className="mr-3 h-4 w-4" />
-                  Schedule Google Meet Session
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() =>
-                    window.open("https://calendar.google.com", "_blank")
-                  }
-                  disabled={!isConnected}
-                >
-                  <Calendar className="mr-3 h-4 w-4" />
-                  View Google Calendar
-                </Button>
-
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="mr-3 h-4 w-4" />
-                  Join Waiting Room
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() =>
-                    window.open("https://meet.google.com", "_blank")
-                  }
-                  disabled={!isConnected}
-                >
-                  <Video className="mr-3 h-4 w-4" />
-                  Start Instant Google Meet
-                </Button>
-
-                <Button variant="outline" className="w-full justify-start">
-                  <Settings className="mr-3 h-4 w-4" />
-                  Google Integration Settings
-                </Button>
-              </CardContent>
-            </Card>
           </div>
-
-          {/* Recent Sessions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                Recent Sessions ({getRecentSessions().length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {getRecentSessions().length > 0 ? (
-                <div className="space-y-4">
-                  {getRecentSessions().map((meeting) => (
-                    <div
-                      key={meeting.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {meeting.summary}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatDateTime(meeting.start_time)} -{" "}
-                            {formatDateTime(meeting.end_time)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Attendees: {meeting.attendees.join(", ")}
-                          </p>
-                          {meeting.description && (
-                            <p className="text-xs text-gray-500 mt-1 truncate max-w-md">
-                              {meeting.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        {getStatusBadge("completed")}
-                        <Button variant="outline" size="sm">
-                          <FileText className="mr-2 h-4 w-4" />
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No recent sessions</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Edit Meeting Modal */}
-          {editingMeeting && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <Card className="w-full max-w-md">
-                <CardHeader>
-                  <CardTitle>Reschedule Meeting</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const formData = new FormData(
-                        e.target as HTMLFormElement
-                      );
-                      const date = formData.get("date") as string;
-                      const time = formData.get("time") as string;
-                      const duration =
-                        (formData.get("duration") as string) || "30";
-
-                      const startDateTime = new Date(
-                        `${date}T${time}:00`
-                      ).toISOString();
-                      const endDateTime = new Date(
-                        new Date(startDateTime).getTime() +
-                          parseInt(duration) * 60000
-                      ).toISOString();
-
-                      handleRescheduleMeeting(
-                        editingMeeting.event_id,
-                        startDateTime,
-                        endDateTime
-                      );
-                    }}
-                    className="space-y-4"
-                  >
-                    <div>
-                      <Label htmlFor="edit-date">New Date</Label>
-                      <Input
-                        id="edit-date"
-                        name="date"
-                        type="date"
-                        min={new Date().toISOString().split("T")[0]}
-                        defaultValue={editingMeeting.start_time.split("T")[0]}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="edit-time">New Time</Label>
-                      <Input
-                        id="edit-time"
-                        name="time"
-                        type="time"
-                        defaultValue={editingMeeting.start_time
-                          .split("T")[1]
-                          .substring(0, 5)}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                      <select
-                        id="edit-duration"
-                        name="duration"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        defaultValue={Math.round(
-                          (new Date(editingMeeting.end_time).getTime() -
-                            new Date(editingMeeting.start_time).getTime()) /
-                            60000
-                        )}
-                      >
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">60 minutes</option>
-                        <option value="90">90 minutes</option>
-                      </select>
-                    </div>
-
-                    <div className="flex space-x-3 pt-4">
-                      <Button
-                        type="submit"
-                        className="bg-blue-600 hover:bg-blue-700"
-                        disabled={
-                          reschedulingMeeting === editingMeeting.event_id
-                        }
-                      >
-                        {reschedulingMeeting === editingMeeting.event_id ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Rescheduling...
-                          </>
-                        ) : (
-                          <>
-                            <Calendar className="mr-2 h-4 w-4" />
-                            Reschedule
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setEditingMeeting(null)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+        )}
       </div>
-    </MainLayout>
+    </div>
   );
 }
