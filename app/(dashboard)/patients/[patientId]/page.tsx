@@ -11,7 +11,6 @@ import { PatientInfoTab } from "../../../../components/patient-detail/tabs/Patie
 import { MedicationsTab } from "@/components/patient-detail/tabs/MedicationsTab";
 import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";
-import { VitalsTab } from "@/components/patient-detail/tabs/VitalsTab";
 import { BillingTab } from "@/components/patient-detail/tabs/BillingTab";
 import { CareTeamTab } from "@/components/patient-detail/tabs/CareTeamTab";
 import { ClinicalNotesDialog } from "@/components/patient-detail/dialogs/ClinicalNotesDialog";
@@ -24,18 +23,16 @@ import {
   Pill,
   FlaskConical,
   FileText,
-  HeartPulse,
   CreditCard,
   Users,
 } from "lucide-react";
 import { patientData } from "./data";
 
-// Updated tabs with new order and icons, removed Imaging (now part of Results)
+// Updated tabs with new order and icons, removed Imaging (now part of Results) and Vitals
 const clinicalTabs = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "notes", label: "Clinical Notes", icon: FileText },
   { id: "medications", label: "Medications", icon: Pill },
-  { id: "vitals", label: "Vitals", icon: HeartPulse },
   { id: "labs", label: "Results Review", icon: FlaskConical }, // Changed from "Lab Results" to "Results" since it now includes imaging
   { id: "billing", label: "Billing", icon: CreditCard },
   { id: "care-team", label: "Provider Relationships", icon: Users },
@@ -116,8 +113,6 @@ export default function PatientDetailPage() {
             setIsOrderMedOpen={setIsOrderMedOpen}
           />
         );
-      case "vitals":
-        return <VitalsTab patientData={patientData} />;
       case "labs":
         return (
           <LabsTab
