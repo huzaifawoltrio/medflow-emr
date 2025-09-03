@@ -12,8 +12,8 @@ import { MedicationsTab } from "@/components/patient-detail/tabs/MedicationsTab"
 import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";
 import { VitalsTab } from "@/components/patient-detail/tabs/VitalsTab";
-import { ImagingTab } from "@/components/patient-detail/tabs/ImagingTab";
 import { BillingTab } from "@/components/patient-detail/tabs/BillingTab";
+import { CareTeamTab } from "@/components/patient-detail/tabs/CareTeamTab";
 import { ClinicalNotesDialog } from "@/components/patient-detail/dialogs/ClinicalNotesDialog";
 import { OrderMedicationDialog } from "../../../../components/patient-detail/dialogs/OrderMedicationDialog";
 import { OrderLabDialog } from "@/components/patient-detail/dialogs/OrderLabDialog";
@@ -25,21 +25,21 @@ import {
   FlaskConical,
   FileText,
   HeartPulse,
-  Scan,
   CreditCard,
+  Users,
 } from "lucide-react";
 import { patientData } from "./data";
 
-// Static data for UI elements like tabs, now with icons
+// Updated tabs with new order and icons, removed Imaging (now part of Results)
 const clinicalTabs = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "patient-info", label: "Patient Information", icon: User },
-  { id: "medications", label: "Medications", icon: Pill },
-  { id: "labs", label: "Lab Results", icon: FlaskConical },
   { id: "notes", label: "Clinical Notes", icon: FileText },
+  { id: "medications", label: "Medications", icon: Pill },
   { id: "vitals", label: "Vitals", icon: HeartPulse },
-  { id: "imaging", label: "Imaging", icon: Scan },
+  { id: "labs", label: "Results", icon: FlaskConical }, // Changed from "Lab Results" to "Results" since it now includes imaging
   { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "care-team", label: "Provider Relationships", icon: Users },
+  { id: "patient-info", label: "Patient Information", icon: User },
 ];
 
 /**
@@ -102,22 +102,6 @@ export default function PatientDetailPage() {
             setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
-      case "patient-info":
-        return <PatientInfoTab patientData={patientData} />;
-      case "medications":
-        return (
-          <MedicationsTab
-            patientData={patientData}
-            setIsOrderMedOpen={setIsOrderMedOpen}
-          />
-        );
-      case "labs":
-        return (
-          <LabsTab
-            patientData={patientData}
-            setIsOrderLabOpen={setIsOrderLabOpen}
-          />
-        );
       case "notes":
         return (
           <ClinicalNotesTab
@@ -125,12 +109,28 @@ export default function PatientDetailPage() {
             setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
+      case "medications":
+        return (
+          <MedicationsTab
+            patientData={patientData}
+            setIsOrderMedOpen={setIsOrderMedOpen}
+          />
+        );
       case "vitals":
         return <VitalsTab patientData={patientData} />;
-      case "imaging":
-        return <ImagingTab patientData={patientData} />;
+      case "labs":
+        return (
+          <LabsTab
+            patientData={patientData}
+            setIsOrderLabOpen={setIsOrderLabOpen}
+          />
+        );
       case "billing":
         return <BillingTab patientData={patientData} />;
+      case "care-team":
+        return <CareTeamTab patientData={patientData} />;
+      case "patient-info":
+        return <PatientInfoTab patientData={patientData} />;
       default:
         return null;
     }
