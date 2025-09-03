@@ -4,6 +4,7 @@ import authReducer from "./features/auth/authSlice";
 import patientReducer from "./features/patients/patientSlice";
 import appointmentReducer from "./features/appointments/appointmentSlice"; // Added appointment reducer
 import chatReducer from "./features/chat/chatSlice";
+import googleCalendarReducer from "./features/googleCalendar/googleCalendarSlice";
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -13,10 +14,10 @@ export const makeStore = () => {
       patient: patientReducer,
       appointment: appointmentReducer, // Register the new reducer
       chat: chatReducer,
+      googleCalendar: googleCalendarReducer,
     },
   });
 };
-
 // Infer the type of makeStore
 export type AppStore = ReturnType<typeof makeStore>;
 // Infer the `RootState` and `AppDispatch` types from the store itself
