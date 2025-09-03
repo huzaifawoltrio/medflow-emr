@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Video,
   Calendar,
@@ -22,74 +24,51 @@ import {
   AlertCircle,
   Clock,
   Plus,
-  UserCheck,
   Mail,
   CalendarDays,
   ExternalLink,
   LogOut,
   User,
-  Phone,
-  FileText,
   Chrome,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  Edit3,
+  FileText,
+  Phone,
 } from "lucide-react";
-import { MainLayout } from "@/components/layout/main-layout";
 
-// Dummy Google user data
-const dummyGoogleUser = {
-  id: "123456789",
-  name: "Dr. Sarah Johnson",
-  email: "dr.sarah@mediclinic.com",
-  picture:
-    "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face",
-  isConnected: true,
-};
-
-// Dummy upcoming sessions with Google Meet links
-const upcomingSessions = [
-  {
-    id: 1,
-    patient: "Mike Wilson",
-    patientEmail: "mike.wilson@email.com",
-    date: "2025-09-02",
-    time: "14:00",
-    type: "Follow-up Consultation",
-    duration: "30 min",
-    status: "scheduled",
-    meetLink: "https://meet.google.com/abc-defg-hij",
-    calendarEventId: "event_123",
-  },
-  {
-    id: 2,
-    patient: "Emma Davis",
-    patientEmail: "emma.davis@email.com",
-    date: "2025-09-02",
-    time: "15:30",
-    type: "Initial Consultation",
-    duration: "45 min",
-    status: "scheduled",
-    meetLink: "https://meet.google.com/klm-nopq-rst",
-    calendarEventId: "event_124",
-  },
-];
-
-const recentSessions = [
-  {
-    id: 1,
-    patient: "Mike Wilson",
-    date: "2025-08-30",
-    type: "Initial Consultation",
-    duration: "45 min",
-    status: "completed",
-    meetLink: "https://meet.google.com/xyz-abcd-efg",
-    notes: "Patient responded well to treatment plan",
-  },
-];
+// Import Redux actions and selectors
+import {
+  checkGoogleConnection,
+  initiateGoogleAuth,
+  createGoogleMeeting,
+  fetchMeetings,
+  rescheduleMeeting,
+  cancelMeeting,
+  disconnectGoogle,
+  clearError,
+} from "../../redux/features/googleCalendar/googleCalendarSlice";
+import { RootState, AppDispatch } from "../../redux/store";
+import MainLayout from "@/components/layout/main-layout";
 
 export default function GoogleTelemedicine() {
-  const [systemStatus, setSystemStatus] = useState({});
-  const [isGoogleConnected, setIsGoogleConnected] = useState(
-    dummyGoogleUser.isConnected
-  );
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Redux state
+  const {
+    isConnected,
+    googleUser,
+    meetings,
+    loading,
+    error,
+    creatingMeeting,
+    reschedulingMeeting,
+    cancelingMeeting,
+  } = useSelector((state: RootState) => state.googleCalendar);
+
+  // Local state
+  const [systemStatus, setSystemStatus] = useState<Record<string, string>>({});
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
     patientName: "",
@@ -97,13 +76,50 @@ export default function GoogleTelemedicine() {
     date: "",
     time: "",
     duration: "30",
-    type: "consultation",
+    type: "Initial Consultation",
     notes: "",
   });
+  const [editingMeeting, setEditingMeeting] = useState<any>(null);
 
+  // Check for OAuth callback success/error in URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const googleAuth = urlParams.get("google_auth");
+
+    if (googleAuth === "success") {
+      // Clear URL params and refresh connection status
+      window.history.replaceState({}, "", "/telemedicine");
+      dispatch(checkGoogleConnection());
+      // Show success message
+      setTimeout(() => {
+        alert("Successfully connected to Google Account!");
+      }, 500);
+    } else if (googleAuth === "error") {
+      const message = urlParams.get("message") || "Authentication failed";
+      console.error("Google auth error:", message);
+      window.history.replaceState({}, "", "/telemedicine");
+      alert(`Authentication failed: ${message}`);
+    }
+  }, [dispatch]);
+
+  // Check Google connection status on component mount
+  useEffect(() => {
+    dispatch(checkGoogleConnection());
+  }, [dispatch]);
+
+  // Fetch meetings when connected
+  useEffect(() => {
+    if (isConnected) {
+      dispatch(fetchMeetings());
+    }
+  }, [isConnected, dispatch]);
+
+  // System status check
   useEffect(() => {
     const checkSystems = async () => {
-      const checks = {};
+      const checks: Record<string, string> = {};
+
+      // Check camera access
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -113,6 +129,8 @@ export default function GoogleTelemedicine() {
       } catch {
         checks["Camera Access"] = "denied";
       }
+
+      // Check microphone access
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
@@ -122,46 +140,76 @@ export default function GoogleTelemedicine() {
       } catch {
         checks["Microphone Access"] = "denied";
       }
+
+      // Static checks
       checks["Internet Connection"] = "excellent";
       checks["Browser Compatibility"] = "supported";
-      checks["Google Calendar API"] = isGoogleConnected
+      checks["Google Calendar API"] = isConnected
         ? "connected"
         : "disconnected";
-      checks["Google Meet Integration"] = isGoogleConnected
-        ? "active"
-        : "inactive";
+      checks["Google Meet Integration"] = isConnected ? "active" : "inactive";
+
       setSystemStatus(checks);
     };
+
     checkSystems();
-  }, [isGoogleConnected]);
+  }, [isConnected]);
 
+  // Event handlers
   const handleGoogleConnect = () => {
-    // Dummy Google OAuth flow
-    console.log("Initiating Google OAuth...");
-    setTimeout(() => {
-      setIsGoogleConnected(true);
-      alert("Successfully connected to Google Account!");
-    }, 1000);
+    dispatch(initiateGoogleAuth());
   };
 
-  const handleGoogleDisconnect = () => {
-    setIsGoogleConnected(false);
-    alert("Disconnected from Google Account");
+  const handleGoogleDisconnect = async () => {
+    if (
+      window.confirm("Are you sure you want to disconnect your Google account?")
+    ) {
+      try {
+        await dispatch(disconnectGoogle()).unwrap();
+        alert("Successfully disconnected from Google Account");
+      } catch (error) {
+        console.error("Error disconnecting:", error);
+      }
+    }
   };
 
-  const handleScheduleSession = (e) => {
+  const handleScheduleSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Scheduling session with Google Calendar:", scheduleForm);
 
-    // Dummy API call simulation
-    setTimeout(() => {
-      alert(`Session scheduled successfully! 
-      
-Patient: ${scheduleForm.patientName}
-Date: ${scheduleForm.date} at ${scheduleForm.time}
-Google Meet link will be sent to: ${scheduleForm.patientEmail}
-Calendar event created in your Google Calendar`);
+    if (
+      !scheduleForm.patientName ||
+      !scheduleForm.patientEmail ||
+      !scheduleForm.date ||
+      !scheduleForm.time
+    ) {
+      alert("Please fill in all required fields");
+      return;
+    }
 
+    // Create ISO datetime strings
+    const startDateTime = new Date(
+      `${scheduleForm.date}T${scheduleForm.time}:00`
+    ).toISOString();
+    const endDateTime = new Date(
+      new Date(startDateTime).getTime() +
+        parseInt(scheduleForm.duration) * 60000
+    ).toISOString();
+
+    const meetingData = {
+      summary: `${scheduleForm.type} with ${scheduleForm.patientName}`,
+      start_time: startDateTime,
+      end_time: endDateTime,
+      attendees: [scheduleForm.patientEmail],
+      description: `Session Type: ${scheduleForm.type}\nDuration: ${scheduleForm.duration} minutes\n\nNotes: ${scheduleForm.notes}`,
+    };
+
+    try {
+      const result = await dispatch(createGoogleMeeting(meetingData)).unwrap();
+      alert(
+        `Session scheduled successfully!\n\nPatient: ${scheduleForm.patientName}\nDate: ${scheduleForm.date} at ${scheduleForm.time}\nGoogle Meet link: ${result.meet_link}\n\nCalendar invitation sent to: ${scheduleForm.patientEmail}`
+      );
+
+      // Reset form and close
       setShowScheduleForm(false);
       setScheduleForm({
         patientName: "",
@@ -169,14 +217,61 @@ Calendar event created in your Google Calendar`);
         date: "",
         time: "",
         duration: "30",
-        type: "consultation",
+        type: "Initial Consultation",
         notes: "",
       });
-    }, 1500);
+
+      // Refresh meetings list
+      dispatch(fetchMeetings());
+    } catch (error: any) {
+      console.error("Error creating meeting:", error);
+      alert(`Failed to create meeting: ${error}`);
+    }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
+  const handleRescheduleMeeting = async (
+    eventId: string,
+    startTime: string,
+    endTime: string
+  ) => {
+    try {
+      await dispatch(
+        rescheduleMeeting({ eventId, start_time: startTime, end_time: endTime })
+      ).unwrap();
+      alert("Meeting rescheduled successfully!");
+      dispatch(fetchMeetings());
+      setEditingMeeting(null);
+    } catch (error: any) {
+      console.error("Error rescheduling meeting:", error);
+      alert(`Failed to reschedule meeting: ${error}`);
+    }
+  };
+
+  const handleCancelMeeting = async (eventId: string, patientName: string) => {
+    if (
+      window.confirm(
+        `Are you sure you want to cancel the meeting with ${patientName}? This will notify all attendees.`
+      )
+    ) {
+      try {
+        await dispatch(cancelMeeting(eventId)).unwrap();
+        alert(
+          "Meeting canceled successfully and attendees have been notified!"
+        );
+      } catch (error: any) {
+        console.error("Error canceling meeting:", error);
+        alert(`Failed to cancel meeting: ${error}`);
+      }
+    }
+  };
+
+  const clearErrorMessage = () => {
+    dispatch(clearError());
+  };
+
+  // Helper functions
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { class: string; text: string }> = {
       ready: {
         class: "bg-green-100 text-green-800 border-green-200",
         text: "Ready",
@@ -229,7 +324,7 @@ Calendar event created in your Google Calendar`);
     );
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: string) => {
     const readyStates = [
       "ready",
       "excellent",
@@ -245,6 +340,27 @@ Calendar event created in your Google Calendar`);
       return <AlertCircle className="h-4 w-4 text-red-600" />;
     }
     return <Clock className="h-4 w-4 text-gray-400" />;
+  };
+
+  const formatDateTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  };
+
+  const getUpcomingSessions = () => {
+    const now = new Date();
+    return meetings.filter((meeting) => new Date(meeting.start_time) > now);
+  };
+
+  const getRecentSessions = () => {
+    const now = new Date();
+    return meetings.filter((meeting) => new Date(meeting.start_time) <= now);
+  };
+
+  const extractPatientName = (summary: string) => {
+    // Extract patient name from summary like "Initial Consultation with John Doe"
+    const match = summary.match(/with (.+)$/);
+    return match ? match[1] : "Patient";
   };
 
   return (
@@ -266,16 +382,45 @@ Calendar event created in your Google Calendar`);
             </div>
 
             <div className="flex gap-3">
+              <Button
+                onClick={() => dispatch(fetchMeetings())}
+                variant="outline"
+                disabled={loading || !isConnected}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
               {!showScheduleForm && (
                 <Button
                   onClick={() => setShowScheduleForm(true)}
                   className="bg-blue-600 hover:bg-blue-700"
+                  disabled={!isConnected}
                 >
                   <Plus className="mr-2 h-4 w-4" /> Schedule Session
                 </Button>
               )}
             </div>
           </div>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                {error}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearErrorMessage}
+                  className="ml-2 text-red-600 hover:text-red-800"
+                >
+                  Dismiss
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Google Account Connection */}
           <Card className="border-l-4 border-l-blue-500">
@@ -289,18 +434,20 @@ Calendar event created in your Google Calendar`);
                     <h3 className="font-semibold text-gray-900">
                       Google Account Integration
                     </h3>
-                    {isGoogleConnected ? (
+                    {isConnected && googleUser ? (
                       <div className="flex items-center space-x-2 mt-1">
-                        <img
-                          src={dummyGoogleUser.picture}
-                          alt="Profile"
-                          className="w-6 h-6 rounded-full"
-                        />
+                        {googleUser.picture && (
+                          <img
+                            src={googleUser.picture}
+                            alt="Profile"
+                            className="w-6 h-6 rounded-full"
+                          />
+                        )}
                         <span className="text-sm text-gray-600">
-                          {dummyGoogleUser.name}
+                          {googleUser.name}
                         </span>
                         <span className="text-sm text-gray-500">
-                          ({dummyGoogleUser.email})
+                          ({googleUser.email})
                         </span>
                       </div>
                     ) : (
@@ -312,10 +459,13 @@ Calendar event created in your Google Calendar`);
                 </div>
 
                 <div className="flex items-center space-x-3">
-                  {getStatusBadge(
-                    isGoogleConnected ? "connected" : "disconnected"
-                  )}
-                  {isGoogleConnected ? (
+                  {getStatusBadge(isConnected ? "connected" : "disconnected")}
+                  {loading ? (
+                    <Button disabled size="sm">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connecting...
+                    </Button>
+                  ) : isConnected ? (
                     <Button
                       variant="outline"
                       onClick={handleGoogleDisconnect}
@@ -348,7 +498,7 @@ Calendar event created in your Google Calendar`);
                 <form onSubmit={handleScheduleSession} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="patientName">Patient Name</Label>
+                      <Label htmlFor="patientName">Patient Name *</Label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
@@ -367,7 +517,7 @@ Calendar event created in your Google Calendar`);
                     </div>
 
                     <div>
-                      <Label htmlFor="patientEmail">Patient Email</Label>
+                      <Label htmlFor="patientEmail">Patient Email *</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
@@ -387,11 +537,12 @@ Calendar event created in your Google Calendar`);
                     </div>
 
                     <div>
-                      <Label htmlFor="date">Date</Label>
+                      <Label htmlFor="date">Date *</Label>
                       <Input
                         id="date"
                         type="date"
                         value={scheduleForm.date}
+                        min={new Date().toISOString().split("T")[0]}
                         onChange={(e) =>
                           setScheduleForm({
                             ...scheduleForm,
@@ -403,7 +554,7 @@ Calendar event created in your Google Calendar`);
                     </div>
 
                     <div>
-                      <Label htmlFor="time">Time</Label>
+                      <Label htmlFor="time">Time *</Label>
                       <Input
                         id="time"
                         type="time"
@@ -435,6 +586,7 @@ Calendar event created in your Google Calendar`);
                         <option value="30">30 minutes</option>
                         <option value="45">45 minutes</option>
                         <option value="60">60 minutes</option>
+                        <option value="90">90 minutes</option>
                       </select>
                     </div>
 
@@ -451,12 +603,15 @@ Calendar event created in your Google Calendar`);
                           })
                         }
                       >
-                        <option value="consultation">
+                        <option value="Initial Consultation">
                           Initial Consultation
                         </option>
-                        <option value="followup">Follow-up</option>
-                        <option value="therapy">Therapy Session</option>
-                        <option value="checkup">Regular Checkup</option>
+                        <option value="Follow-up">Follow-up</option>
+                        <option value="Therapy Session">Therapy Session</option>
+                        <option value="Regular Checkup">Regular Checkup</option>
+                        <option value="Emergency Consultation">
+                          Emergency Consultation
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -481,12 +636,19 @@ Calendar event created in your Google Calendar`);
                     <Button
                       type="submit"
                       className="bg-green-600 hover:bg-green-700"
-                      disabled={!isGoogleConnected}
+                      disabled={!isConnected || creatingMeeting}
                     >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      {isGoogleConnected
-                        ? "Create Google Meet Session"
-                        : "Connect Google First"}
+                      {creatingMeeting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Meeting...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="mr-2 h-4 w-4" />
+                          Create Google Meet Session
+                        </>
+                      )}
                     </Button>
                     <Button
                       type="button"
@@ -501,20 +663,25 @@ Calendar event created in your Google Calendar`);
             </Card>
           )}
 
-          {/* Today's Upcoming Sessions */}
+          {/* Upcoming Sessions */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Video className="mr-2 h-5 w-5" />
-                Today's Sessions
+                Upcoming Sessions ({getUpcomingSessions().length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {upcomingSessions.length > 0 ? (
+              {loading && meetings.length === 0 ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600">Loading sessions...</p>
+                </div>
+              ) : getUpcomingSessions().length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingSessions.map((session) => (
+                  {getUpcomingSessions().map((meeting) => (
                     <div
-                      key={session.id}
+                      key={meeting.id}
                       className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border"
                     >
                       <div className="flex items-center space-x-4">
@@ -523,25 +690,56 @@ Calendar event created in your Google Calendar`);
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {session.patient}
+                            {meeting.summary}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {session.time} • {session.type} • {session.duration}
+                            {formatDateTime(meeting.start_time)} -{" "}
+                            {formatDateTime(meeting.end_time)}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {session.patientEmail}
+                            Attendees: {meeting.attendees.join(", ")}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-3">
-                        {getStatusBadge(session.status)}
+                      <div className="flex items-center space-x-2">
+                        {getStatusBadge("scheduled")}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={reschedulingMeeting === meeting.event_id}
+                          onClick={() => setEditingMeeting(meeting)}
+                        >
+                          <Edit3 className="mr-1 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={cancelingMeeting === meeting.event_id}
+                          onClick={() =>
+                            handleCancelMeeting(
+                              meeting.event_id,
+                              extractPatientName(meeting.summary)
+                            )
+                          }
+                        >
+                          {cancelingMeeting === meeting.event_id ? (
+                            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-1 h-4 w-4" />
+                          )}
+                          Cancel
+                        </Button>
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
+                          onClick={() =>
+                            window.open(meeting.meet_link, "_blank")
+                          }
                         >
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          Join Google Meet
+                          <ExternalLink className="mr-1 h-4 w-4" />
+                          Join Meet
                         </Button>
                       </div>
                     </div>
@@ -551,22 +749,24 @@ Calendar event created in your Google Calendar`);
                 <div className="text-center py-8">
                   <CalendarDays className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600">
-                    No sessions scheduled for today
+                    No upcoming sessions scheduled
                   </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => setShowScheduleForm(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" /> Schedule New Session
-                  </Button>
+                  {isConnected && (
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => setShowScheduleForm(true)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Schedule New Session
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Enhanced System Check */}
+            {/* System Status */}
             <Card>
               <CardHeader>
                 <CardTitle>System & Integration Status</CardTitle>
@@ -608,7 +808,7 @@ Calendar event created in your Google Calendar`);
               </CardContent>
             </Card>
 
-            {/* Enhanced Quick Actions */}
+            {/* Quick Actions */}
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
@@ -617,13 +817,20 @@ Calendar event created in your Google Calendar`);
                 <Button
                   className="w-full justify-start bg-blue-600 hover:bg-blue-700"
                   onClick={() => setShowScheduleForm(true)}
-                  disabled={!isGoogleConnected}
+                  disabled={!isConnected}
                 >
                   <Plus className="mr-3 h-4 w-4" />
                   Schedule Google Meet Session
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() =>
+                    window.open("https://calendar.google.com", "_blank")
+                  }
+                  disabled={!isConnected}
+                >
                   <Calendar className="mr-3 h-4 w-4" />
                   View Google Calendar
                 </Button>
@@ -633,7 +840,14 @@ Calendar event created in your Google Calendar`);
                   Join Waiting Room
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() =>
+                    window.open("https://meet.google.com", "_blank")
+                  }
+                  disabled={!isConnected}
+                >
                   <Video className="mr-3 h-4 w-4" />
                   Start Instant Google Meet
                 </Button>
@@ -646,17 +860,19 @@ Calendar event created in your Google Calendar`);
             </Card>
           </div>
 
-          {/* Recent Sessions with Meet Links */}
+          {/* Recent Sessions */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Sessions</CardTitle>
+              <CardTitle>
+                Recent Sessions ({getRecentSessions().length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentSessions.length > 0 ? (
+              {getRecentSessions().length > 0 ? (
                 <div className="space-y-4">
-                  {recentSessions.map((session) => (
+                  {getRecentSessions().map((meeting) => (
                     <div
-                      key={session.id}
+                      key={meeting.id}
                       className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                     >
                       <div className="flex items-center space-x-4">
@@ -665,24 +881,28 @@ Calendar event created in your Google Calendar`);
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {session.patient}
+                            {meeting.summary}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {session.date} • {session.type} • {session.duration}
+                            {formatDateTime(meeting.start_time)} -{" "}
+                            {formatDateTime(meeting.end_time)}
                           </p>
-                          {session.notes && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              {session.notes}
+                          <p className="text-xs text-gray-500">
+                            Attendees: {meeting.attendees.join(", ")}
+                          </p>
+                          {meeting.description && (
+                            <p className="text-xs text-gray-500 mt-1 truncate max-w-md">
+                              {meeting.description}
                             </p>
                           )}
                         </div>
                       </div>
 
                       <div className="flex items-center space-x-3">
-                        {getStatusBadge(session.status)}
+                        {getStatusBadge("completed")}
                         <Button variant="outline" size="sm">
                           <FileText className="mr-2 h-4 w-4" />
-                          View Summary
+                          View Details
                         </Button>
                       </div>
                     </div>
@@ -696,6 +916,120 @@ Calendar event created in your Google Calendar`);
               )}
             </CardContent>
           </Card>
+
+          {/* Edit Meeting Modal */}
+          {editingMeeting && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-md">
+                <CardHeader>
+                  <CardTitle>Reschedule Meeting</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(
+                        e.target as HTMLFormElement
+                      );
+                      const date = formData.get("date") as string;
+                      const time = formData.get("time") as string;
+                      const duration =
+                        (formData.get("duration") as string) || "30";
+
+                      const startDateTime = new Date(
+                        `${date}T${time}:00`
+                      ).toISOString();
+                      const endDateTime = new Date(
+                        new Date(startDateTime).getTime() +
+                          parseInt(duration) * 60000
+                      ).toISOString();
+
+                      handleRescheduleMeeting(
+                        editingMeeting.event_id,
+                        startDateTime,
+                        endDateTime
+                      );
+                    }}
+                    className="space-y-4"
+                  >
+                    <div>
+                      <Label htmlFor="edit-date">New Date</Label>
+                      <Input
+                        id="edit-date"
+                        name="date"
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        defaultValue={editingMeeting.start_time.split("T")[0]}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="edit-time">New Time</Label>
+                      <Input
+                        id="edit-time"
+                        name="time"
+                        type="time"
+                        defaultValue={editingMeeting.start_time
+                          .split("T")[1]
+                          .substring(0, 5)}
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="edit-duration">Duration (minutes)</Label>
+                      <select
+                        id="edit-duration"
+                        name="duration"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        defaultValue={Math.round(
+                          (new Date(editingMeeting.end_time).getTime() -
+                            new Date(editingMeeting.start_time).getTime()) /
+                            60000
+                        )}
+                      >
+                        <option value="15">15 minutes</option>
+                        <option value="30">30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60">60 minutes</option>
+                        <option value="90">90 minutes</option>
+                      </select>
+                    </div>
+
+                    <div className="flex space-x-3 pt-4">
+                      <Button
+                        type="submit"
+                        className="bg-blue-600 hover:bg-blue-700"
+                        disabled={
+                          reschedulingMeeting === editingMeeting.event_id
+                        }
+                      >
+                        {reschedulingMeeting === editingMeeting.event_id ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Rescheduling...
+                          </>
+                        ) : (
+                          <>
+                            <Calendar className="mr-2 h-4 w-4" />
+                            Reschedule
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEditingMeeting(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </MainLayout>

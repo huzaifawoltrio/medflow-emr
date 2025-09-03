@@ -79,7 +79,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="labs" className="flex items-center gap-2">
             <FlaskConical className="h-4 w-4" />
-            Laboratory Results
+            Results Review
           </TabsTrigger>
           <TabsTrigger value="imaging" className="flex items-center gap-2">
             <Scan className="h-4 w-4" />
