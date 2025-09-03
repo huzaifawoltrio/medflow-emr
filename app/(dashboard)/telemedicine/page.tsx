@@ -241,7 +241,7 @@ export default function GoogleTelemedicine() {
       await dispatch(
         rescheduleMeeting({ eventId, start_time: startTime, end_time: endTime })
       ).unwrap();
-      alert("Meeting rescheduled successfully!");
+      alert("Meeting rescheduled successfully.!");
       dispatch(fetchMeetings());
       setEditingMeeting(null);
     } catch (error: any) {
