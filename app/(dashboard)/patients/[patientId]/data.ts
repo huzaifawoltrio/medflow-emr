@@ -80,6 +80,100 @@ export const patientData = {
       ordered: "2025-08-25",
       result: "Normal",
     },
+    {
+      name: "CBC: Hemoglobin",
+      status: "completed",
+      ordered: "2025-01-15",
+      result: "13.8 g/dL",
+    },
+    {
+      name: "CBC: WBC",
+      status: "completed",
+      ordered: "2025-01-15",
+      result: "6.2 K/uL",
+    },
+    {
+      name: "CBC: Platelets",
+      status: "completed",
+      ordered: "2025-01-15",
+      result: "245 K/uL",
+    },
+
+    {
+      name: "CBC: Hemoglobin",
+      status: "completed",
+      ordered: "2025-02-15",
+      result: "14.0 g/dL",
+    },
+    {
+      name: "CBC: WBC",
+      status: "completed",
+      ordered: "2025-02-15",
+      result: "6.4 K/uL",
+    },
+    {
+      name: "CBC: Platelets",
+      status: "completed",
+      ordered: "2025-02-15",
+      result: "248 K/uL",
+    },
+
+    {
+      name: "CBC: Hemoglobin",
+      status: "completed",
+      ordered: "2025-04-12",
+      result: "14.3 g/dL",
+    },
+    {
+      name: "CBC: WBC",
+      status: "completed",
+      ordered: "2025-04-12",
+      result: "6.6 K/uL",
+    },
+    {
+      name: "CBC: Platelets",
+      status: "completed",
+      ordered: "2025-04-12",
+      result: "252 K/uL",
+    },
+
+    {
+      name: "CBC: Hemoglobin",
+      status: "completed",
+      ordered: "2025-06-20",
+      result: "14.4 g/dL",
+    },
+    {
+      name: "CBC: WBC",
+      status: "completed",
+      ordered: "2025-06-20",
+      result: "6.7 K/uL",
+    },
+    {
+      name: "CBC: Platelets",
+      status: "completed",
+      ordered: "2025-06-20",
+      result: "255 K/uL",
+    },
+
+    {
+      name: "CBC: Hemoglobin",
+      status: "completed",
+      ordered: "2025-08-18",
+      result: "14.6 g/dL",
+    },
+    {
+      name: "CBC: WBC",
+      status: "completed",
+      ordered: "2025-08-18",
+      result: "7.1 K/uL",
+    },
+    {
+      name: "CBC: Platelets",
+      status: "completed",
+      ordered: "2025-08-18",
+      result: "260 K/uL",
+    },
   ],
   upcomingAppointments: [
     {

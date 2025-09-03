@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FlaskConical, Scan, Clipboard } from "lucide-react";
+import { Plus, FlaskConical, Scan, Clipboard, TrendingUp } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -26,6 +26,46 @@ const ratingScaleData = [
   { date: "2023-02-01", PHQ9: 8, GAD7: 7, PTSD: 30 },
   { date: "2023-03-01", PHQ9: 6, GAD7: 5, PTSD: 20 },
   { date: "2023-04-01", PHQ9: 4, GAD7: 3, PTSD: 15 },
+];
+
+// Sample lab trends data (replace with actual data from patientData.labs)
+const labTrendsData = [
+  {
+    date: "2025-06-01",
+    hemoglobin: 8.5,
+    wbc: 7.2,
+    glucose: 95,
+    creatinine: 0.9,
+    alt: 25,
+    cholesterol: 180,
+  },
+  {
+    date: "2025-07-01",
+    hemoglobin: 13.8,
+    wbc: 6.8,
+    glucose: 88,
+    creatinine: 0.8,
+    alt: 22,
+    cholesterol: 175,
+  },
+  {
+    date: "2025-08-01",
+    hemoglobin: 16.1,
+    wbc: 7.5,
+    glucose: 92,
+    creatinine: 0.9,
+    alt: 28,
+    cholesterol: 172,
+  },
+  {
+    date: "2025-09-01",
+    hemoglobin: 13.9,
+    wbc: 7.0,
+    glucose: 90,
+    creatinine: 0.8,
+    alt: 24,
+    cholesterol: 168,
+  },
 ];
 
 const recentRatingScales = [
@@ -55,7 +95,75 @@ const recentRatingScales = [
   },
 ];
 
+// Lab value configuration for the chart
+const labValueConfig = [
+  {
+    key: "hemoglobin",
+    name: "Hemoglobin (g/dL)",
+    color: "#dc2626",
+    normalRange: "12.0-15.5",
+    unit: "g/dL",
+  },
+  {
+    key: "wbc",
+    name: "WBC (K/μL)",
+    color: "#2563eb",
+    normalRange: "4.0-11.0",
+    unit: "K/μL",
+  },
+  {
+    key: "glucose",
+    name: "Glucose (mg/dL)",
+    color: "#16a34a",
+    normalRange: "70-100",
+    unit: "mg/dL",
+  },
+  {
+    key: "creatinine",
+    name: "Creatinine (mg/dL)",
+    color: "#ca8a04",
+    normalRange: "0.6-1.2",
+    unit: "mg/dL",
+  },
+  {
+    key: "alt",
+    name: "ALT (U/L)",
+    color: "#9333ea",
+    normalRange: "10-40",
+    unit: "U/L",
+  },
+  {
+    key: "cholesterol",
+    name: "Total Cholesterol (mg/dL)",
+    color: "#c2410c",
+    normalRange: "<200",
+    unit: "mg/dL",
+  },
+];
+
 export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
+  // Custom tooltip for lab trends chart
+  const CustomLabTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-medium mb-2">
+            {new Date(label).toLocaleDateString()}
+          </p>
+          {payload.map((entry: any, index: number) => {
+            const config = labValueConfig.find((c) => c.key === entry.dataKey);
+            return (
+              <p key={index} style={{ color: entry.color }} className="text-sm">
+                {entry.name}: {entry.value} {config?.unit}
+              </p>
+            );
+          })}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -92,94 +200,163 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
         </TabsList>
 
         <TabsContent value="labs" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Labs */}
+          <div className="space-y-6">
+            {/* Lab Trends Chart */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FlaskConical className="h-5 w-5 text-purple-600" />
-                  Recent Lab Results
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  Lab Value Trends
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {patientData.labs.map((lab: any, index: number) => (
-                  <div
-                    key={index}
-                    className="p-3 border rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{lab.name}</p>
-                        <p className="text-sm text-gray-600">
-                          Ordered: {lab.ordered}
-                        </p>
-                        {lab.result && (
-                          <p className="text-sm text-green-600 font-medium">
-                            {lab.result}
-                          </p>
-                        )}
-                      </div>
-                      <Badge
-                        className={
-                          lab.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {lab.status}
-                      </Badge>
-                    </div>
-                    {lab.status === "completed" && (
-                      <div className="mt-2 flex gap-2">
-                        <Button variant="outline" size="sm">
-                          View Results
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Download Report
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* Pending Lab Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Lab Orders</CardTitle>
-              </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">Complete Blood Count</p>
-                        <p className="text-sm text-gray-600">
-                          Ordered today - Sample collected
-                        </p>
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={labTrendsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) =>
+                          new Date(value).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        }
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip content={<CustomLabTooltip />} />
+                      <Legend />
+                      {labValueConfig.map((config) => (
+                        <Line
+                          key={config.key}
+                          type="natural"
+                          dataKey={config.key}
+                          stroke={config.color}
+                          strokeWidth={2}
+                          name={config.name}
+                          connectNulls={false}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Lab Reference Ranges */}
+                <div className="mt-4 p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium mb-3">Reference Ranges</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                    {labValueConfig.map((config) => (
+                      <div
+                        key={config.key}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: config.color }}
+                          />
+                          {config.name}:
+                        </span>
+                        <span className="font-medium text-slate-600">
+                          {config.normalRange} {config.unit}
+                        </span>
                       </div>
-                      <Badge className="bg-yellow-100 text-yellow-800">
-                        Processing
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="p-3 border-l-4 border-blue-400 bg-blue-50 rounded">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">Lipid Panel</p>
-                        <p className="text-sm text-gray-600">
-                          Scheduled for tomorrow - Fasting required
-                        </p>
-                      </div>
-                      <Badge className="bg-blue-100 text-blue-800">
-                        Scheduled
-                      </Badge>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Labs */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FlaskConical className="h-5 w-5 text-purple-600" />
+                    Recent Lab Results
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {patientData.labs.map((lab: any, index: number) => (
+                    <div
+                      key={index}
+                      className="p-3 border rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{lab.name}</p>
+                          <p className="text-sm text-gray-600">
+                            Ordered: {lab.ordered}
+                          </p>
+                          {lab.result && (
+                            <p className="text-sm text-green-600 font-medium">
+                              {lab.result}
+                            </p>
+                          )}
+                        </div>
+                        <Badge
+                          className={
+                            lab.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }
+                        >
+                          {lab.status}
+                        </Badge>
+                      </div>
+                      {lab.status === "completed" && (
+                        <div className="mt-2 flex gap-2">
+                          <Button variant="outline" size="sm">
+                            View Results
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Download Report
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Pending Lab Orders */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pending Lab Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="p-3 border-l-4 border-yellow-400 bg-yellow-50 rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Complete Blood Count</p>
+                          <p className="text-sm text-gray-600">
+                            Ordered today - Sample collected
+                          </p>
+                        </div>
+                        <Badge className="bg-yellow-100 text-yellow-800">
+                          Processing
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="p-3 border-l-4 border-blue-400 bg-blue-50 rounded">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">Lipid Panel</p>
+                          <p className="text-sm text-gray-600">
+                            Scheduled for tomorrow - Fasting required
+                          </p>
+                        </div>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          Scheduled
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -620,7 +797,6 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
                       </div>
                     </div>
                   </div>
-
                   <div>
                     <h4 className="font-medium mb-2">PCL-5 PTSD</h4>
                     <div className="space-y-1 text-sm">
