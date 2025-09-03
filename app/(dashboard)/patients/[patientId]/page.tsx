@@ -36,7 +36,7 @@ const clinicalTabs = [
   { id: "notes", label: "Clinical Notes", icon: FileText },
   { id: "medications", label: "Medications", icon: Pill },
   { id: "vitals", label: "Vitals", icon: HeartPulse },
-  { id: "labs", label: "Results", icon: FlaskConical }, // Changed from "Lab Results" to "Results" since it now includes imaging
+  { id: "labs", label: "Results Review", icon: FlaskConical }, // Changed from "Lab Results" to "Results" since it now includes imaging
   { id: "billing", label: "Billing", icon: CreditCard },
   { id: "care-team", label: "Provider Relationships", icon: Users },
   { id: "patient-info", label: "Patient Information", icon: User },
