@@ -16,7 +16,6 @@ import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";
 import { BillingTab } from "@/components/patient-detail/tabs/BillingTab";
 import { CareTeamTab } from "../../../../components/patient-detail/tabs/CareTeamTab";
-import { ClinicalNotesDialog } from "@/components/patient-detail/dialogs/ClinicalNotesDialog";
 import { OrderMedicationDialog } from "@/components/patient-detail/dialogs/OrderMedicationDialog";
 import { OrderLabDialog } from "@/components/patient-detail/dialogs/OrderLabDialog";
 import {
@@ -74,20 +73,10 @@ export default function PatientDetailPage() {
   );
 
   const [activeTab, setActiveTab] = useState("overview");
-  const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
 
-  // Dialog states remain dynamic for backward compatibility
-  const [newNote, setNewNote] = useState({
-    patientName: "", // Will be populated from selected patient
-    patientId: "", // Will be populated from selected patient
-    type: "",
-    content: "",
-    billingCodes: "",
-    status: "draft",
-  });
-
+  // Dialog states for medication and lab orders
   const [newMedication, setNewMedication] = useState({
     medication: "",
     dosage: "",
@@ -110,29 +99,6 @@ export default function PatientDetailPage() {
       dispatch(fetchPatientByUsername(username));
     }
   }, [dispatch, username]);
-
-  // Update newNote when patient data is loaded
-  useEffect(() => {
-    if (selectedPatient) {
-      console.log("Patient data loaded:", selectedPatient);
-      const patientName = `${selectedPatient.first_name} ${selectedPatient.last_name}`;
-      const patientId =
-        selectedPatient.user_id?.toString() ||
-        selectedPatient.id?.toString() ||
-        "";
-
-      setNewNote((prev) => ({
-        ...prev,
-        patientName,
-        patientId,
-      }));
-
-      console.log("Updated newNote with patient info:", {
-        patientName,
-        patientId,
-      });
-    }
-  }, [selectedPatient]);
 
   // Log clinical notes state changes
   useEffect(() => {
@@ -211,16 +177,10 @@ export default function PatientDetailPage() {
             patientData={unifiedPatientData}
             setIsOrderMedOpen={setIsOrderMedOpen}
             setIsOrderLabOpen={setIsOrderLabOpen}
-            setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
       case "notes":
-        return (
-          <ClinicalNotesTab
-            patientData={unifiedPatientData}
-            setIsNewNoteOpen={setIsNewNoteOpen}
-          />
-        );
+        return <ClinicalNotesTab patientData={unifiedPatientData} />;
       case "medications":
         return (
           <MedicationsTab
@@ -273,12 +233,6 @@ export default function PatientDetailPage() {
 
   console.log("Banner data created:", bannerData);
 
-  const handleCreateNote = () => {
-    console.log("Creating note:", newNote);
-    // The actual note creation is now handled by the ClinicalNotesModal component
-    // This is just for backward compatibility with the old dialog
-  };
-
   const handleOrderMedication = () => {
     console.log("Ordering medication:", newMedication);
     // TODO: Implement medication ordering functionality
@@ -306,15 +260,7 @@ export default function PatientDetailPage() {
         </div>
       </div>
 
-      {/* Backward compatibility dialogs - these will be replaced by the new modal system */}
-      <ClinicalNotesDialog
-        isOpen={isNewNoteOpen}
-        onOpenChange={setIsNewNoteOpen}
-        newNote={newNote}
-        setNewNote={setNewNote}
-        handleCreateNote={handleCreateNote}
-      />
-
+      {/* Medication and Lab order dialogs */}
       <OrderMedicationDialog
         isOpen={isOrderMedOpen}
         onOpenChange={setIsOrderMedOpen}

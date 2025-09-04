@@ -1,10 +1,15 @@
-// components/clinical-notes/ClinicalNotesList.tsx
-import React, { useEffect, useState } from "react";
+"use client";
+
+import { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -12,437 +17,343 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   FileText,
-  Plus,
   Search,
+  Plus,
   Eye,
   Edit,
   Trash2,
-  FileSignature,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Filter,
+  Lock,
+  Unlock,
+  Loader2,
 } from "lucide-react";
-import { AppDispatch, RootState } from "../../app/redux/store";
-import {
-  fetchPatientNotes,
-  deleteClinicalNote,
-  signClinicalNote,
-  searchClinicalNotes,
-} from "../../app/redux/features/clinicalNotes/clinicalNotesActions";
-import { ClinicalNote } from "../../app/redux/features/clinicalNotes/clinicalNotesActions";
+import { ClinicalNote } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
+import { AppDispatch, RootState } from "@/app/redux/store";
 
 interface ClinicalNotesListProps {
-  patientId: number;
-  onNewNoteClick: () => void;
-  onViewNote?: (note: ClinicalNote) => void;
-  onEditNote?: (note: ClinicalNote) => void;
+  notes: ClinicalNote[];
+  onView: (note: ClinicalNote) => void;
+  onEdit: (note: ClinicalNote) => void;
+  onDelete: (noteId: number) => void;
+  onSign: (noteId: number) => void;
+  onUnsign: (noteId: number) => void;
+  setIsModalOpen: (isOpen: boolean) => void;
+  canCreate: boolean;
+  canEdit: (note: ClinicalNote) => boolean;
+  canDelete: (note: ClinicalNote) => boolean;
+  canSign: (note: ClinicalNote) => boolean;
 }
 
-export const ClinicalNotesList: React.FC<ClinicalNotesListProps> = ({
-  patientId,
-  onNewNoteClick,
-  onViewNote,
-  onEditNote,
-}) => {
+export function ClinicalNotesList({
+  notes = [],
+  onView,
+  onEdit,
+  onDelete,
+  onSign,
+  onUnsign,
+  setIsModalOpen,
+  canCreate,
+  canEdit,
+  canDelete,
+  canSign,
+}: ClinicalNotesListProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const { notesLoading, notesError, deleting, signing } = useSelector(
+    (state: RootState) => state.clinicalNotes
+  );
 
-  const {
-    notes,
-    notesPagination,
-    notesLoading,
-    notesError,
-    searchResults,
-    searchLoading,
-    signing,
-    deleting,
-  } = useSelector((state: RootState) => state.clinicalNotes);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
+  const uniqueNoteTypes = useMemo(() => {
+    const types = notes.map((note) => note.note_type).filter(Boolean);
+    return [...new Set(types)];
+  }, [notes]);
 
-  // Load patient notes on component mount
-  useEffect(() => {
-    if (patientId) {
-      console.log("Loading notes for patient ID:", patientId);
-      dispatch(
-        fetchPatientNotes({
-          patientId,
-          page: currentPage,
-          perPage: 10,
-          type: filterType || undefined,
-        })
-      )
-        .then((result) => {
-          console.log("Fetch patient notes result:", result);
-        })
-        .catch((error) => {
-          console.error("Error fetching patient notes:", error);
-        });
-    }
-  }, [dispatch, patientId, currentPage, filterType]);
+  const filteredNotes = useMemo(() => {
+    return notes.filter((note) => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        note.title?.toLowerCase().includes(searchLower) ||
+        note.note_type?.toLowerCase().includes(searchLower) ||
+        (typeof note.content === "string" &&
+          note.content.toLowerCase().includes(searchLower));
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      console.log("Searching notes with query:", searchQuery);
-      dispatch(
-        searchClinicalNotes({
-          query: searchQuery,
-          patientId,
-          type: filterType || undefined,
-          status: filterStatus || undefined,
-        })
-      )
-        .then((result) => {
-          console.log("Search notes result:", result);
-        })
-        .catch((error) => {
-          console.error("Error searching notes:", error);
-        });
-      setShowSearch(true);
-    }
-  };
+      const matchesType = filterType === "all" || note.note_type === filterType;
+      const matchesStatus =
+        filterStatus === "all" || note.status === filterStatus;
 
-  const clearSearch = () => {
-    console.log("Clearing search filters");
-    setSearchQuery("");
-    setFilterType("");
-    setFilterStatus("");
-    setShowSearch(false);
-
-    // Reload patient notes
-    dispatch(
-      fetchPatientNotes({
-        patientId,
-        page: 1,
-        perPage: 10,
-      })
-    );
-    setCurrentPage(1);
-  };
-
-  const handleSignNote = async (noteId: number) => {
-    try {
-      console.log("Signing note:", noteId);
-      const result = await dispatch(signClinicalNote(noteId));
-      console.log("Sign note result:", result);
-
-      // Refresh the notes list
-      dispatch(
-        fetchPatientNotes({
-          patientId,
-          page: currentPage,
-          perPage: 10,
-          type: filterType || undefined,
-        })
-      );
-    } catch (error) {
-      console.error("Error signing note:", error);
-    }
-  };
-
-  const handleDeleteNote = async (noteId: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this note? This action cannot be undone."
-      )
-    ) {
-      try {
-        console.log("Deleting note:", noteId);
-        const result = await dispatch(deleteClinicalNote(noteId));
-        console.log("Delete note result:", result);
-        // The note will be automatically removed from the list via Redux state update
-      } catch (error) {
-        console.error("Error deleting note:", error);
-      }
-    }
-  };
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [notes, searchTerm, filterType, filterStatus]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "draft":
-        return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" />
-            Draft
-          </Badge>
-        );
       case "signed":
         return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+            <Lock className="mr-1 h-3 w-3" />
             Signed
+          </Badge>
+        );
+      case "draft":
+        return (
+          <Badge
+            variant="outline"
+            className="border-yellow-400 text-yellow-600"
+          >
+            Draft
           </Badge>
         );
       case "amended":
         return (
-          <Badge variant="outline" className="bg-orange-100 text-orange-800">
-            <AlertCircle className="w-3 h-3 mr-1" />
+          <Badge
+            variant="outline"
+            className="border-orange-400 text-orange-600"
+          >
             Amended
           </Badge>
         );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const displayNotes = showSearch ? searchResults : notes;
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
 
-  console.log("Rendering ClinicalNotesList with:", {
-    patientId,
-    notesCount: displayNotes.length,
-    loading: notesLoading,
-    showSearch,
-    currentPage,
-  });
+  // Show loading state
+  if (notesLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Clinical Notes</h2>
+          {canCreate && (
+            <Button onClick={() => setIsModalOpen(true)} disabled>
+              <Plus className="mr-2 h-4 w-4" />
+              New Clinical Note
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mr-3" />
+          <span className="text-lg">Loading clinical notes...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (notesError) {
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Clinical Notes</h2>
+          {canCreate && (
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              New Clinical Note
+            </Button>
+          )}
+        </div>
+
+        <Alert variant="destructive">
+          <AlertDescription>
+            Error loading clinical notes: {notesError}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold flex items-center">
-          <FileText className="h-5 w-5 mr-2" />
-          Clinical Notes
-          {notesPagination && (
-            <span className="text-sm text-gray-500 ml-2">
-              ({notesPagination.total} total)
-            </span>
+    <div className="space-y-4">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search notes..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+          {canCreate && (
+            <Button onClick={() => setIsModalOpen(true)} className="w-full">
+              <Plus className="mr-2 h-4 w-4" />
+              New Clinical Note
+            </Button>
           )}
-        </h3>
-        <Button
-          onClick={onNewNoteClick}
-          className="bg-blue-800 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Note
-        </Button>
+        </div>
       </div>
 
-      {/* Search and Filters */}
-      <Card className="shadow-sm">
-        <CardContent className="pt-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search notes by title..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      <div className="flex flex-wrap gap-2">
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-48 text-sm">
+            <SelectValue placeholder="Filter by Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {uniqueNoteTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type || "Uncategorized"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
-                <SelectItem value="progress">Progress Note</SelectItem>
-                <SelectItem value="assessment">Assessment</SelectItem>
-                <SelectItem value="discharge">Discharge</SelectItem>
-                <SelectItem value="followup">Follow-up</SelectItem>
-              </SelectContent>
-            </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-48 text-sm">
+            <SelectValue placeholder="Filter by Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="signed">Signed</SelectItem>
+            <SelectItem value="amended">Amended</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="signed">Signed</SelectItem>
-                <SelectItem value="amended">Amended</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredNotes.length > 0 ? (
+              filteredNotes.map((note) => (
+                <TableRow key={note.id}>
+                  <TableCell>
+                    <div className="font-medium">
+                      {note.title || "Untitled Note"}
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDate(note.created_at)}</TableCell>
+                  <TableCell>{note.note_type}</TableCell>
+                  <TableCell>{getStatusBadge(note.status)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onView(note)}
+                        title="View Note"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
 
-            <div className="flex gap-2">
-              <Button onClick={handleSearch} disabled={searchLoading}>
-                {searchLoading ? (
-                  <Clock className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </Button>
-              {showSearch && (
-                <Button variant="outline" onClick={clearSearch}>
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                      {canEdit(note) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(note)}
+                          title="Edit Note"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
 
-      {/* Notes List */}
-      {notesLoading ? (
-        <div className="text-center py-8">
-          <Clock className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading notes...</p>
-        </div>
-      ) : displayNotes.length === 0 ? (
-        <Card className="shadow-sm">
-          <CardContent className="text-center py-8">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <h4 className="text-lg font-medium mb-2">No Clinical Notes</h4>
-            <p className="text-gray-500 mb-4">
-              {showSearch
-                ? "No notes found matching your search criteria."
-                : "No clinical notes have been created for this patient yet."}
-            </p>
-            {!showSearch && (
-              <Button
-                onClick={onNewNoteClick}
-                className="bg-blue-800 hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Note
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {displayNotes.map((note: ClinicalNote) => (
-            <Card
-              key={note.id}
-              className="shadow-sm hover:shadow-md transition-shadow"
-            >
-              <CardContent className="pt-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 mb-1">
-                      {note.title}
-                    </h4>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
-                      <span>Type: {note.note_type}</span>
-                      <span>•</span>
-                      <span>
-                        Created:{" "}
-                        {new Date(note.created_at).toLocaleDateString()}
-                      </span>
-                      {note.template_name && (
-                        <>
-                          <span>•</span>
-                          <span>Template: {note.template_name}</span>
-                        </>
+                      {canSign(note) ? (
+                        note.status === "signed" ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onUnsign(note.id)}
+                            title="Unsign Note"
+                            disabled={signing}
+                          >
+                            <Unlock className="h-4 w-4 text-orange-500" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onSign(note.id)}
+                            title="Sign Note"
+                            disabled={signing}
+                          >
+                            <Lock className="h-4 w-4 text-green-500" />
+                          </Button>
+                        )
+                      ) : null}
+
+                      {canDelete(note) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => onDelete(note.id)}
+                          title="Delete Note"
+                          disabled={deleting}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(note.status)}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      console.log("Viewing note:", note.id);
-                      onViewNote?.(note);
-                    }}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-
-                  {note.status === "draft" && (
-                    <>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center h-24">
+                  {searchTerm ||
+                  filterType !== "all" ||
+                  filterStatus !== "all" ? (
+                    <div>
+                      <p className="text-gray-500 mb-2">
+                        No notes match your search criteria.
+                      </p>
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => {
-                          console.log("Editing note:", note.id);
-                          onEditNote?.(note);
+                          setSearchTerm("");
+                          setFilterType("all");
+                          setFilterStatus("all");
                         }}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
+                        Clear Filters
                       </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSignNote(note.id)}
-                        disabled={signing}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <FileSignature className="h-4 w-4 mr-1" />
-                        Sign
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteNote(note.id)}
-                        disabled={deleting}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </>
+                    </div>
+                  ) : (
+                    <div>
+                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500 mb-2">
+                        No clinical notes found for this patient.
+                      </p>
+                      {canCreate && (
+                        <Button onClick={() => setIsModalOpen(true)}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Create First Note
+                        </Button>
+                      )}
+                    </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Pagination */}
-          {notesPagination && notesPagination.pages > 1 && !showSearch && (
-            <div className="flex justify-center items-center gap-2 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-
-              <span className="text-sm text-gray-600">
-                Page {notesPagination.page} of {notesPagination.pages}
-              </span>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setCurrentPage(
-                    Math.min(notesPagination.pages, currentPage + 1)
-                  )
-                }
-                disabled={currentPage === notesPagination.pages}
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Error Display */}
-      {notesError && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center text-red-800">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              <span>{notesError}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
-};
+}
