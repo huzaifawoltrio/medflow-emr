@@ -36,14 +36,14 @@ const navigation = [
   { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
   { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: DollarSign },
-  {
-    name: "Patient Provider Relationships",
-    href: "/relationships",
-    icon: Handshake,
-  },
+  // {
+  //   name: "Patient Provider Relationships",
+  //   href: "/relationships",
+  //   icon: Handshake,
+  // },
   { name: "Telemedicine", href: "/telemedicine", icon: Video },
   { name: "Documents", href: "/documents", icon: ClipboardList },
-  { name: "Results Review", href: "/results-review", icon: TrendingUp },
+  // { name: "Results Review", href: "/results-review", icon: TrendingUp },
   { name: "File Management", href: "/file-management", icon: FolderOpen },
   { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
 ];

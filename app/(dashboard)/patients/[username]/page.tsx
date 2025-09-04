@@ -10,36 +10,36 @@ import MainLayout from "@/components/layout/main-layout";
 import { PatientBanner } from "@/components/patient-detail/PatientBanner";
 import { ClinicalTabs } from "@/components/patient-detail/tabs/ClinicalTabs";
 import { OverviewTab } from "@/components/patient-detail/tabs/OverviewTab";
+import { PatientInfoTab } from "@/components/patient-detail/tabs/PatientInfoTab";
 import { MedicationsTab } from "@/components/patient-detail/tabs/MedicationsTab";
 import { LabsTab } from "@/components/patient-detail/tabs/LabsTab";
 import { ClinicalNotesTab } from "@/components/patient-detail/tabs/ClinicalNotesTab";
-import { VitalsTab } from "@/components/patient-detail/tabs/VitalsTab";
-import { ImagingTab } from "@/components/patient-detail/tabs/ImagingTab";
 import { BillingTab } from "@/components/patient-detail/tabs/BillingTab";
+import { CareTeamTab } from "../../../../components/patient-detail/tabs/CareTeamTab";
 import { ClinicalNotesDialog } from "@/components/patient-detail/dialogs/ClinicalNotesDialog";
 import { OrderMedicationDialog } from "@/components/patient-detail/dialogs/OrderMedicationDialog";
 import { OrderLabDialog } from "@/components/patient-detail/dialogs/OrderLabDialog";
 import {
   Loader2,
   LayoutDashboard,
+  User,
   Pill,
   FlaskConical,
   FileText,
-  HeartPulse,
-  Scan,
   CreditCard,
+  Users,
 } from "lucide-react";
 import { patientData } from "./data";
 
-// Static data for UI elements like tabs, now with icons
+// Updated tabs with new order and icons
 const clinicalTabs = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "medications", label: "Medications", icon: Pill },
-  { id: "labs", label: "Lab Results", icon: FlaskConical },
   { id: "notes", label: "Clinical Notes", icon: FileText },
-  { id: "vitals", label: "Vitals", icon: HeartPulse },
-  { id: "imaging", label: "Imaging", icon: Scan },
+  { id: "medications", label: "Medications", icon: Pill },
+  { id: "labs", label: "Results Review", icon: FlaskConical },
   { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "care-team", label: "Provider Relationships", icon: Users },
+  { id: "patient-info", label: "Patient Information", icon: User },
 ];
 
 /**
@@ -67,7 +67,7 @@ export default function PatientDetailPage() {
   const { selectedPatient, loading, error } = useSelector(
     (state: RootState) => state.patient
   );
-  console.log("selected patient is", selectedPatient);
+
   const [activeTab, setActiveTab] = useState("overview");
   const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
@@ -100,8 +100,6 @@ export default function PatientDetailPage() {
   });
 
   useEffect(() => {
-    // We still fetch the patient to ensure the component's loading/error/found states work correctly.
-    // The UI will use the hardcoded data below.
     if (username) {
       dispatch(fetchPatientByUsername(username));
     }
@@ -129,8 +127,6 @@ export default function PatientDetailPage() {
     );
   }
 
-  // This check ensures we don't render until Redux confirms a patient was found,
-  // even though we're about to use hardcoded data for the display.
   if (!selectedPatient) {
     return (
       <MainLayout>
@@ -153,6 +149,13 @@ export default function PatientDetailPage() {
             setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
+      case "notes":
+        return (
+          <ClinicalNotesTab
+            patientData={patientData}
+            setIsNewNoteOpen={setIsNewNoteOpen}
+          />
+        );
       case "medications":
         return (
           <MedicationsTab
@@ -167,23 +170,18 @@ export default function PatientDetailPage() {
             setIsOrderLabOpen={setIsOrderLabOpen}
           />
         );
-      case "notes":
-        return (
-          <ClinicalNotesTab
-            patientData={patientData}
-            setIsNewNoteOpen={setIsNewNoteOpen}
-          />
-        );
-      case "vitals":
-        return <VitalsTab patientData={patientData} />;
-      case "imaging":
-        return <ImagingTab patientData={patientData} />;
       case "billing":
         return <BillingTab patientData={patientData} />;
+      case "care-team":
+        return <CareTeamTab patientData={patientData} />;
+      case "patient-info":
+        return <PatientInfoTab patientData={patientData} />;
       default:
         return null;
     }
   };
+
+  // **FIX**: Moved bannerData initialization here, after the !selectedPatient check.
   const bannerData = {
     name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
     avatar: "", // No avatar in the provided data
@@ -217,7 +215,6 @@ export default function PatientDetailPage() {
               setActiveTab={setActiveTab}
               clinicalTabs={clinicalTabs}
             />
-
             <div className="mt-6">{renderActiveTab()}</div>
           </div>
         </div>

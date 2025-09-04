@@ -6,6 +6,7 @@ import {
   Meeting,
   CreateMeetingResponse,
 } from "../../../../lib/googleCalendarApi";
+import api from "../../../../lib/axiosConfig"; // Import the axios instance
 
 interface GoogleUser {
   id: string;
@@ -14,13 +15,50 @@ interface GoogleUser {
   picture?: string;
 }
 
+interface Patient {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+}
+
+interface PatientDetails {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+}
+
+interface DoctorDetails {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  specialization?: string;
+}
+
+interface EnhancedMeeting extends Meeting {
+  patient_id: number;
+  doctor_id: number;
+  patient_details?: PatientDetails;
+  doctor_details?: DoctorDetails;
+}
+
 interface GoogleCalendarState {
   isConnected: boolean;
   googleUser: GoogleUser | null;
-  meetings: Meeting[];
+  meetings: EnhancedMeeting[];
+  patients: Patient[];
   loading: boolean;
   error: string | null;
   creatingMeeting: boolean;
+  fetchingPatients: boolean;
   reschedulingMeeting: string | null; // event_id of meeting being rescheduled
   cancelingMeeting: string | null; // event_id of meeting being canceled
 }
@@ -29,12 +67,30 @@ const initialState: GoogleCalendarState = {
   isConnected: false,
   googleUser: null,
   meetings: [],
+  patients: [],
   loading: false,
   error: null,
   creatingMeeting: false,
+  fetchingPatients: false,
   reschedulingMeeting: null,
   cancelingMeeting: null,
 };
+
+// Updated CreateMeetingRequest interface for new API structure
+interface NewCreateMeetingRequest {
+  summary: string;
+  start_time: string;
+  end_time: string;
+  patient_id: number;
+  description?: string;
+}
+
+interface NewCreateMeetingResponse {
+  status: string;
+  message: string;
+  meeting: EnhancedMeeting;
+  event_link: string;
+}
 
 // Async thunks
 export const checkGoogleConnection = createAsyncThunk<
@@ -62,30 +118,40 @@ export const initiateGoogleAuth = createAsyncThunk<
   }
 });
 
+// Updated createGoogleMeeting thunk for new API structure using axios
 export const createGoogleMeeting = createAsyncThunk<
-  CreateMeetingResponse,
-  CreateMeetingRequest,
+  NewCreateMeetingResponse,
+  NewCreateMeetingRequest,
   { rejectValue: string }
 >("googleCalendar/createMeeting", async (meetingData, { rejectWithValue }) => {
   try {
-    return await googleCalendarService.createMeeting(meetingData);
+    const response = await api.post("/meetings", meetingData);
+    return response.data;
   } catch (error: any) {
-    return rejectWithValue(error.message);
+    if (error.response && error.response.data && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    }
+    return rejectWithValue(error.message || "Failed to create meeting");
   }
 });
 
 export const fetchMeetings = createAsyncThunk<
-  Meeting[],
+  EnhancedMeeting[],
   void,
   { rejectValue: string }
 >("googleCalendar/fetchMeetings", async (_, { rejectWithValue }) => {
   try {
-    return await googleCalendarService.getMeetings();
+    const response = await api.get("/meetings");
+    return response.data;
   } catch (error: any) {
-    return rejectWithValue(error.message);
+    if (error.response && error.response.data && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    }
+    return rejectWithValue(error.message || "Failed to fetch meetings");
   }
 });
 
+// Updated rescheduleMeeting thunk using axios
 export const rescheduleMeeting = createAsyncThunk<
   { eventId: string; updated_event_link?: string },
   { eventId: string; start_time: string; end_time: string },
@@ -94,13 +160,20 @@ export const rescheduleMeeting = createAsyncThunk<
   "googleCalendar/rescheduleMeeting",
   async ({ eventId, start_time, end_time }, { rejectWithValue }) => {
     try {
-      const result = await googleCalendarService.rescheduleMeeting(eventId, {
+      const response = await api.put(`/meetings/${eventId}/reschedule`, {
         start_time,
         end_time,
       });
-      return { eventId, ...result };
+      return { eventId, ...response.data };
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue(error.message || "Failed to reschedule meeting");
     }
   }
 );
@@ -111,10 +184,13 @@ export const cancelMeeting = createAsyncThunk<
   { rejectValue: string }
 >("googleCalendar/cancelMeeting", async (eventId, { rejectWithValue }) => {
   try {
-    const result = await googleCalendarService.cancelMeeting(eventId);
-    return { eventId, ...result };
+    const response = await api.delete(`/meetings/${eventId}`);
+    return { eventId, ...response.data };
   } catch (error: any) {
-    return rejectWithValue(error.message);
+    if (error.response && error.response.data && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    }
+    return rejectWithValue(error.message || "Failed to cancel meeting");
   }
 });
 
@@ -130,6 +206,32 @@ export const disconnectGoogle = createAsyncThunk<
   }
 });
 
+// New thunk to fetch specific patient's meetings using axios
+export const fetchPatientMeetings = createAsyncThunk<
+  EnhancedMeeting[],
+  number,
+  { rejectValue: string }
+>(
+  "googleCalendar/fetchPatientMeetings",
+  async (patientId, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/meetings/patient/${patientId}`);
+      return response.data;
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue(
+        error.message || "Failed to fetch patient meetings"
+      );
+    }
+  }
+);
+
 const googleCalendarSlice = createSlice({
   name: "googleCalendar",
   initialState,
@@ -143,6 +245,9 @@ const googleCalendarSlice = createSlice({
     ) => {
       state.isConnected = action.payload.isConnected;
       state.googleUser = action.payload.userInfo || null;
+    },
+    clearMeetings: (state) => {
+      state.meetings = [];
     },
   },
   extraReducers: (builder) => {
@@ -183,7 +288,8 @@ const googleCalendarSlice = createSlice({
       })
       .addCase(createGoogleMeeting.fulfilled, (state, action) => {
         state.creatingMeeting = false;
-        // You might want to refresh meetings list after creating
+        // Add the new meeting to the list
+        state.meetings.push(action.payload.meeting);
       })
       .addCase(createGoogleMeeting.rejected, (state, action) => {
         state.creatingMeeting = false;
@@ -204,6 +310,21 @@ const googleCalendarSlice = createSlice({
         state.error = action.payload || "Failed to fetch meetings";
       })
 
+      // Fetch Patient Meetings
+      .addCase(fetchPatientMeetings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPatientMeetings.fulfilled, (state, action) => {
+        state.loading = false;
+        // Replace or merge patient meetings
+        state.meetings = action.payload;
+      })
+      .addCase(fetchPatientMeetings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch patient meetings";
+      })
+
       // Reschedule Meeting
       .addCase(rescheduleMeeting.pending, (state, action) => {
         state.reschedulingMeeting = action.meta.arg.eventId;
@@ -216,7 +337,9 @@ const googleCalendarSlice = createSlice({
           (m) => m.event_id === action.payload.eventId
         );
         if (meetingIndex !== -1) {
-          // You'd need to update the meeting details here
+          // Update meeting details with new times
+          const meeting = state.meetings[meetingIndex];
+          // You would update the meeting times here based on the response
         }
       })
       .addCase(rescheduleMeeting.rejected, (state, action) => {
@@ -251,6 +374,7 @@ const googleCalendarSlice = createSlice({
         state.isConnected = false;
         state.googleUser = null;
         state.meetings = [];
+        state.patients = [];
       })
       .addCase(disconnectGoogle.rejected, (state, action) => {
         state.loading = false;
@@ -259,5 +383,6 @@ const googleCalendarSlice = createSlice({
   },
 });
 
-export const { clearError, setGoogleConnection } = googleCalendarSlice.actions;
+export const { clearError, setGoogleConnection, clearMeetings } =
+  googleCalendarSlice.actions;
 export default googleCalendarSlice.reducer;

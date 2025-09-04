@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Video,
   Calendar,
@@ -36,8 +42,9 @@ import {
   Edit3,
   FileText,
   Phone,
+  Search,
+  UserCheck,
 } from "lucide-react";
-
 // Import Redux actions and selectors
 import {
   checkGoogleConnection,
@@ -49,11 +56,20 @@ import {
   disconnectGoogle,
   clearError,
 } from "../../redux/features/googleCalendar/googleCalendarSlice";
+import { fetchPatients } from "../../redux/features/patients/patientActions"; // Updated import
 import { RootState, AppDispatch } from "../../redux/store";
+
+interface Patient {
+  user_id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+}
 
 export default function GoogleTelemedicine() {
   const dispatch = useDispatch<AppDispatch>();
-
   // Redux state
   const {
     isConnected,
@@ -66,12 +82,16 @@ export default function GoogleTelemedicine() {
     cancelingMeeting,
   } = useSelector((state: RootState) => state.googleCalendar);
 
+  // Get patients from the patient slice
+  const { patients, loading: patientsLoading } = useSelector(
+    (state: RootState) => state.patient
+  );
+
   // Local state
   const [systemStatus, setSystemStatus] = useState<Record<string, string>>({});
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] = useState({
-    patientName: "",
-    patientEmail: "",
+    patientId: "",
     date: "",
     time: "",
     duration: "30",
@@ -79,12 +99,13 @@ export default function GoogleTelemedicine() {
     notes: "",
   });
   const [editingMeeting, setEditingMeeting] = useState<any>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientSearchTerm, setPatientSearchTerm] = useState("");
 
   // Check for OAuth callback success/error in URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const googleAuth = urlParams.get("google_auth");
-
     if (googleAuth === "success") {
       // Clear URL params and refresh connection status
       window.history.replaceState({}, "", "/telemedicine");
@@ -106,10 +127,11 @@ export default function GoogleTelemedicine() {
     dispatch(checkGoogleConnection());
   }, [dispatch]);
 
-  // Fetch meetings when connected
+  // Fetch meetings and patients when connected
   useEffect(() => {
     if (isConnected) {
       dispatch(fetchMeetings());
+      dispatch(fetchPatients()); // Now using patientActions
     }
   }, [isConnected, dispatch]);
 
@@ -117,7 +139,6 @@ export default function GoogleTelemedicine() {
   useEffect(() => {
     const checkSystems = async () => {
       const checks: Record<string, string> = {};
-
       // Check camera access
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -128,7 +149,6 @@ export default function GoogleTelemedicine() {
       } catch {
         checks["Camera Access"] = "denied";
       }
-
       // Check microphone access
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -139,7 +159,6 @@ export default function GoogleTelemedicine() {
       } catch {
         checks["Microphone Access"] = "denied";
       }
-
       // Static checks
       checks["Internet Connection"] = "excellent";
       checks["Browser Compatibility"] = "supported";
@@ -147,10 +166,8 @@ export default function GoogleTelemedicine() {
         ? "connected"
         : "disconnected";
       checks["Google Meet Integration"] = isConnected ? "active" : "inactive";
-
       setSystemStatus(checks);
     };
-
     checkSystems();
   }, [isConnected]);
 
@@ -178,17 +195,10 @@ export default function GoogleTelemedicine() {
 
   const handleScheduleSession = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (
-      !scheduleForm.patientName ||
-      !scheduleForm.patientEmail ||
-      !scheduleForm.date ||
-      !scheduleForm.time
-    ) {
+    if (!scheduleForm.patientId || !scheduleForm.date || !scheduleForm.time) {
       alert("Please fill in all required fields");
       return;
     }
-
     // Create ISO datetime strings
     const startDateTime = new Date(
       `${scheduleForm.date}T${scheduleForm.time}:00`
@@ -197,33 +207,41 @@ export default function GoogleTelemedicine() {
       new Date(startDateTime).getTime() +
         parseInt(scheduleForm.duration) * 60000
     ).toISOString();
-
+    const patient = patients.find(
+      (p) => p.user_id.toString() === scheduleForm.patientId
+    );
+    const patientName = patient
+      ? `${patient.first_name} ${patient.last_name}`
+      : "Patient";
     const meetingData = {
-      summary: `${scheduleForm.type} with ${scheduleForm.patientName}`,
+      summary: `${scheduleForm.type} with ${patientName}`,
       start_time: startDateTime,
       end_time: endDateTime,
-      attendees: [scheduleForm.patientEmail],
-      description: `Session Type: ${scheduleForm.type}\nDuration: ${scheduleForm.duration} minutes\n\nNotes: ${scheduleForm.notes}`,
+      patient_id: parseInt(scheduleForm.patientId),
+      description: `Session Type: ${scheduleForm.type}
+Duration: ${scheduleForm.duration} minutes
+Notes: ${scheduleForm.notes}`,
     };
-
     try {
       const result = await dispatch(createGoogleMeeting(meetingData)).unwrap();
       alert(
-        `Session scheduled successfully!\n\nPatient: ${scheduleForm.patientName}\nDate: ${scheduleForm.date} at ${scheduleForm.time}\nGoogle Meet link: ${result.meet_link}\n\nCalendar invitation sent to: ${scheduleForm.patientEmail}`
+        `Session scheduled successfully!
+Patient: ${patientName}
+Date: ${scheduleForm.date} at ${scheduleForm.time}
+Google Meet link: ${result.meeting.meet_link}
+Calendar invitation sent to: ${patient?.email}`
       );
-
       // Reset form and close
       setShowScheduleForm(false);
       setScheduleForm({
-        patientName: "",
-        patientEmail: "",
+        patientId: "",
         date: "",
         time: "",
         duration: "30",
         type: "Initial Consultation",
         notes: "",
       });
-
+      setSelectedPatient(null);
       // Refresh meetings list
       dispatch(fetchMeetings());
     } catch (error: any) {
@@ -241,7 +259,7 @@ export default function GoogleTelemedicine() {
       await dispatch(
         rescheduleMeeting({ eventId, start_time: startTime, end_time: endTime })
       ).unwrap();
-      alert("Meeting rescheduled successfully.!");
+      alert("Meeting rescheduled successfully!");
       dispatch(fetchMeetings());
       setEditingMeeting(null);
     } catch (error: any) {
@@ -317,7 +335,6 @@ export default function GoogleTelemedicine() {
         text: "Completed",
       },
     };
-
     const config = statusConfig[status] || {
       class: "bg-gray-100 text-gray-800 border-gray-200",
       text: status,
@@ -336,7 +353,6 @@ export default function GoogleTelemedicine() {
       "active",
     ];
     const errorStates = ["denied", "poor", "disconnected", "inactive"];
-
     if (readyStates.includes(status)) {
       return <CheckCircle className="h-4 w-4 text-green-600" />;
     } else if (errorStates.includes(status)) {
@@ -360,11 +376,32 @@ export default function GoogleTelemedicine() {
     return meetings.filter((meeting) => new Date(meeting.start_time) <= now);
   };
 
-  const extractPatientName = (summary: string) => {
-    // Extract patient name from summary like "Initial Consultation with John Doe"
-    const match = summary.match(/with (.+)$/);
+  const getPatientDisplayName = (meeting: any) => {
+    if (meeting.patient_details) {
+      return `${meeting.patient_details.first_name} ${meeting.patient_details.last_name}`;
+    }
+    // Fallback to extracting from summary
+    const match = meeting.summary.match(/with (.+)$/);
     return match ? match[1] : "Patient";
   };
+
+  const getDoctorDisplayName = (meeting: any) => {
+    if (meeting.doctor_details) {
+      return `Dr. ${meeting.doctor_details.first_name} ${meeting.doctor_details.last_name}`;
+    }
+    return "Doctor";
+  };
+
+  // Filter patients based on search term
+  const filteredPatients = patients.filter((patient) => {
+    const searchLower = patientSearchTerm.toLowerCase();
+    return (
+      patient.first_name.toLowerCase().includes(searchLower) ||
+      patient.last_name.toLowerCase().includes(searchLower) ||
+      patient.email.toLowerCase().includes(searchLower) ||
+      patient.username.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -382,10 +419,12 @@ export default function GoogleTelemedicine() {
               </span>
             </div>
           </div>
-
           <div className="flex gap-3">
             <Button
-              onClick={() => dispatch(fetchMeetings())}
+              onClick={() => {
+                dispatch(fetchMeetings());
+                dispatch(fetchPatients());
+              }}
               variant="outline"
               disabled={loading || !isConnected}
             >
@@ -405,7 +444,6 @@ export default function GoogleTelemedicine() {
             )}
           </div>
         </div>
-
         {/* Error Alert */}
         {error && (
           <Alert className="border-red-200 bg-red-50">
@@ -423,7 +461,6 @@ export default function GoogleTelemedicine() {
             </AlertDescription>
           </Alert>
         )}
-
         {/* Google Account Connection */}
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
@@ -459,7 +496,6 @@ export default function GoogleTelemedicine() {
                   )}
                 </div>
               </div>
-
               <div className="flex items-center space-x-3">
                 {getStatusBadge(isConnected ? "connected" : "disconnected")}
                 {loading ? (
@@ -486,7 +522,6 @@ export default function GoogleTelemedicine() {
             </div>
           </CardContent>
         </Card>
-
         {/* Schedule New Session Form */}
         {showScheduleForm && (
           <Card className="border-l-4 border-l-green-500">
@@ -499,45 +534,96 @@ export default function GoogleTelemedicine() {
             <CardContent>
               <form onSubmit={handleScheduleSession} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="patientName">Patient Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="patientName"
-                        className="pl-10"
-                        value={scheduleForm.patientName}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            patientName: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
+                  {/* Patient Selection Dropdown */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="patient">Select Patient *</Label>
+                    {patientsLoading ? (
+                      <div className="flex items-center p-3 border rounded-md">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>Loading patients...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search patients by name, email, or username..."
+                            className="pl-10"
+                            value={patientSearchTerm}
+                            onChange={(e) =>
+                              setPatientSearchTerm(e.target.value)
+                            }
+                          />
+                        </div>
+                        <Select
+                          value={scheduleForm.patientId}
+                          onValueChange={(value) => {
+                            setScheduleForm({
+                              ...scheduleForm,
+                              patientId: value,
+                            });
+                            const patient = patients.find(
+                              (p) => p.user_id.toString() === value
+                            );
+                            setSelectedPatient(patient || null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Choose a patient..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredPatients.length === 0 ? (
+                              <div className="p-4 text-center text-gray-500">
+                                {patientSearchTerm
+                                  ? "No patients found matching search"
+                                  : "No patients available"}
+                              </div>
+                            ) : (
+                              filteredPatients.map((patient) => (
+                                <SelectItem
+                                  key={patient.user_id}
+                                  value={patient.user_id.toString()}
+                                >
+                                  <div className="flex items-center space-x-3">
+                                    <UserCheck className="h-4 w-4 text-blue-600" />
+                                    <div>
+                                      <div className="font-medium">
+                                        {patient.first_name} {patient.last_name}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {patient.email} • {patient.phone_number}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {selectedPatient && (
+                          <div className="p-3 bg-blue-50 rounded-md border-l-4 border-l-blue-500">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <User className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-blue-900">
+                                  {selectedPatient.first_name}{" "}
+                                  {selectedPatient.last_name}
+                                </p>
+                                <p className="text-sm text-blue-700">
+                                  {selectedPatient.email}
+                                </p>
+                                <p className="text-xs text-blue-600">
+                                  Phone: {selectedPatient.phone_number}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-
-                  <div>
-                    <Label htmlFor="patientEmail">Patient Email *</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="patientEmail"
-                        type="email"
-                        className="pl-10"
-                        value={scheduleForm.patientEmail}
-                        onChange={(e) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            patientEmail: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                  </div>
-
                   <div>
                     <Label htmlFor="date">Date *</Label>
                     <Input
@@ -554,7 +640,6 @@ export default function GoogleTelemedicine() {
                       required
                     />
                   </div>
-
                   <div>
                     <Label htmlFor="time">Time *</Label>
                     <Input
@@ -570,54 +655,61 @@ export default function GoogleTelemedicine() {
                       required
                     />
                   </div>
-
                   <div>
                     <Label htmlFor="duration">Duration (minutes)</Label>
-                    <select
-                      id="duration"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <Select
                       value={scheduleForm.duration}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         setScheduleForm({
                           ...scheduleForm,
-                          duration: e.target.value,
+                          duration: value,
                         })
                       }
                     >
-                      <option value="15">15 minutes</option>
-                      <option value="30">30 minutes</option>
-                      <option value="45">45 minutes</option>
-                      <option value="60">60 minutes</option>
-                      <option value="90">90 minutes</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="45">45 minutes</SelectItem>
+                        <SelectItem value="60">60 minutes</SelectItem>
+                        <SelectItem value="90">90 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
                   <div>
                     <Label htmlFor="type">Session Type</Label>
-                    <select
-                      id="type"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <Select
                       value={scheduleForm.type}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         setScheduleForm({
                           ...scheduleForm,
-                          type: e.target.value,
+                          type: value,
                         })
                       }
                     >
-                      <option value="Initial Consultation">
-                        Initial Consultation
-                      </option>
-                      <option value="Follow-up">Follow-up</option>
-                      <option value="Therapy Session">Therapy Session</option>
-                      <option value="Regular Checkup">Regular Checkup</option>
-                      <option value="Emergency Consultation">
-                        Emergency Consultation
-                      </option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Initial Consultation">
+                          Initial Consultation
+                        </SelectItem>
+                        <SelectItem value="Follow-up">Follow-up</SelectItem>
+                        <SelectItem value="Therapy Session">
+                          Therapy Session
+                        </SelectItem>
+                        <SelectItem value="Regular Checkup">
+                          Regular Checkup
+                        </SelectItem>
+                        <SelectItem value="Emergency Consultation">
+                          Emergency Consultation
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-
                 <div>
                   <Label htmlFor="notes">Session Notes (Optional)</Label>
                   <Textarea
@@ -633,7 +725,6 @@ export default function GoogleTelemedicine() {
                     className="h-20"
                   />
                 </div>
-
                 <div className="flex space-x-3 pt-4">
                   <Button
                     type="submit"
@@ -655,7 +746,11 @@ export default function GoogleTelemedicine() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowScheduleForm(false)}
+                    onClick={() => {
+                      setShowScheduleForm(false);
+                      setSelectedPatient(null);
+                      setPatientSearchTerm("");
+                    }}
                   >
                     Cancel
                   </Button>
@@ -664,7 +759,6 @@ export default function GoogleTelemedicine() {
             </CardContent>
           </Card>
         )}
-
         {/* Upcoming Sessions */}
         <Card>
           <CardHeader>
@@ -698,12 +792,22 @@ export default function GoogleTelemedicine() {
                           {formatDateTime(meeting.start_time)} -{" "}
                           {formatDateTime(meeting.end_time)}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          Attendees: {meeting.attendees.join(", ")}
-                        </p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          {meeting.patient_details && (
+                            <p>
+                              Patient: {getPatientDisplayName(meeting)} (
+                              {meeting.patient_details.email})
+                            </p>
+                          )}
+                          {meeting.doctor_details && (
+                            <p>
+                              Doctor: {getDoctorDisplayName(meeting)} (
+                              {meeting.doctor_details.email})
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-
                     <div className="flex items-center space-x-2">
                       {getStatusBadge("scheduled")}
                       <Button
@@ -722,7 +826,7 @@ export default function GoogleTelemedicine() {
                         onClick={() =>
                           handleCancelMeeting(
                             meeting.event_id,
-                            extractPatientName(meeting.summary)
+                            getPatientDisplayName(meeting)
                           )
                         }
                       >
@@ -762,7 +866,6 @@ export default function GoogleTelemedicine() {
             )}
           </CardContent>
         </Card>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* System Status */}
           <Card>
@@ -805,7 +908,6 @@ export default function GoogleTelemedicine() {
               </div>
             </CardContent>
           </Card>
-
           {/* Quick Actions */}
           <Card>
             <CardHeader>
@@ -820,7 +922,6 @@ export default function GoogleTelemedicine() {
                 <Plus className="mr-3 h-4 w-4" />
                 Schedule Google Meet Session
               </Button>
-
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -832,12 +933,10 @@ export default function GoogleTelemedicine() {
                 <Calendar className="mr-3 h-4 w-4" />
                 View Google Calendar
               </Button>
-
               <Button variant="outline" className="w-full justify-start">
                 <Users className="mr-3 h-4 w-4" />
                 Join Waiting Room
               </Button>
-
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -847,7 +946,6 @@ export default function GoogleTelemedicine() {
                 <Video className="mr-3 h-4 w-4" />
                 Start Instant Google Meet
               </Button>
-
               <Button variant="outline" className="w-full justify-start">
                 <Settings className="mr-3 h-4 w-4" />
                 Google Integration Settings
@@ -855,7 +953,6 @@ export default function GoogleTelemedicine() {
             </CardContent>
           </Card>
         </div>
-
         {/* Recent Sessions */}
         <Card>
           <CardHeader>
@@ -883,17 +980,27 @@ export default function GoogleTelemedicine() {
                           {formatDateTime(meeting.start_time)} -{" "}
                           {formatDateTime(meeting.end_time)}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          Attendees: {meeting.attendees.join(", ")}
-                        </p>
-                        {meeting.description && (
-                          <p className="text-xs text-gray-500 mt-1 truncate max-w-md">
-                            {meeting.description}
-                          </p>
-                        )}
+                        <div className="text-xs text-gray-500 space-y-1">
+                          {meeting.patient_details && (
+                            <p>
+                              Patient: {getPatientDisplayName(meeting)} (
+                              {meeting.patient_details.email})
+                            </p>
+                          )}
+                          {meeting.doctor_details && (
+                            <p>
+                              Doctor: {getDoctorDisplayName(meeting)} (
+                              {meeting.doctor_details.email})
+                            </p>
+                          )}
+                          {meeting.description && (
+                            <p className="truncate max-w-md">
+                              {meeting.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-
                     <div className="flex items-center space-x-3">
                       {getStatusBadge("completed")}
                       <Button variant="outline" size="sm">
@@ -912,7 +1019,6 @@ export default function GoogleTelemedicine() {
             )}
           </CardContent>
         </Card>
-
         {/* Edit Meeting Modal */}
         {editingMeeting && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -929,7 +1035,6 @@ export default function GoogleTelemedicine() {
                     const time = formData.get("time") as string;
                     const duration =
                       (formData.get("duration") as string) || "30";
-
                     const startDateTime = new Date(
                       `${date}T${time}:00`
                     ).toISOString();
@@ -937,7 +1042,6 @@ export default function GoogleTelemedicine() {
                       new Date(startDateTime).getTime() +
                         parseInt(duration) * 60000
                     ).toISOString();
-
                     handleRescheduleMeeting(
                       editingMeeting.event_id,
                       startDateTime,
@@ -957,7 +1061,6 @@ export default function GoogleTelemedicine() {
                       required
                     />
                   </div>
-
                   <div>
                     <Label htmlFor="edit-time">New Time</Label>
                     <Input
@@ -970,27 +1073,28 @@ export default function GoogleTelemedicine() {
                       required
                     />
                   </div>
-
                   <div>
                     <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                    <select
-                      id="edit-duration"
+                    <Select
                       name="duration"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       defaultValue={Math.round(
                         (new Date(editingMeeting.end_time).getTime() -
                           new Date(editingMeeting.start_time).getTime()) /
                           60000
-                      )}
+                      ).toString()}
                     >
-                      <option value="15">15 minutes</option>
-                      <option value="30">30 minutes</option>
-                      <option value="45">45 minutes</option>
-                      <option value="60">60 minutes</option>
-                      <option value="90">90 minutes</option>
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15">15 minutes</SelectItem>
+                        <SelectItem value="30">30 minutes</SelectItem>
+                        <SelectItem value="45">45 minutes</SelectItem>
+                        <SelectItem value="60">60 minutes</SelectItem>
+                        <SelectItem value="90">90 minutes</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
                   <div className="flex space-x-3 pt-4">
                     <Button
                       type="submit"
