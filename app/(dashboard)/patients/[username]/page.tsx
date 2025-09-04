@@ -68,15 +68,20 @@ export default function PatientDetailPage() {
     (state: RootState) => state.patient
   );
 
+  // Clinical notes Redux state
+  const clinicalNotesState = useSelector(
+    (state: RootState) => state.clinicalNotes
+  );
+
   const [activeTab, setActiveTab] = useState("overview");
   const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
 
-  // Dialog states remain dynamic
+  // Dialog states remain dynamic for backward compatibility
   const [newNote, setNewNote] = useState({
-    patientName: "John Smith", // Pre-populate with static name
-    patientId: "3", // Pre-populate with static ID
+    patientName: "", // Will be populated from selected patient
+    patientId: "", // Will be populated from selected patient
     type: "",
     content: "",
     billingCodes: "",
@@ -101,9 +106,47 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     if (username) {
+      console.log("Fetching patient data for username:", username);
       dispatch(fetchPatientByUsername(username));
     }
   }, [dispatch, username]);
+
+  // Update newNote when patient data is loaded
+  useEffect(() => {
+    if (selectedPatient) {
+      console.log("Patient data loaded:", selectedPatient);
+      const patientName = `${selectedPatient.first_name} ${selectedPatient.last_name}`;
+      const patientId =
+        selectedPatient.user_id?.toString() ||
+        selectedPatient.id?.toString() ||
+        "";
+
+      setNewNote((prev) => ({
+        ...prev,
+        patientName,
+        patientId,
+      }));
+
+      console.log("Updated newNote with patient info:", {
+        patientName,
+        patientId,
+      });
+    }
+  }, [selectedPatient]);
+
+  // Log clinical notes state changes
+  useEffect(() => {
+    console.log("Clinical notes state updated:", {
+      notesCount: clinicalNotesState.notes.length,
+      templatesCount: clinicalNotesState.templates.length,
+      loading: clinicalNotesState.notesLoading,
+      creating: clinicalNotesState.creating,
+      errors: {
+        notesError: clinicalNotesState.notesError,
+        templatesError: clinicalNotesState.templatesError,
+      },
+    });
+  }, [clinicalNotesState]);
 
   if (loading) {
     return (
@@ -117,6 +160,7 @@ export default function PatientDetailPage() {
   }
 
   if (error) {
+    console.error("Error loading patient:", error);
     return (
       <MainLayout>
         <div className="p-8 text-center text-red-600">
@@ -128,6 +172,7 @@ export default function PatientDetailPage() {
   }
 
   if (!selectedPatient) {
+    console.log("No patient data found for username:", username);
     return (
       <MainLayout>
         <div className="p-8 text-center text-gray-600">
@@ -139,11 +184,31 @@ export default function PatientDetailPage() {
   }
 
   const renderActiveTab = () => {
+    // Create a unified patient data object for the tabs
+    const unifiedPatientData = {
+      ...selectedPatient,
+      ...patientData, // Include static data for sections that need it
+      // Add additional mappings for consistency
+      personalInfo: {
+        id: selectedPatient.user_id || selectedPatient.id,
+        firstName: selectedPatient.first_name,
+        lastName: selectedPatient.last_name,
+        ...selectedPatient,
+      },
+    };
+
+    console.log(
+      "Rendering tab:",
+      activeTab,
+      "with unified patient data:",
+      unifiedPatientData
+    );
+
     switch (activeTab) {
       case "overview":
         return (
           <OverviewTab
-            patientData={patientData}
+            patientData={unifiedPatientData}
             setIsOrderMedOpen={setIsOrderMedOpen}
             setIsOrderLabOpen={setIsOrderLabOpen}
             setIsNewNoteOpen={setIsNewNoteOpen}
@@ -152,36 +217,36 @@ export default function PatientDetailPage() {
       case "notes":
         return (
           <ClinicalNotesTab
-            patientData={patientData}
+            patientData={unifiedPatientData}
             setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
       case "medications":
         return (
           <MedicationsTab
-            patientData={patientData}
+            patientData={unifiedPatientData}
             setIsOrderMedOpen={setIsOrderMedOpen}
           />
         );
       case "labs":
         return (
           <LabsTab
-            patientData={patientData}
+            patientData={unifiedPatientData}
             setIsOrderLabOpen={setIsOrderLabOpen}
           />
         );
       case "billing":
-        return <BillingTab patientData={patientData} />;
+        return <BillingTab patientData={unifiedPatientData} />;
       case "care-team":
-        return <CareTeamTab patientData={patientData} />;
+        return <CareTeamTab patientData={unifiedPatientData} />;
       case "patient-info":
-        return <PatientInfoTab patientData={patientData} />;
+        return <PatientInfoTab patientData={unifiedPatientData} />;
       default:
         return null;
     }
   };
 
-  // **FIX**: Moved bannerData initialization here, after the !selectedPatient check.
+  // Create banner data from selected patient
   const bannerData = {
     name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
     avatar: "", // No avatar in the provided data
@@ -190,7 +255,10 @@ export default function PatientDetailPage() {
     }`,
     gender: selectedPatient.gender,
     age: calculateAge(selectedPatient.date_of_birth),
-    mrn: selectedPatient.user_id.toString(),
+    mrn:
+      selectedPatient.user_id?.toString() ||
+      selectedPatient.id?.toString() ||
+      "",
     location: `${selectedPatient.city}, ${selectedPatient.state}`,
     contact: {
       phone: selectedPatient.phone_number,
@@ -201,6 +269,24 @@ export default function PatientDetailPage() {
     admitDate: "2023-10-26", // Placeholder as this is not in the data
     primaryPhysician: selectedPatient.primary_care_physician,
     dischargeDate: null, // Assuming patient is active
+  };
+
+  console.log("Banner data created:", bannerData);
+
+  const handleCreateNote = () => {
+    console.log("Creating note:", newNote);
+    // The actual note creation is now handled by the ClinicalNotesModal component
+    // This is just for backward compatibility with the old dialog
+  };
+
+  const handleOrderMedication = () => {
+    console.log("Ordering medication:", newMedication);
+    // TODO: Implement medication ordering functionality
+  };
+
+  const handleOrderLab = () => {
+    console.log("Ordering lab:", newLabOrder);
+    // TODO: Implement lab ordering functionality
   };
 
   return (
@@ -220,12 +306,13 @@ export default function PatientDetailPage() {
         </div>
       </div>
 
+      {/* Backward compatibility dialogs - these will be replaced by the new modal system */}
       <ClinicalNotesDialog
         isOpen={isNewNoteOpen}
         onOpenChange={setIsNewNoteOpen}
         newNote={newNote}
         setNewNote={setNewNote}
-        handleCreateNote={() => console.log("Creating note:", newNote)}
+        handleCreateNote={handleCreateNote}
       />
 
       <OrderMedicationDialog
@@ -233,9 +320,7 @@ export default function PatientDetailPage() {
         onOpenChange={setIsOrderMedOpen}
         newMedication={newMedication}
         setNewMedication={setNewMedication}
-        handleOrderMedication={() =>
-          console.log("Ordering medication:", newMedication)
-        }
+        handleOrderMedication={handleOrderMedication}
       />
 
       <OrderLabDialog
@@ -243,7 +328,7 @@ export default function PatientDetailPage() {
         onOpenChange={setIsOrderLabOpen}
         newLabOrder={newLabOrder}
         setNewLabOrder={setNewLabOrder}
-        handleOrderLab={() => console.log("Ordering lab:", newLabOrder)}
+        handleOrderLab={handleOrderLab}
       />
     </MainLayout>
   );
