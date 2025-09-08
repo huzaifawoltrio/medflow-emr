@@ -1,6 +1,7 @@
 "use client";
 
-import { MainLayout } from "@/components/layout/main-layout"; // Corrected import path
+import React, { useState, useEffect } from "react";
+import { MainLayout } from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,14 +11,49 @@ import {
   Pill,
   DollarSign,
   Search,
-  Link as LinkIcon,
+  ExternalLink,
   CheckCircle2,
   CalendarCheck,
   ScanLine,
   FileText,
+  Clock,
+  Plus,
+  AlertTriangle,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import Link from "next/link";
+
+// Mock data for pending notes
+const initialPendingNotes = [
+  {
+    id: 1,
+    patientName: "John Doe",
+    encounterId: "ENC001",
+    encounterDate: "2024-09-08",
+    encounterTime: "09:00 AM",
+    status: "No note created",
+    encounterType: "Follow-up",
+  },
+  {
+    id: 2,
+    patientName: "Sarah Johnson",
+    encounterId: "ENC002",
+    encounterDate: "2024-09-07",
+    encounterTime: "02:30 PM",
+    status: "Draft saved",
+    encounterType: "Initial Consult",
+  },
+  {
+    id: 3,
+    patientName: "Emma Davis",
+    encounterId: "ENC003",
+    encounterDate: "2024-09-06",
+    encounterTime: "11:15 AM",
+    status: "No note created",
+    encounterType: "Therapy Session",
+  },
+];
+
 // A helper component for Quick Action items
 const QuickActionButton = ({
   icon: Icon,
@@ -38,7 +74,144 @@ const QuickActionButton = ({
   </div>
 );
 
+// Component for individual pending note items
+const PendingNoteItem = ({
+  note,
+  onCreateNote,
+  onRemoveNote,
+}: {
+  note: any;
+  onCreateNote: (note: any) => void;
+  onRemoveNote: (id: number) => void;
+}) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === "Draft saved") {
+      return (
+        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
+          Draft saved
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
+        No note created
+      </Badge>
+    );
+  };
+
+  return (
+    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+      <div className="flex items-start justify-between space-x-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 mb-1">
+            <p className="font-semibold text-sm text-gray-900 truncate">
+              {note.patientName}
+            </p>
+            {getStatusBadge(note.status)}
+          </div>
+          <div className="flex items-center space-x-1 text-xs text-gray-500 mb-2">
+            <Calendar className="h-3 w-3" />
+            <span>
+              {formatDate(note.encounterDate)} • {note.encounterTime}
+            </span>
+          </div>
+          <p className="text-xs text-gray-600">{note.encounterType}</p>
+        </div>
+        <div className="flex flex-col space-y-1">
+          <Button
+            size="sm"
+            onClick={() => onCreateNote(note)}
+            className="bg-blue-600 hover:bg-blue-700 text-xs px-2 py-1 h-7"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Create Note
+          </Button>
+          {note.status === "Draft saved" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onRemoveNote(note.id)}
+              className="text-xs px-2 py-1 h-6"
+            >
+              Mark Complete
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
+  const [pendingNotes, setPendingNotes] = useState(initialPendingNotes);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Simulate automatic note creation tracking
+  useEffect(() => {
+    // This would typically connect to your EMR system to track new encounters
+    const checkForNewEncounters = () => {
+      // Mock logic for demonstration
+      console.log("Checking for new encounters without notes...");
+      // In a real implementation, this would:
+      // 1. Query your EMR database for recent encounters
+      // 2. Check if clinical notes exist for each encounter
+      // 3. Add missing notes to the pending list
+      // 4. Update the state with new pending notes
+    };
+
+    const interval = setInterval(checkForNewEncounters, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCreateNote = (note: any) => {
+    console.log("Creating note for:", note);
+
+    // Update status to "Draft saved" when user starts creating a note
+    setPendingNotes((prev) =>
+      prev.map((n) => (n.id === note.id ? { ...n, status: "Draft saved" } : n))
+    );
+
+    // In a real implementation, this would:
+    // 1. Navigate to the clinical notes page
+    // 2. Pre-populate the form with encounter data
+    // 3. Set the encounter ID for the note
+    alert(
+      `Opening clinical note for ${note.patientName} - ${note.encounterType} on ${note.encounterDate}`
+    );
+
+    // Example navigation (uncomment and modify for your routing):
+    // router.push(`/clinical-notes/new?encounterId=${note.encounterId}&patientName=${note.patientName}`);
+  };
+
+  const handleRemoveNote = (noteId: number) => {
+    // Remove completed note from pending list
+    setPendingNotes((prev) => prev.filter((n) => n.id !== noteId));
+
+    // In a real implementation, this would also:
+    // 1. Update the encounter status in the database
+    // 2. Mark the clinical note as completed
+    // 3. Trigger any completion workflows
+    console.log("Marking note as complete:", noteId);
+  };
+
+  const handleViewAllPending = () => {
+    console.log("Opening full pending notes view");
+    // In a real implementation, navigate to dedicated pending notes page:
+    // router.push('/pending-notes');
+  };
+
+  const filteredPendingNotes = pendingNotes.filter((note) =>
+    note.patientName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
@@ -58,14 +231,16 @@ export default function Dashboard() {
               <input
                 type="text"
                 placeholder="Search patients..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 w-full"
               />
             </div>
           </div>
         </div>
 
-        {/* Stat Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {/* Stat Cards Grid - Updated to include Pending Notes */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
           <Card className="bg-blue-50 border-none rounded-xl shadow-sm">
             <CardContent className="p-4 flex justify-between items-center">
               <div>
@@ -129,6 +304,23 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* New Pending Notes Card */}
+          <Card className="bg-amber-50 border-none rounded-xl shadow-sm">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-amber-800">
+                  Pending Notes
+                </CardTitle>
+                <div className="text-2xl md:text-3xl font-bold text-amber-900 mt-2">
+                  {pendingNotes.length}
+                </div>
+              </div>
+              <div className="p-3 bg-amber-600 rounded-lg">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Content Grid */}
@@ -160,7 +352,7 @@ export default function Dashboard() {
                   </Link>
                   <Link href="/e-prescription">
                     <QuickActionButton
-                      icon={LinkIcon}
+                      icon={ExternalLink}
                       label="Prescribe"
                       colorClass="purple"
                     />
@@ -173,6 +365,45 @@ export default function Dashboard() {
                     />
                   </Link>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* NEW: Pending Notes Section */}
+            <Card className="rounded-xl shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg md:text-xl font-semibold flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
+                  Pending Notes ({filteredPendingNotes.length})
+                </CardTitle>
+                {pendingNotes.length > 3 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleViewAllPending}
+                  >
+                    View All
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {filteredPendingNotes.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                    <p className="font-medium">All caught up!</p>
+                    <p className="text-sm">No pending clinical notes.</p>
+                  </div>
+                ) : (
+                  filteredPendingNotes
+                    .slice(0, 3)
+                    .map((note) => (
+                      <PendingNoteItem
+                        key={note.id}
+                        note={note}
+                        onCreateNote={handleCreateNote}
+                        onRemoveNote={handleRemoveNote}
+                      />
+                    ))
+                )}
               </CardContent>
             </Card>
 

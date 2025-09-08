@@ -157,8 +157,8 @@ export default function SecureMessaging() {
             <div className="flex items-center mt-2 text-sm text-gray-600">
               <Shield className="h-4 w-4 mr-2 text-green-600" />
               <span>
-                Telemedicine platform ready. All sessions are encrypted and
-                HIPAA compliant.
+                Secure messaging ready. All messages are encrypted and HIPAA
+                compliant.
               </span>
             </div>
           </div>

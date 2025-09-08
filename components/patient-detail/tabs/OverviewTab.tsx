@@ -36,6 +36,17 @@ export function OverviewTab({
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-3">
           <Button
+            onClick={() => setIsNewNoteOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-left justify-start"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Clinical Note
+          </Button>
+          <Button className="bg-yellow-600 hover:bg-yellow-700 text-left justify-start">
+            <Video className="mr-2 h-4 w-4" />
+            Telemedicine
+          </Button>
+          <Button
             onClick={() => setIsOrderMedOpen(true)}
             className="bg-blue-800 hover:bg-blue-700 text-left justify-start"
           >
@@ -48,17 +59,6 @@ export function OverviewTab({
           >
             <FlaskConical className="mr-2 h-4 w-4" />
             Order Labs
-          </Button>
-          <Button
-            onClick={() => setIsNewNoteOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-left justify-start"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Clinical Note
-          </Button>
-          <Button className="bg-yellow-600 hover:bg-green-700 text-left justify-start">
-            <Video className="mr-2 h-4 w-4" />
-            Telemedicine
           </Button>
         </CardContent>
       </Card>

@@ -1,4 +1,3 @@
-// app/patient/[patientId]/data.ts
 import {
   FileText,
   Calendar,
@@ -30,8 +29,55 @@ export const patientData = {
     address: "123 Main St, Anytown, USA 12345",
   },
   allergies: ["Penicillin", "Peanuts"],
-  currentMedications: ["Lisinopril 10mg daily", "Atorvastatin 20mg daily"],
-  // Extended patient information from intake form
+  currentMedications: [
+    {
+      id: "med1",
+      name: "Lisinopril",
+      dosage: "10mg daily",
+      prescribedBy: "Dr. Emily Carter",
+      status: "Active",
+      pharmacy: {
+        name: "CVS Pharmacy",
+        phone: "(555) 234-5678",
+        address: "456 Oak Ave, Anytown, USA",
+      },
+    },
+    {
+      id: "med2",
+      name: "Atorvastatin",
+      dosage: "20mg daily",
+      prescribedBy: "Dr. Emily Carter",
+      status: "Active",
+      pharmacy: {
+        name: "Walgreens",
+        phone: "(555) 345-6789",
+        address: "789 Pine St, Anytown, USA",
+      },
+    },
+  ],
+  recentOrders: [
+    {
+      id: "ord1",
+      name: "Amoxicillin",
+      dosage: "500mg, 3x daily for 10 days",
+      prescribedBy: "Dr. Emily Carter",
+      status: "Completed",
+      orderedDate: "2025-08-20",
+      pharmacy: {
+        name: "CVS Pharmacy",
+        phone: "(555) 234-5678",
+        address: "456 Oak Ave, Anytown, USA",
+      },
+    },
+    {
+      id: "ord2",
+      name: "Ibuprofen",
+      dosage: "600mg, as needed for pain",
+      prescribedBy: "Dr. Robert Johnson",
+      status: "Completed",
+      orderedDate: "2025-06-15",
+    },
+  ], // Extended patient information from intake form
   personalInfo: {
     firstName: "John",
     lastName: "Doe",
@@ -205,6 +251,7 @@ export const patientData = {
       title: "Follow-up Note",
       author: "Dr. Carter",
       date: "2025-08-12",
+      providerType: "physician",
       content:
         "Patient reports improved mood. Continue current medication regimen.",
     },
@@ -213,8 +260,26 @@ export const patientData = {
       title: "Initial Assessment",
       author: "Dr. Carter",
       date: "2025-07-20",
+      providerType: "physician",
       content:
         "New patient presenting with anxiety symptoms. Comprehensive evaluation completed.",
+    },
+    {
+      id: 3,
+      title: "Biopsychosocial",
+      author: "Dr. Anya Sharma",
+      date: "2025-07-21",
+      providerType: "therapist",
+      content: "Patient discussed family history and social stressors.",
+    },
+    {
+      id: 4,
+      title: "Treatment Plan",
+      author: "Dr. Emily Carter",
+      date: "2025-07-22",
+      providerType: "physician",
+      content:
+        "Initial treatment plan established, focusing on CBT and medication.",
     },
   ],
   billingHistory: [
