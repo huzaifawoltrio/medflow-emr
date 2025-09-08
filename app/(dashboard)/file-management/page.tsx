@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import {
-  fetchAllDocuments,
+  fetchMyUploadedDocuments,
   deleteDocument,
   Document,
 } from "@/app/redux/features/documents/documentActions";
@@ -394,9 +394,8 @@ const StructuredFoldersView = () => {
 // --- Main Page Component ---
 export default function FileManagement() {
   const dispatch = useAppDispatch();
-  const { documents, loading, deleting, error, deleteError } = useAppSelector(
-    (state) => state.documents
-  );
+  const { myUploadedDocuments, loading, deleting, error, deleteError } =
+    useAppSelector((state) => state.documents);
   const { patients } = useAppSelector((state) => state.patient);
 
   // Local state
@@ -406,9 +405,13 @@ export default function FileManagement() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
+  // Get documents from paginated response
+  const documents = myUploadedDocuments?.documents || [];
+  const totalCount = myUploadedDocuments?.total_count || 0;
+
   // Load data on component mount
   useEffect(() => {
-    dispatch(fetchAllDocuments());
+    dispatch(fetchMyUploadedDocuments({}));
     if (patients.length === 0) {
       dispatch(fetchPatients());
     }
@@ -418,12 +421,14 @@ export default function FileManagement() {
   const handleDeleteDocument = async (documentId: number) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       await dispatch(deleteDocument(documentId));
+      // Refresh the documents list after deletion
+      dispatch(fetchMyUploadedDocuments({}));
     }
   };
 
   // Handle refresh
   const handleRefresh = () => {
-    dispatch(fetchAllDocuments());
+    dispatch(fetchMyUploadedDocuments({}));
   };
 
   // Clear errors
@@ -437,7 +442,10 @@ export default function FileManagement() {
     const matchesSearch =
       doc.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.uploader_name.toLowerCase().includes(searchQuery.toLowerCase());
+      (doc.uploader_name &&
+        doc.uploader_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (doc.patient_name &&
+        doc.patient_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesTags =
       selectedTags.length === 0 ||
@@ -447,7 +455,9 @@ export default function FileManagement() {
   });
 
   // Get all unique tags from documents
-  const allTags = Array.from(new Set(documents.flatMap((doc) => doc.tags)));
+  const allTags = Array.from(
+    new Set(documents.flatMap((doc) => doc.tags || []))
+  );
 
   // Handle tag toggle
   const toggleTag = (tag: string) => {
@@ -462,9 +472,7 @@ export default function FileManagement() {
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-bold text-gray-900">
-              File Management
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">My Documents</h1>
             <Button
               variant="ghost"
               size="icon"
@@ -506,7 +514,7 @@ export default function FileManagement() {
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            Documents ({documents.length})
+            Documents ({totalCount})
           </button>
           <button
             onClick={() => setActiveTab("structured")}
@@ -635,7 +643,7 @@ export default function FileManagement() {
                   <>
                     <div className="flex justify-between items-center mb-4">
                       <p className="text-sm text-gray-600">
-                        Showing {filteredDocuments.length} of {documents.length}{" "}
+                        Showing {filteredDocuments.length} of {totalCount}{" "}
                         documents
                       </p>
                       {deleting && (

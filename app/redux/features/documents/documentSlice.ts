@@ -5,11 +5,14 @@ import {
   fetchPatientDocuments,
   fetchAllDocuments,
   deleteDocument,
+  fetchMyUploadedDocuments,
   Document,
+  PaginatedDocumentsResponse,
 } from "./documentActions";
 
 interface DocumentState {
   documents: Document[];
+  myUploadedDocuments: PaginatedDocumentsResponse | null;
   loading: boolean;
   uploading: boolean;
   deleting: boolean;
@@ -22,6 +25,7 @@ interface DocumentState {
 
 const initialState: DocumentState = {
   documents: [],
+  myUploadedDocuments: null,
   loading: false,
   uploading: false,
   deleting: false,
@@ -67,6 +71,13 @@ const documentSlice = createSlice({
           state.uploadSuccess = true;
           // Add the new document to the beginning of the array
           state.documents.unshift(action.payload);
+
+          // Also add to myUploadedDocuments if it exists
+          if (state.myUploadedDocuments) {
+            state.myUploadedDocuments.documents.unshift(action.payload);
+            state.myUploadedDocuments.count += 1;
+            state.myUploadedDocuments.total_count += 1;
+          }
         }
       )
       .addCase(
@@ -116,6 +127,26 @@ const documentSlice = createSlice({
           state.error = action.payload;
         }
       )
+      // Fetch my uploaded documents cases
+      .addCase(fetchMyUploadedDocuments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchMyUploadedDocuments.fulfilled,
+        (state, action: PayloadAction<PaginatedDocumentsResponse>) => {
+          state.loading = false;
+          state.myUploadedDocuments = action.payload;
+          state.success = true;
+        }
+      )
+      .addCase(
+        fetchMyUploadedDocuments.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        }
+      )
       // Delete document cases
       .addCase(deleteDocument.pending, (state) => {
         state.deleting = true;
@@ -125,10 +156,26 @@ const documentSlice = createSlice({
         deleteDocument.fulfilled,
         (state, action: PayloadAction<number>) => {
           state.deleting = false;
-          // Remove the deleted document from the array
+          // Remove the deleted document from the documents array
           state.documents = state.documents.filter(
             (doc) => doc.id !== action.payload
           );
+
+          // Also remove from myUploadedDocuments if it exists
+          if (state.myUploadedDocuments) {
+            const originalCount = state.myUploadedDocuments.documents.length;
+            state.myUploadedDocuments.documents =
+              state.myUploadedDocuments.documents.filter(
+                (doc) => doc.id !== action.payload
+              );
+            const newCount = state.myUploadedDocuments.documents.length;
+
+            // Update counts if a document was actually removed
+            if (newCount < originalCount) {
+              state.myUploadedDocuments.count = newCount;
+              state.myUploadedDocuments.total_count -= 1;
+            }
+          }
         }
       )
       .addCase(deleteDocument.rejected, (state, action: PayloadAction<any>) => {
