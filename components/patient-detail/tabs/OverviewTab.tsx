@@ -1,4 +1,3 @@
-// components/patient-detail/tabs/OverviewTab.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +10,28 @@ import {
   Video,
 } from "lucide-react";
 
+// Define the structure of a single medication object
+interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  prescribedBy: string;
+  status: "Active" | "Completed";
+}
+
+// Define the structure for the patient data prop
 interface OverviewTabProps {
-  patientData: any;
+  patientData: {
+    vitals: {
+      bp: string;
+      hr: string;
+      temp: string;
+      resp: string;
+      spo2: string;
+      recorded: string;
+    };
+    currentMedications?: Medication[];
+  };
   setIsOrderMedOpen: (open: boolean) => void;
   setIsOrderLabOpen: (open: boolean) => void;
   setIsNewNoteOpen: (open: boolean) => void;
@@ -24,6 +43,9 @@ export function OverviewTab({
   setIsOrderLabOpen,
   setIsNewNoteOpen,
 }: OverviewTabProps) {
+  // Defensively get currentMedications, defaulting to an empty array
+  const currentMedications = patientData?.currentMedications || [];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Quick Actions */}
@@ -127,25 +149,38 @@ export function OverviewTab({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {patientData.currentMedications.map((med: string, index: number) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center space-x-3">
-                <Pill className="h-4 w-4 text-blue-800" />
-                <span className="font-medium">{med}</span>
+          {currentMedications.length > 0 ? (
+            currentMedications.map((med) => (
+              <div
+                key={med.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <Pill className="h-4 w-4 text-blue-800" />
+                  <div>
+                    <p className="font-medium text-slate-800">{med.name}</p>
+                    <p className="text-sm text-slate-600">{med.dosage}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    Discontinue
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm">
-                  Discontinue
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-sm text-slate-500 text-center py-4">
+              No active medications on file.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
