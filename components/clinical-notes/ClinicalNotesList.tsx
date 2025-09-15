@@ -1,13 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -277,10 +270,31 @@ export function ClinicalNotesList({
   const [deleting, setDeleting] = useState(false);
   const [signing, setSigning] = useState(false);
 
-  const uniqueNoteTypes = useMemo(() => {
-    const types = notes.map((note) => note.note_type).filter(Boolean);
-    return [...new Set(types)];
-  }, [notes]);
+  // Predefined note types from NOTE_TEMPLATES
+  const noteTypes = [
+    "Initial Psychiatric Evaluation",
+    "Follow-up Note",
+    "Biopsychosocial Assessment",
+    "Risk Assessment",
+    "Treatment Plan",
+    "Therapy Session",
+  ];
+
+  // Get shortened labels for the buttons - updated to handle actual data
+  const getTypeLabel = (type: string) => {
+    const labelMap: Record<string, string> = {
+      "Initial Psychiatric Evaluation": "Initial Eval",
+      "Follow-up Note": "Follow-up",
+      "Biopsychosocial Assessment": "Biopsychosocial",
+      "Risk Assessment": "Risk",
+      "Treatment Plan": "Treatment",
+      "Therapy Session": "Therapy",
+      "Therapy Session Notes": "Therapy", // Handle variations
+      "Initial Evaluation": "Initial Eval", // Handle variations
+      "Follow-up": "Follow-up", // Handle variations
+    };
+    return labelMap[type] || type;
+  };
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
@@ -373,32 +387,94 @@ export function ClinicalNotesList({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-48 text-sm">
-            <SelectValue placeholder="Filter by Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {uniqueNoteTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type || "Uncategorized"}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {/* Note Type Filter Buttons */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filterType === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilterType("all")}
+            className={`text-xs font-medium transition-colors ${
+              filterType === "all"
+                ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+            }`}
+          >
+            All Types
+          </Button>
+          {noteTypes.map((type) => (
+            <Button
+              key={type}
+              variant={filterType === type ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterType(type)}
+              className={`text-xs font-medium transition-colors ${
+                filterType === type
+                  ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              {getTypeLabel(type)}
+            </Button>
+          ))}
+        </div>
 
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-48 text-sm">
-            <SelectValue placeholder="Filter by Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="signed">Signed</SelectItem>
-            <SelectItem value="amended">Amended</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Status Filter Buttons */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500 font-medium mr-2">
+            Status:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={filterStatus === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("all")}
+              className={`text-xs font-medium transition-colors ${
+                filterStatus === "all"
+                  ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              All Statuses
+            </Button>
+            <Button
+              variant={filterStatus === "draft" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("draft")}
+              className={`text-xs font-medium transition-colors ${
+                filterStatus === "draft"
+                  ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              Draft
+            </Button>
+            <Button
+              variant={filterStatus === "signed" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("signed")}
+              className={`text-xs font-medium transition-colors ${
+                filterStatus === "signed"
+                  ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              Signed
+            </Button>
+            <Button
+              variant={filterStatus === "amended" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus("amended")}
+              className={`text-xs font-medium transition-colors ${
+                filterStatus === "amended"
+                  ? "bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+              }`}
+            >
+              Amended
+            </Button>
+          </div>
+        </div>
       </div>
 
       {filteredNotes.length > 0 ? (

@@ -57,7 +57,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
               label: "Chief Complaint",
               type: "textarea",
               required: true,
-              placeholder: "What is the primary reason for today's visit?",
+              placeholder: "In one sentence, tell me why you are here",
               rows: 3,
             },
           ],
@@ -343,7 +343,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
   },
   {
     id: 2,
-    name: "Follow-up Note",
+    name: "Progress Note",
     description: "Standard follow-up visit documentation",
     schema: {
       sections: [
@@ -355,7 +355,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
               label: "Chief Complaint",
               type: "textarea",
               required: true,
-              placeholder: "Patient's main concern today",
+              placeholder: "In one sentence, tell me why you are here",
               rows: 3,
             },
             {
@@ -848,7 +848,7 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
   },
   {
     id: 6,
-    name: "Group Therapy Session",
+    name: "Therapy Session",
     description: "Documentation for group therapy sessions",
     schema: {
       sections: [
@@ -983,6 +983,122 @@ export const NOTE_TEMPLATES: NoteTemplate[] = [
               type: "textarea",
               placeholder: "Any individual follow-up actions required",
               rows: 3,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    id: 7,
+    name: "Case Management",
+    description:
+      "Documentation of case management activities and coordination of care",
+    schema: {
+      sections: [
+        {
+          title: "Encounter Information",
+          fields: [
+            {
+              name: "encounter_date",
+              label: "Encounter Date",
+              type: "date",
+              required: true,
+            },
+            {
+              name: "encounter_type",
+              label: "Encounter Type",
+              type: "select",
+              options: [
+                { value: "phone", label: "Phone" },
+                { value: "in_person", label: "In Person" },
+                { value: "video", label: "Video Call" },
+                { value: "email", label: "Email/Message" },
+              ],
+            },
+            {
+              name: "duration",
+              label: "Duration",
+              type: "text",
+              placeholder: "e.g., 45 minutes",
+            },
+          ],
+        },
+        {
+          title: "Presenting Issues",
+          fields: [
+            {
+              name: "client_needs",
+              label: "Client Needs",
+              type: "textarea",
+              placeholder: "Identify client's current needs and concerns",
+              rows: 3,
+            },
+            {
+              name: "barriers",
+              label: "Barriers to Care",
+              type: "textarea",
+              placeholder:
+                "Financial, social, transportation, compliance issues",
+              rows: 3,
+            },
+          ],
+        },
+        {
+          title: "Interventions & Coordination",
+          fields: [
+            {
+              name: "services_provided",
+              label: "Services Provided",
+              type: "textarea",
+              placeholder:
+                "Referrals, resource linkage, advocacy, coordination",
+              rows: 3,
+            },
+            {
+              name: "collaboration",
+              label: "Collaboration",
+              type: "textarea",
+              placeholder:
+                "Communication with providers, family, community agencies",
+              rows: 3,
+            },
+          ],
+        },
+        {
+          title: "Assessment & Progress",
+          fields: [
+            {
+              name: "progress_towards_goals",
+              label: "Progress Towards Goals",
+              type: "textarea",
+              placeholder: "Updates on client progress, achievements, setbacks",
+              rows: 3,
+            },
+            {
+              name: "risk_concerns",
+              label: "Risk Concerns",
+              type: "textarea",
+              placeholder:
+                "Safety issues, housing, health, substance use, etc.",
+              rows: 3,
+            },
+          ],
+        },
+        {
+          title: "Plan & Follow-up",
+          fields: [
+            {
+              name: "next_steps",
+              label: "Next Steps",
+              type: "textarea",
+              placeholder: "Planned actions, referrals, or client tasks",
+              rows: 3,
+            },
+            {
+              name: "follow_up_date",
+              label: "Follow-up Date",
+              type: "date",
             },
           ],
         },

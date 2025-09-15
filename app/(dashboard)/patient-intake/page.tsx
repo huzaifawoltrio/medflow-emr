@@ -550,7 +550,9 @@ export default function PatientIntake() {
         Current Concerns
       </CardTitle>
       <div className="space-y-2">
-        <Label htmlFor="chiefComplaint">Chief Complaint *</Label>
+        <Label htmlFor="chiefComplaint">
+          Please describe the main reason why you are seeking treatment
+        </Label>
         <Textarea
           id="chiefComplaint"
           placeholder="Please describe your main reason for today's visit"
