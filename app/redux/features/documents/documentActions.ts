@@ -153,7 +153,7 @@ export const deleteDocument = createAsyncThunk<
   { rejectValue: string }
 >("documents/delete", async (documentId, { rejectWithValue }) => {
   try {
-    await api.delete(`/patients/documents/${documentId}`);
+    await api.delete(`/documents/${documentId}`);
     return documentId;
   } catch (error: any) {
     if (error.response && error.response.data.message) {

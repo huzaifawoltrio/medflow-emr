@@ -93,9 +93,11 @@ const formatDate = (dateString: string): string => {
 const DocumentCard = ({
   doc,
   onDelete,
+  deleting,
 }: {
   doc: Document;
   onDelete: (id: number) => void;
+  deleting: boolean;
 }) => {
   const fileExtension = getFileExtension(doc.file_name);
   const FileIcon = fileTypeStyles[fileExtension]?.icon || FileText;
@@ -194,8 +196,13 @@ const DocumentCard = ({
           size="icon"
           className="bg-gray-100 hover:bg-red-100 text-gray-700 hover:text-red-600 h-9 w-9"
           onClick={() => onDelete(doc.id)}
+          disabled={deleting}
         >
-          <Trash2 className="h-4 w-4" />
+          {deleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </div>
@@ -206,9 +213,11 @@ const DocumentCard = ({
 const DocumentRow = ({
   doc,
   onDelete,
+  deleting,
 }: {
   doc: Document;
   onDelete: (id: number) => void;
+  deleting: boolean;
 }) => {
   const fileExtension = getFileExtension(doc.file_name);
   const FileIcon = fileTypeStyles[fileExtension]?.icon || FileText;
@@ -262,10 +271,19 @@ const DocumentRow = ({
           className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer"
           onClick={handleDownload}
         />
-        <Trash2
-          className="h-5 w-5 text-gray-500 hover:text-red-500 cursor-pointer"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0"
           onClick={() => onDelete(doc.id)}
-        />
+          disabled={deleting}
+        >
+          {deleting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -420,9 +438,14 @@ export default function FileManagement() {
   // Handle document deletion
   const handleDeleteDocument = async (documentId: number) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
-      await dispatch(deleteDocument(documentId));
-      // Refresh the documents list after deletion
-      dispatch(fetchMyUploadedDocuments({}));
+      try {
+        await dispatch(deleteDocument(documentId)).unwrap();
+        // Refresh the documents list after successful deletion
+        dispatch(fetchMyUploadedDocuments({}));
+      } catch (error) {
+        // Error is already handled by Redux, shown in the alert
+        console.error("Failed to delete document:", error);
+      }
     }
   };
 
@@ -661,6 +684,7 @@ export default function FileManagement() {
                             key={doc.id}
                             doc={doc}
                             onDelete={handleDeleteDocument}
+                            deleting={deleting}
                           />
                         ))}
                       </div>
@@ -671,6 +695,7 @@ export default function FileManagement() {
                             key={doc.id}
                             doc={doc}
                             onDelete={handleDeleteDocument}
+                            deleting={deleting}
                           />
                         ))}
                       </div>
