@@ -4,25 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { NoteTemplate } from "../../app/redux/features/clinicalNotes/clinicalNotesActions";
+import {
+  NoteType,
+  NoteTemplate,
+} from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 
 interface DynamicFormRendererProps {
-  template: NoteTemplate | null;
+  noteType: NoteType;
+  template: NoteTemplate;
   formData: Record<string, any>;
   setFormData: (data: Record<string, any>) => void;
   errors?: Record<string, string>;
 }
 
 export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
+  noteType,
   template,
   formData,
   setFormData,
   errors = {},
 }) => {
-  if (!template || !template.schema) {
-    return null;
-  }
-
   const handleFieldChange = (
     fieldName: string,
     value: any,
@@ -212,6 +213,30 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Note Configuration Summary */}
+      <Card className="shadow-sm border-2 border-blue-100">
+        <CardHeader className="pb-3 bg-blue-50">
+          <CardTitle className="text-lg font-semibold text-gray-900">
+            Note Configuration
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 pt-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium text-gray-600">Note Type:</span>
+              <p className="text-gray-900">{noteType.name}</p>
+              <p className="text-gray-500 text-xs">{noteType.description}</p>
+            </div>
+            <div>
+              <span className="font-medium text-gray-600">Template:</span>
+              <p className="text-gray-900">{template.name}</p>
+              <p className="text-gray-500 text-xs">{template.description}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Form Fields */}
       {template.schema.sections?.map((section: any) => (
         <Card key={section.title} className="shadow-sm">
           <CardHeader className="pb-3">

@@ -1,6 +1,10 @@
 // components/patient-detail/tabs/ClinicalNotesTab.tsx
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Loader2, FileText, Plus, AlertTriangle } from "lucide-react";
 import { ClinicalNotesList } from "../../clinical-notes/ClinicalNotesList";
 import { ClinicalNotesModal } from "../../clinical-notes/ClinicalNotesModal";
 import { ClinicalNoteViewModal } from "../../clinical-notes/ClinicalNoteViewModal";
@@ -11,6 +15,8 @@ import {
 } from "../../../app/redux/features/clinicalNotes/clinicalNotesSlice";
 import {
   fetchPatientNotes,
+  fetchNoteTypes,
+  fetchNoteTemplates,
   signClinicalNote,
   deleteClinicalNote,
 } from "../../../app/redux/features/clinicalNotes/clinicalNotesActions";
@@ -30,16 +36,26 @@ export function ClinicalNotesTab({
   // Redux state
   const {
     notes,
+    noteTypes,
+    templates,
     notesLoading,
+    noteTypesLoading,
+    templatesLoading,
+    notesError,
+    noteTypesError,
+    templatesError,
     createSuccess,
     updateSuccess,
     signSuccess,
     deleteSuccess,
     amendSuccess,
+    creating,
+    deleting,
+    signing,
+    amending,
   } = useSelector((state: RootState) => state.clinicalNotes);
 
-  const { user } = useSelector((state: RootState) => state.auth);
-
+  // Local state
   const [isNewNoteModalOpen, setIsNewNoteModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState<ClinicalNote | null>(null);
@@ -75,19 +91,25 @@ export function ClinicalNotesTab({
   const patientId = getPatientId();
   const patientName = getPatientName();
 
-  // Load patient notes when component mounts
+  // Load initial data when component mounts
   useEffect(() => {
+    console.log("ClinicalNotesTab mounted, loading data...");
+
+    // Clear any previous errors and success states
+    dispatch(clearErrors());
+    dispatch(clearSuccessStates());
+
+    // Load patient notes if we have a patient ID
     if (patientId) {
       console.log("Loading clinical notes for patient:", patientId);
       dispatch(fetchPatientNotes({ patientId }));
     }
-  }, [dispatch, patientId]);
 
-  // Clear success states when component mounts
-  useEffect(() => {
-    dispatch(clearErrors());
-    dispatch(clearSuccessStates());
-  }, [dispatch]);
+    // Load note types and templates for filtering and creation
+    console.log("Loading note types and templates...");
+    dispatch(fetchNoteTypes());
+    dispatch(fetchNoteTemplates());
+  }, [dispatch, patientId]);
 
   // Handle success states
   useEffect(() => {
@@ -95,8 +117,13 @@ export function ClinicalNotesTab({
       console.log("Clinical note created successfully");
       setIsNewNoteModalOpen(false);
       // Reload patient notes to get the latest list
-      dispatch(fetchPatientNotes({ patientId }));
-      dispatch(clearSuccessStates());
+      if (patientId) {
+        dispatch(fetchPatientNotes({ patientId }));
+      }
+      // Clear success state after a delay
+      setTimeout(() => {
+        dispatch(clearSuccessStates());
+      }, 3000);
     }
   }, [createSuccess, dispatch, patientId]);
 
@@ -104,8 +131,13 @@ export function ClinicalNotesTab({
     if (updateSuccess) {
       console.log("Clinical note updated successfully");
       // Reload patient notes to get the updated list
-      dispatch(fetchPatientNotes({ patientId }));
-      dispatch(clearSuccessStates());
+      if (patientId) {
+        dispatch(fetchPatientNotes({ patientId }));
+      }
+      // Clear success state after a delay
+      setTimeout(() => {
+        dispatch(clearSuccessStates());
+      }, 3000);
     }
   }, [updateSuccess, dispatch, patientId]);
 
@@ -113,8 +145,13 @@ export function ClinicalNotesTab({
     if (signSuccess) {
       console.log("Clinical note signed successfully");
       // Reload patient notes to get the updated list
-      dispatch(fetchPatientNotes({ patientId }));
-      dispatch(clearSuccessStates());
+      if (patientId) {
+        dispatch(fetchPatientNotes({ patientId }));
+      }
+      // Clear success state after a delay
+      setTimeout(() => {
+        dispatch(clearSuccessStates());
+      }, 3000);
     }
   }, [signSuccess, dispatch, patientId]);
 
@@ -122,7 +159,10 @@ export function ClinicalNotesTab({
     if (deleteSuccess) {
       console.log("Clinical note deleted successfully");
       // Notes list will be automatically updated by the Redux store
-      dispatch(clearSuccessStates());
+      // Clear success state after a delay
+      setTimeout(() => {
+        dispatch(clearSuccessStates());
+      }, 3000);
     }
   }, [deleteSuccess, dispatch]);
 
@@ -130,28 +170,21 @@ export function ClinicalNotesTab({
     if (amendSuccess) {
       console.log("Clinical note amendment created successfully");
       // Reload patient notes to get the updated list
-      dispatch(fetchPatientNotes({ patientId }));
-      dispatch(clearSuccessStates());
+      if (patientId) {
+        dispatch(fetchPatientNotes({ patientId }));
+      }
+      // Clear success state after a delay
+      setTimeout(() => {
+        dispatch(clearSuccessStates());
+      }, 3000);
     }
   }, [amendSuccess, dispatch, patientId]);
 
-  // Permission checks - simplified for now, you can make these more sophisticated
-  const canCreate = user?.role === "doctor";
-
-  const canEdit = (note: ClinicalNote) => {
-    // Can edit if it's a draft and belongs to current doctor
-    return note.status === "draft" && note.doctor_id === user?.id;
-  };
-
-  const canDelete = (note: ClinicalNote) => {
-    // Can delete if it's a draft and belongs to current doctor
-    return note.status === "draft" && note.doctor_id === user?.id;
-  };
-
-  const canSign = (note: ClinicalNote) => {
-    // Can sign if it's a draft and belongs to current doctor
-    return note.status === "draft" && note.doctor_id === user?.id;
-  };
+  // Simplified permissions - just allow everything for authenticated users
+  const canCreate = true;
+  const canEdit = (note: ClinicalNote) => true;
+  const canDelete = (note: ClinicalNote) => note.status === "draft";
+  const canSign = (note: ClinicalNote) => note.status === "draft";
 
   // Event handlers
   const handleNewNoteClick = () => {
@@ -233,22 +266,134 @@ export function ClinicalNotesTab({
     }
   };
 
-  return (
-    <>
-      <ClinicalNotesList
-        notes={notes}
-        onView={handleViewNote}
-        onEdit={handleEditNote}
-        onDelete={handleDeleteNote}
-        onSign={handleSignNote}
-        onUnsign={handleUnsignNote}
-        setIsModalOpen={setIsNewNoteModalOpen}
-        canCreate={canCreate}
-        canEdit={canEdit}
-        canDelete={canDelete}
-        canSign={canSign}
-      />
+  // Error state
+  const hasErrors = notesError || noteTypesError || templatesError;
 
+  // Loading states
+  const isInitialLoading =
+    (notesLoading && notes.length === 0) ||
+    (noteTypesLoading && noteTypes.length === 0) ||
+    (templatesLoading && templates.length === 0);
+
+  // Show loading state for initial load
+  if (isInitialLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="mr-2 h-5 w-5" />
+            Clinical Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600 mr-3" />
+            <span className="text-lg">Loading clinical notes...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state
+  if (hasErrors) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="mr-2 h-5 w-5" />
+            Clinical Notes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-1">
+                {notesError && <div>Notes: {notesError}</div>}
+                {noteTypesError && <div>Note Types: {noteTypesError}</div>}
+                {templatesError && <div>Templates: {templatesError}</div>}
+              </div>
+            </AlertDescription>
+          </Alert>
+          <div className="text-center">
+            <Button
+              onClick={() => {
+                dispatch(clearErrors());
+                dispatch(fetchPatientNotes({ patientId }));
+                dispatch(fetchNoteTypes());
+                dispatch(fetchNoteTemplates());
+              }}
+              className="mt-4"
+            >
+              Retry Loading
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show success messages
+  const successMessages = [];
+  if (createSuccess) successMessages.push("Note created successfully!");
+  if (updateSuccess) successMessages.push("Note updated successfully!");
+  if (signSuccess) successMessages.push("Note signed successfully!");
+  if (deleteSuccess) successMessages.push("Note deleted successfully!");
+  if (amendSuccess) successMessages.push("Amendment added successfully!");
+
+  return (
+    <div className="space-y-6">
+      {/* Success Messages */}
+      {successMessages.map((message, index) => (
+        <Alert key={index} className="border-green-200 bg-green-50">
+          <AlertDescription className="text-green-800">
+            {message}
+          </AlertDescription>
+        </Alert>
+      ))}
+
+      {/* Patient Information Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center">
+              <FileText className="mr-2 h-5 w-5" />
+              Clinical Notes for {patientName}
+            </div>
+            <div className="text-sm font-normal text-muted-foreground">
+              Patient ID: {patientId}
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground">
+            Total Notes: {notes.length} | Note Types Available:{" "}
+            {noteTypes.length} | Templates Available: {templates.length}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Notes List */}
+      <Card>
+        <CardContent className="p-6">
+          <ClinicalNotesList
+            notes={notes}
+            onView={handleViewNote}
+            onEdit={handleEditNote}
+            onDelete={handleDeleteNote}
+            onSign={handleSignNote}
+            onUnsign={handleUnsignNote}
+            setIsModalOpen={handleNewNoteClick}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            canSign={canSign}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
       <ClinicalNotesModal
         isOpen={isNewNoteModalOpen}
         onOpenChange={handleCloseNewNoteModal}
@@ -261,8 +406,9 @@ export function ClinicalNotesTab({
           isOpen={isViewModalOpen}
           onOpenChange={handleCloseViewModal}
           note={selectedNote}
+          patientName={patientName}
         />
       )}
-    </>
+    </div>
   );
 }

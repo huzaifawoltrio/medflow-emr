@@ -25,28 +25,29 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { AppDispatch, RootState } from "../../app/redux/store";
+import { AppDispatch, RootState } from "@/app/redux/store";
 import {
+  ClinicalNote,
   fetchClinicalNote,
   fetchNoteAmendments,
   amendClinicalNote,
   signClinicalNote,
-} from "../../app/redux/features/clinicalNotes/clinicalNotesActions";
-import { ClinicalNote } from "../../app/redux/features/clinicalNotes/clinicalNotesActions";
+} from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 
 interface ClinicalNoteViewModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  note: ClinicalNote;
+  note: ClinicalNote | null;
+  patientName?: string;
 }
 
 export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   isOpen,
   onOpenChange,
   note,
+  patientName,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-
   const {
     selectedNote,
     amendments,
@@ -56,6 +57,8 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
     amendSuccess,
     signing,
     signSuccess,
+    notesError,
+    amendmentsError,
   } = useSelector((state: RootState) => state.clinicalNotes);
 
   const [showAmendForm, setShowAmendForm] = useState(false);
@@ -65,10 +68,9 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
     Record<string, string>
   >({});
 
-  // Load full note details and amendments when modal opens
+  // Load note details and amendments when modal opens
   useEffect(() => {
     if (isOpen && note?.id) {
-      console.log("Loading note details for note ID:", note.id);
       dispatch(fetchClinicalNote(note.id));
       dispatch(fetchNoteAmendments(note.id));
     }
@@ -77,7 +79,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle amendment success
   useEffect(() => {
     if (amendSuccess) {
-      console.log("Amendment created successfully");
       setShowAmendForm(false);
       setAmendmentText("");
       setAmendmentReason("");
@@ -93,7 +94,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle sign success
   useEffect(() => {
     if (signSuccess) {
-      console.log("Note signed successfully");
       // Reload note details
       if (note?.id) {
         dispatch(fetchClinicalNote(note.id));
@@ -130,11 +130,12 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   };
 
   const handleSignNote = async () => {
+    if (!note?.id) return;
+
     try {
-      console.log("Signing note:", note.id);
-      await dispatch(signClinicalNote(note.id));
+      await dispatch(signClinicalNote(note.id)).unwrap();
     } catch (error) {
-      console.error("Error signing note:", error);
+      console.error("Failed to sign note:", error);
     }
   };
 
@@ -154,19 +155,18 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   };
 
   const handleSubmitAmendment = async () => {
-    if (!validateAmendmentForm()) return;
+    if (!validateAmendmentForm() || !note?.id) return;
 
     try {
-      console.log("Submitting amendment for note:", note.id);
       await dispatch(
         amendClinicalNote({
           noteId: note.id,
-          amendmentText: amendmentText,
+          amendmentText,
           reason: amendmentReason,
         })
-      );
+      ).unwrap();
     } catch (error) {
-      console.error("Error creating amendment:", error);
+      console.error("Failed to add amendment:", error);
     }
   };
 
@@ -213,6 +213,10 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
 
   const displayNote = selectedNote || note;
 
+  if (!displayNote) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -222,13 +226,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
               <FileText className="h-5 w-5 mr-2" />
               <span>Clinical Note Details</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
 
@@ -256,7 +253,10 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
                     {new Date(displayNote.created_at).toLocaleDateString()}
                   </div>
                   <div className="flex items-center">
-                    Type: {displayNote.note_type}
+                    Type: {displayNote.note_type_name}
+                  </div>
+                  <div className="flex items-center">
+                    Template: {displayNote.template_name}
                   </div>
                 </div>
               </div>
@@ -264,6 +264,23 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
                 {getStatusBadge(displayNote.status)}
               </div>
             </div>
+
+            {/* Success Messages */}
+            {signSuccess && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertDescription className="text-green-800">
+                  Note has been successfully signed!
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {amendSuccess && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertDescription className="text-green-800">
+                  Amendment has been added successfully!
+                </AlertDescription>
+              </Alert>
+            )}
 
             {/* Note Content */}
             <Card>
@@ -424,6 +441,15 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* Errors */}
+            {(notesError || amendmentsError) && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {notesError || amendmentsError}
+                </AlertDescription>
+              </Alert>
             )}
 
             {/* Actions */}

@@ -1,6 +1,8 @@
 // redux/features/clinicalNotes/clinicalNotesSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
+  fetchNoteTypes,
+  fetchNoteType,
   fetchNoteTemplates,
   fetchNoteTemplate,
   createClinicalNote,
@@ -12,12 +14,20 @@ import {
   amendClinicalNote,
   fetchNoteAmendments,
   searchClinicalNotes,
+  filterNotesByTypeAndTemplate,
+  NoteType,
   NoteTemplate,
   ClinicalNote,
   NoteAmendment,
 } from "./clinicalNotesActions";
 
 interface ClinicalNotesState {
+  // Note Types
+  noteTypes: NoteType[];
+  selectedNoteType: NoteType | null;
+  noteTypesLoading: boolean;
+  noteTypesError: string | null;
+
   // Templates
   templates: NoteTemplate[];
   selectedTemplate: NoteTemplate | null;
@@ -49,6 +59,12 @@ interface ClinicalNotesState {
   searchLoading: boolean;
   searchError: string | null;
 
+  // Filter results
+  filteredResults: ClinicalNote[];
+  filteredCount: number;
+  filterLoading: boolean;
+  filterError: string | null;
+
   // UI states
   creating: boolean;
   updating: boolean;
@@ -65,6 +81,11 @@ interface ClinicalNotesState {
 }
 
 const initialState: ClinicalNotesState = {
+  noteTypes: [],
+  selectedNoteType: null,
+  noteTypesLoading: false,
+  noteTypesError: null,
+
   templates: [],
   selectedTemplate: null,
   templatesLoading: false,
@@ -84,6 +105,11 @@ const initialState: ClinicalNotesState = {
   searchCount: 0,
   searchLoading: false,
   searchError: null,
+
+  filteredResults: [],
+  filteredCount: 0,
+  filterLoading: false,
+  filterError: null,
 
   creating: false,
   updating: false,
@@ -113,13 +139,19 @@ const clinicalNotesSlice = createSlice({
 
     // Clear errors
     clearErrors: (state) => {
+      state.noteTypesError = null;
       state.templatesError = null;
       state.notesError = null;
       state.amendmentsError = null;
       state.searchError = null;
+      state.filterError = null;
     },
 
     // Clear selected items
+    clearSelectedNoteType: (state) => {
+      state.selectedNoteType = null;
+    },
+
     clearSelectedTemplate: (state) => {
       state.selectedTemplate = null;
     },
@@ -134,9 +166,50 @@ const clinicalNotesSlice = createSlice({
       state.searchCount = 0;
       state.searchError = null;
     },
+
+    // Clear filter results
+    clearFilterResults: (state) => {
+      state.filteredResults = [];
+      state.filteredCount = 0;
+      state.filterError = null;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Note Types
+      .addCase(fetchNoteTypes.pending, (state) => {
+        state.noteTypesLoading = true;
+        state.noteTypesError = null;
+      })
+      .addCase(
+        fetchNoteTypes.fulfilled,
+        (state, action: PayloadAction<NoteType[]>) => {
+          state.noteTypesLoading = false;
+          state.noteTypes = action.payload;
+        }
+      )
+      .addCase(fetchNoteTypes.rejected, (state, action: PayloadAction<any>) => {
+        state.noteTypesLoading = false;
+        state.noteTypesError = action.payload;
+      })
+
+      // Fetch Single Note Type
+      .addCase(fetchNoteType.pending, (state) => {
+        state.noteTypesLoading = true;
+        state.noteTypesError = null;
+      })
+      .addCase(
+        fetchNoteType.fulfilled,
+        (state, action: PayloadAction<NoteType>) => {
+          state.noteTypesLoading = false;
+          state.selectedNoteType = action.payload;
+        }
+      )
+      .addCase(fetchNoteType.rejected, (state, action: PayloadAction<any>) => {
+        state.noteTypesLoading = false;
+        state.noteTypesError = action.payload;
+      })
+
       // Fetch Templates
       .addCase(fetchNoteTemplates.pending, (state) => {
         state.templatesLoading = true;
@@ -391,6 +464,24 @@ const clinicalNotesSlice = createSlice({
           state.searchLoading = false;
           state.searchError = action.payload;
         }
+      )
+
+      // Filter Notes
+      .addCase(filterNotesByTypeAndTemplate.pending, (state) => {
+        state.filterLoading = true;
+        state.filterError = null;
+      })
+      .addCase(filterNotesByTypeAndTemplate.fulfilled, (state, action) => {
+        state.filterLoading = false;
+        state.filteredResults = action.payload.notes;
+        state.filteredCount = action.payload.count;
+      })
+      .addCase(
+        filterNotesByTypeAndTemplate.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.filterLoading = false;
+          state.filterError = action.payload;
+        }
       );
   },
 });
@@ -398,9 +489,11 @@ const clinicalNotesSlice = createSlice({
 export const {
   clearSuccessStates,
   clearErrors,
+  clearSelectedNoteType,
   clearSelectedTemplate,
   clearSelectedNote,
   clearSearchResults,
+  clearFilterResults,
 } = clinicalNotesSlice.actions;
 
 export default clinicalNotesSlice.reducer;

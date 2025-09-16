@@ -27,7 +27,10 @@ import {
   FileText,
   CreditCard,
   Users,
+  AlertTriangle,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { patientData } from "./data";
 
 // Updated tabs with new order and icons
@@ -67,7 +70,7 @@ export default function PatientDetailPage() {
     (state: RootState) => state.patient
   );
 
-  // Clinical notes Redux state
+  // Clinical notes Redux state for debugging
   const clinicalNotesState = useSelector(
     (state: RootState) => state.clinicalNotes
   );
@@ -75,6 +78,7 @@ export default function PatientDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Dialog states for medication and lab orders
   const [newMedication, setNewMedication] = useState({
@@ -98,52 +102,120 @@ export default function PatientDetailPage() {
       console.log("Fetching patient data for username:", username);
       dispatch(fetchPatientByUsername(username));
     }
-  }, [dispatch, username]);
+  }, [dispatch, username, retryCount]);
 
-  // Log clinical notes state changes
+  // Log clinical notes state changes for debugging
   useEffect(() => {
     console.log("Clinical notes state updated:", {
       notesCount: clinicalNotesState.notes.length,
+      noteTypesCount: clinicalNotesState.noteTypes?.length || 0,
       templatesCount: clinicalNotesState.templates.length,
-      loading: clinicalNotesState.notesLoading,
-      creating: clinicalNotesState.creating,
+      loading: {
+        notes: clinicalNotesState.notesLoading,
+        noteTypes: clinicalNotesState.noteTypesLoading,
+        templates: clinicalNotesState.templatesLoading,
+        creating: clinicalNotesState.creating,
+      },
       errors: {
         notesError: clinicalNotesState.notesError,
+        noteTypesError: clinicalNotesState.noteTypesError,
         templatesError: clinicalNotesState.templatesError,
+      },
+      success: {
+        create: clinicalNotesState.createSuccess,
+        update: clinicalNotesState.updateSuccess,
+        sign: clinicalNotesState.signSuccess,
+        delete: clinicalNotesState.deleteSuccess,
+        amend: clinicalNotesState.amendSuccess,
       },
     });
   }, [clinicalNotesState]);
 
+  const handleRetry = () => {
+    console.log("Retrying patient data fetch...");
+    setRetryCount((prev) => prev + 1);
+  };
+
+  // Loading state
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-800" />
-          <span className="ml-4 text-lg">Loading Patient Details...</span>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-800 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">
+              Loading Patient Details
+            </h2>
+            <p className="text-gray-600">
+              Please wait while we fetch the patient information...
+            </p>
+          </div>
         </div>
       </MainLayout>
     );
   }
 
+  // Error state
   if (error) {
     console.error("Error loading patient:", error);
     return (
       <MainLayout>
-        <div className="p-8 text-center text-red-600">
-          <h2 className="text-xl font-bold">Error Fetching Patient</h2>
-          <p>{error}</p>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p className="font-semibold">Error Loading Patient</p>
+                  <p className="text-sm">{error}</p>
+                </div>
+              </AlertDescription>
+            </Alert>
+            <div className="text-center space-y-4">
+              <p className="text-gray-600">
+                We encountered an issue while loading the patient information.
+              </p>
+              <div className="space-x-2">
+                <Button onClick={handleRetry} variant="outline">
+                  Try Again
+                </Button>
+                <Button onClick={() => window.history.back()} variant="ghost">
+                  Go Back
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </MainLayout>
     );
   }
 
+  // Patient not found state
   if (!selectedPatient) {
     console.log("No patient data found for username:", username);
     return (
       <MainLayout>
-        <div className="p-8 text-center text-gray-600">
-          <h2 className="text-xl font-bold">Patient Not Found</h2>
-          <p>The requested patient could not be found.</p>
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="max-w-md w-full text-center">
+            <div className="mb-6">
+              <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Patient Not Found
+              </h2>
+              <p className="text-gray-600">
+                The requested patient with username "{username}" could not be
+                found.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Button onClick={handleRetry} variant="outline">
+                Retry Search
+              </Button>
+              <Button onClick={() => window.history.back()} variant="ghost">
+                Go Back
+              </Button>
+            </div>
+          </div>
         </div>
       </MainLayout>
     );
@@ -166,8 +238,8 @@ export default function PatientDetailPage() {
     console.log(
       "Rendering tab:",
       activeTab,
-      "with unified patient data:",
-      unifiedPatientData
+      "with unified patient data keys:",
+      Object.keys(unifiedPatientData)
     );
 
     switch (activeTab) {
@@ -202,7 +274,11 @@ export default function PatientDetailPage() {
       case "patient-info":
         return <PatientInfoTab patientData={unifiedPatientData} />;
       default:
-        return null;
+        return (
+          <div className="text-center p-8">
+            <p className="text-gray-500">Tab content not available</p>
+          </div>
+        );
     }
   };
 
@@ -231,36 +307,49 @@ export default function PatientDetailPage() {
     dischargeDate: null, // Assuming patient is active
   };
 
-  console.log("Banner data created:", bannerData);
+  console.log("Banner data created:", {
+    name: bannerData.name,
+    mrn: bannerData.mrn,
+    location: bannerData.location,
+  });
 
   const handleOrderMedication = () => {
     console.log("Ordering medication:", newMedication);
     // TODO: Implement medication ordering functionality
+    alert("Medication ordering functionality will be implemented soon.");
   };
 
   const handleOrderLab = () => {
     console.log("Ordering lab:", newLabOrder);
     // TODO: Implement lab ordering functionality
+    alert("Lab ordering functionality will be implemented soon.");
   };
 
   return (
     <MainLayout>
+      {/* Patient Banner */}
       <PatientBanner patientData={bannerData} />
 
-      <div className="space-y-6 md:space-y-8 p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-1">
-          <div className="lg:col-span-4">
+      {/* Main Content */}
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-6">
+          <div className="space-y-6">
+            {/* Clinical Tabs Navigation */}
             <ClinicalTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               clinicalTabs={clinicalTabs}
             />
-            <div className="mt-6">{renderActiveTab()}</div>
+
+            {/* Tab Content */}
+            <div className="bg-white rounded-lg shadow-sm">
+              {renderActiveTab()}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Medication and Lab order dialogs */}
+      {/* Order Dialogs */}
       <OrderMedicationDialog
         isOpen={isOrderMedOpen}
         onOpenChange={setIsOrderMedOpen}

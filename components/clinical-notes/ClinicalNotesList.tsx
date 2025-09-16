@@ -32,7 +32,11 @@ import {
   Unlock,
   Loader2,
 } from "lucide-react";
-import { ClinicalNote } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
+import {
+  ClinicalNote,
+  fetchNoteTypes,
+  fetchNoteTemplates,
+} from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 import { AppDispatch, RootState } from "@/app/redux/store";
 
 interface ClinicalNotesListProps {
@@ -63,35 +67,52 @@ export function ClinicalNotesList({
   canSign,
 }: ClinicalNotesListProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { notesLoading, notesError, deleting, signing } = useSelector(
-    (state: RootState) => state.clinicalNotes
-  );
+  const {
+    noteTypes,
+    templates,
+    notesLoading,
+    notesError,
+    deleting,
+    signing,
+    noteTypesLoading,
+    templatesLoading,
+  } = useSelector((state: RootState) => state.clinicalNotes);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const [filterNoteTypeId, setFilterNoteTypeId] = useState<string>("all");
+  const [filterTemplateId, setFilterTemplateId] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const uniqueNoteTypes = useMemo(() => {
-    const types = notes.map((note) => note.note_type).filter(Boolean);
-    return [...new Set(types)];
-  }, [notes]);
+  // Load note types and templates for filtering
+  useEffect(() => {
+    dispatch(fetchNoteTypes());
+    dispatch(fetchNoteTemplates());
+  }, [dispatch]);
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
         note.title?.toLowerCase().includes(searchLower) ||
-        note.note_type?.toLowerCase().includes(searchLower) ||
-        (typeof note.content === "string" &&
-          note.content.toLowerCase().includes(searchLower));
+        note.note_type_name?.toLowerCase().includes(searchLower) ||
+        note.template_name?.toLowerCase().includes(searchLower);
 
-      const matchesType = filterType === "all" || note.note_type === filterType;
+      const matchesNoteType =
+        filterNoteTypeId === "all" ||
+        note.note_type_id.toString() === filterNoteTypeId;
+
+      const matchesTemplate =
+        filterTemplateId === "all" ||
+        note.template_id.toString() === filterTemplateId;
+
       const matchesStatus =
         filterStatus === "all" || note.status === filterStatus;
 
-      return matchesSearch && matchesType && matchesStatus;
+      return (
+        matchesSearch && matchesNoteType && matchesTemplate && matchesStatus
+      );
     });
-  }, [notes, searchTerm, filterType, filterStatus]);
+  }, [notes, searchTerm, filterNoteTypeId, filterTemplateId, filterStatus]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -201,17 +222,43 @@ export function ClinicalNotesList({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Select value={filterType} onValueChange={setFilterType}>
+        <Select value={filterNoteTypeId} onValueChange={setFilterNoteTypeId}>
           <SelectTrigger className="w-48 text-sm">
-            <SelectValue placeholder="Filter by Type" />
+            <SelectValue placeholder="Filter by Note Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {uniqueNoteTypes.map((type) => (
-              <SelectItem key={type} value={type}>
-                {type || "Uncategorized"}
+            <SelectItem value="all">All Note Types</SelectItem>
+            {noteTypesLoading ? (
+              <SelectItem value="" disabled>
+                Loading...
               </SelectItem>
-            ))}
+            ) : (
+              noteTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id.toString()}>
+                  {type.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTemplateId} onValueChange={setFilterTemplateId}>
+          <SelectTrigger className="w-48 text-sm">
+            <SelectValue placeholder="Filter by Template" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Templates</SelectItem>
+            {templatesLoading ? (
+              <SelectItem value="" disabled>
+                Loading...
+              </SelectItem>
+            ) : (
+              templates.map((template) => (
+                <SelectItem key={template.id} value={template.id.toString()}>
+                  {template.name}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
 
@@ -234,7 +281,8 @@ export function ClinicalNotesList({
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Note Type</TableHead>
+              <TableHead>Template</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -249,7 +297,12 @@ export function ClinicalNotesList({
                     </div>
                   </TableCell>
                   <TableCell>{formatDate(note.created_at)}</TableCell>
-                  <TableCell>{note.note_type}</TableCell>
+                  <TableCell>{note.note_type_name}</TableCell>
+                  <TableCell>
+                    <span className="text-sm text-gray-600">
+                      {note.template_name}
+                    </span>
+                  </TableCell>
                   <TableCell>{getStatusBadge(note.status)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
@@ -315,9 +368,10 @@ export function ClinicalNotesList({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center h-24">
+                <TableCell colSpan={6} className="text-center h-24">
                   {searchTerm ||
-                  filterType !== "all" ||
+                  filterNoteTypeId !== "all" ||
+                  filterTemplateId !== "all" ||
                   filterStatus !== "all" ? (
                     <div>
                       <p className="text-gray-500 mb-2">
@@ -327,7 +381,8 @@ export function ClinicalNotesList({
                         variant="outline"
                         onClick={() => {
                           setSearchTerm("");
-                          setFilterType("all");
+                          setFilterNoteTypeId("all");
+                          setFilterTemplateId("all");
                           setFilterStatus("all");
                         }}
                       >

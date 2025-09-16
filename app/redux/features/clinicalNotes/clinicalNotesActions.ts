@@ -2,12 +2,21 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../../../lib/axiosConfig";
 
-// Define interfaces based on your backend models
+// Define interfaces based on the new backend models
+export interface NoteType {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  specialty?: string;
+  is_active: boolean;
+  display_order: number;
+}
+
 export interface NoteTemplate {
   id: number;
   name: string;
   description: string;
-  note_type: string;
   schema: {
     sections: Array<{
       title: string;
@@ -33,6 +42,7 @@ export interface NoteTemplate {
   };
   version: string;
   specialty: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -41,20 +51,22 @@ export interface ClinicalNote {
   patient_id: number;
   doctor_id: number;
   appointment_id: number | null;
+  note_type_id: number;
   template_id: number;
   title: string;
-  note_type: string;
   content: Record<string, any>;
   status: "draft" | "signed" | "amended";
   is_locked: boolean;
   created_at: string;
   updated_at: string;
   signed_at: string | null;
+  note_type_name: string | null;
   template_name: string | null;
 }
 
 export interface CreateNoteData {
   patient_id: number;
+  note_type_id: number;
   template_id: number;
   title: string;
   content: Record<string, any>;
@@ -68,6 +80,44 @@ export interface NoteAmendment {
   amended_by: number;
   created_at: string;
 }
+
+/**
+ * Fetch all note types
+ */
+export const fetchNoteTypes = createAsyncThunk<
+  NoteType[],
+  void,
+  { rejectValue: string }
+>("clinicalNotes/fetchNoteTypes", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/clinical-notes/note-types");
+    return response.data.note_types;
+  } catch (error: any) {
+    if (error.response && error.response.data.error) {
+      return rejectWithValue(error.response.data.error);
+    }
+    return rejectWithValue(error.message || "Failed to fetch note types");
+  }
+});
+
+/**
+ * Fetch a specific note type by ID
+ */
+export const fetchNoteType = createAsyncThunk<
+  NoteType,
+  number,
+  { rejectValue: string }
+>("clinicalNotes/fetchNoteType", async (noteTypeId, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/clinical-notes/note-types/${noteTypeId}`);
+    return response.data.note_type;
+  } catch (error: any) {
+    if (error.response && error.response.data.error) {
+      return rejectWithValue(error.response.data.error);
+    }
+    return rejectWithValue(error.message || "Failed to fetch note type");
+  }
+});
 
 /**
  * Fetch all note templates
@@ -98,7 +148,7 @@ export const fetchNoteTemplate = createAsyncThunk<
 >("clinicalNotes/fetchTemplate", async (templateId, { rejectWithValue }) => {
   try {
     const response = await api.get(`/clinical-notes/templates/${templateId}`);
-    return response.data;
+    return response.data.template;
   } catch (error: any) {
     if (error.response && error.response.data.error) {
       return rejectWithValue(error.response.data.error);
@@ -169,14 +219,17 @@ export const signClinicalNote = createAsyncThunk<
  */
 export const fetchPatientNotes = createAsyncThunk<
   { notes: ClinicalNote[]; pagination: any },
-  { patientId: number; page?: number; perPage?: number; type?: string },
+  { patientId: number; page?: number; perPage?: number; noteTypeId?: number },
   { rejectValue: string }
 >(
   "clinicalNotes/fetchPatientNotes",
-  async ({ patientId, page = 1, perPage = 20, type }, { rejectWithValue }) => {
+  async (
+    { patientId, page = 1, perPage = 20, noteTypeId },
+    { rejectWithValue }
+  ) => {
     try {
       const params: any = { page, per_page: perPage };
-      if (type) params.type = type;
+      if (noteTypeId) params.note_type_id = noteTypeId;
 
       const response = await api.get(`/patients/${patientId}/clinical-notes`, {
         params,
@@ -284,7 +337,8 @@ export const searchClinicalNotes = createAsyncThunk<
   {
     query?: string;
     patientId?: number;
-    type?: string;
+    noteTypeId?: number;
+    templateId?: number;
     status?: string;
     dateFrom?: string;
     dateTo?: string;
@@ -295,7 +349,8 @@ export const searchClinicalNotes = createAsyncThunk<
     const params: any = {};
     if (searchParams.query) params.q = searchParams.query;
     if (searchParams.patientId) params.patient_id = searchParams.patientId;
-    if (searchParams.type) params.type = searchParams.type;
+    if (searchParams.noteTypeId) params.note_type_id = searchParams.noteTypeId;
+    if (searchParams.templateId) params.template_id = searchParams.templateId;
     if (searchParams.status) params.status = searchParams.status;
     if (searchParams.dateFrom) params.date_from = searchParams.dateFrom;
     if (searchParams.dateTo) params.date_to = searchParams.dateTo;
@@ -310,5 +365,36 @@ export const searchClinicalNotes = createAsyncThunk<
       return rejectWithValue(error.response.data.error);
     }
     return rejectWithValue(error.message || "Failed to search notes");
+  }
+});
+
+/**
+ * Filter notes by type and template
+ */
+export const filterNotesByTypeAndTemplate = createAsyncThunk<
+  { notes: ClinicalNote[]; count: number },
+  {
+    noteTypeId?: number;
+    templateId?: number;
+    patientId?: number;
+  },
+  { rejectValue: string }
+>("clinicalNotes/filter", async (filterParams, { rejectWithValue }) => {
+  try {
+    const params: any = {};
+    if (filterParams.noteTypeId) params.note_type_id = filterParams.noteTypeId;
+    if (filterParams.templateId) params.template_id = filterParams.templateId;
+    if (filterParams.patientId) params.patient_id = filterParams.patientId;
+
+    const response = await api.get("/clinical-notes/filter", { params });
+    return {
+      notes: response.data.notes,
+      count: response.data.count,
+    };
+  } catch (error: any) {
+    if (error.response && error.response.data.error) {
+      return rejectWithValue(error.response.data.error);
+    }
+    return rejectWithValue(error.message || "Failed to filter notes");
   }
 });
