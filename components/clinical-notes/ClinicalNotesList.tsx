@@ -110,7 +110,7 @@ const NoteCard = ({
   const getNoteTypeBadge = (type: string) => {
     const typeMap: Record<string, string> = {
       "Initial Psychiatric Evaluation": "Psych Eval",
-      "Follow-up Note": "Follow-up",
+      "Progress Note": "Progress",
       "Biopsychosocial Assessment": "Bio-Psycho",
       "Risk Assessment": "Risk",
       "Treatment Plan": "Treatment",
@@ -273,7 +273,7 @@ export function ClinicalNotesList({
   // Predefined note types from NOTE_TEMPLATES
   const noteTypes = [
     "Initial Psychiatric Evaluation",
-    "Follow-up Note",
+    "Progress Note",
     "Biopsychosocial Assessment",
     "Risk Assessment",
     "Treatment Plan",
@@ -291,7 +291,7 @@ export function ClinicalNotesList({
       "Therapy Session": "Therapy",
       "Therapy Session Notes": "Therapy", // Handle variations
       "Initial Evaluation": "Initial Eval", // Handle variations
-      "Follow-up": "Follow-up", // Handle variations
+      Progress: "Progress", // Handle variations
     };
     return labelMap[type] || type;
   };
