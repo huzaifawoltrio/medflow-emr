@@ -43,7 +43,7 @@ export const patientData = {
     {
       name: "Basic Metabolic Panel",
       status: "completed",
-      ordered: "2025-08-25",
+      ordered: "2025-07-25",
       result: "Normal",
     },
   ],
@@ -98,6 +98,39 @@ export const patientData = {
       status: "Paid",
     },
   ],
+  // Added data for PatientInfoTab
+  personalInfo: {
+    firstName: "John",
+    lastName: "Doe",
+    dateOfBirth: "1985-03-15",
+    gender: "male",
+    phoneNumber: "(555) 123-4567",
+    emailAddress: "john.doe@email.com",
+    address: "123 Main Street",
+    city: "Anytown",
+    state: "NY",
+    zipCode: "12345",
+    emergencyContactName: "Jane Doe",
+    emergencyContactPhone: "(555) 987-6543",
+  },
+  insurance: {
+    insuranceProvider: "Blue Cross Blue Shield",
+    policyNumber: "BCBS-789456123",
+    groupNumber: "G-456123",
+    policyHolderName: "John Doe",
+    relationshipToPatient: "self",
+    policyHolderDob: "1985-03-15",
+  },
+  medicalHistory: {
+    primaryCarePhysician: "Dr. Emily Carter",
+    smokingStatus: "never",
+    exerciseFrequency: "3-4 times per week",
+    allergies: ["Penicillin", "Peanuts"],
+    alcoholConsumption: "occasional",
+    previousSurgeries: "Appendectomy (2010)",
+    familyMedicalHistory: "Father - Hypertension, Mother - Diabetes",
+    currentMedications: "Lisinopril 10mg daily, Atorvastatin 20mg daily",
+  },
 };
 
 export const clinicalTabs = [

@@ -110,16 +110,14 @@ const CustomWeekCalendar = ({
               <div key={index} className="p-4 text-center">
                 <div
                   className={`text-lg font-medium ${
-                    isToday ? "text-
-blue-800" : "text-gray-900"
+                    isToday ? "text-blue-800" : "text-gray-900"
                   }`}
                 >
                   {day.getDate()}
                 </div>
                 <div
                   className={`text-sm ${
-                    isToday ? "text-
-blue-800" : "text-gray-500"
+                    isToday ? "text-blue-800" : "text-gray-500"
                   }`}
                 >
                   {day.toLocaleDateString("en-US", { weekday: "short" })}
@@ -194,12 +192,12 @@ blue-800" : "text-gray-500"
                               key={appointment.id}
                               onClick={() => onAppointmentClick(appointment)}
                               className={`
-                              absolute left-1 right-1 top-1 
-                              ${appointment.color} ${appointment.borderColor}
-                              border-l-4 rounded-lg shadow-sm hover:shadow-md
-                              cursor-pointer transition-all duration-200
-                              z-10 p-2 text-xs
-                            `}
+                                absolute left-1 right-1 top-1 
+                                ${appointment.color} ${appointment.borderColor}
+                                border-l-4 rounded-lg shadow-sm hover:shadow-md
+                                cursor-pointer transition-all duration-200
+                                z-10 p-2 text-xs
+                              `}
                               style={{
                                 height: position.height,
                                 minHeight: "58px",
