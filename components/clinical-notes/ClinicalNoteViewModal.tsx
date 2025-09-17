@@ -1,5 +1,5 @@
 // components/clinical-notes/ClinicalNoteViewModal.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Dialog,
@@ -68,38 +68,50 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
     Record<string, string>
   >({});
 
-  // Load note details and amendments when modal opens
+  // Track the current note ID to prevent unnecessary API calls
+  const currentNoteId = useRef<number | null>(null);
+
+  // Load note details and amendments when modal opens or note changes
   useEffect(() => {
-    if (isOpen && note?.id) {
+    if (isOpen && note?.id && currentNoteId.current !== note.id) {
+      console.log("Loading note details and amendments for note:", note.id);
+      currentNoteId.current = note.id;
       dispatch(fetchClinicalNote(note.id));
       dispatch(fetchNoteAmendments(note.id));
     }
   }, [isOpen, note?.id, dispatch]);
 
+  // Reset current note when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      currentNoteId.current = null;
+    }
+  }, [isOpen]);
+
   // Handle amendment success
   useEffect(() => {
-    if (amendSuccess) {
+    if (amendSuccess && isOpen) {
       setShowAmendForm(false);
       setAmendmentText("");
       setAmendmentReason("");
       setAmendmentErrors({});
 
-      // Reload amendments
+      // Reload amendments only if we have a note ID
       if (note?.id) {
         dispatch(fetchNoteAmendments(note.id));
       }
     }
-  }, [amendSuccess, note?.id, dispatch]);
+  }, [amendSuccess, note?.id, dispatch, isOpen]);
 
   // Handle sign success
   useEffect(() => {
-    if (signSuccess) {
-      // Reload note details
+    if (signSuccess && isOpen) {
+      // Reload note details only if we have a note ID
       if (note?.id) {
         dispatch(fetchClinicalNote(note.id));
       }
     }
-  }, [signSuccess, note?.id, dispatch]);
+  }, [signSuccess, note?.id, dispatch, isOpen]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

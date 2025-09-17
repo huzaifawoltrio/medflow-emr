@@ -21,8 +21,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Save, FileSignature, X } from "lucide-react";
 import { AppDispatch, RootState } from "@/app/redux/store";
 import {
-  fetchNoteTypes,
-  fetchNoteTemplates,
   createClinicalNote,
   NoteType,
   NoteTemplate,
@@ -78,14 +76,6 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
   const [submitAction, setSubmitAction] = useState<"draft" | "sign" | null>(
     null
   );
-
-  // Load note types and templates when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      dispatch(fetchNoteTypes());
-      dispatch(fetchNoteTemplates());
-    }
-  }, [isOpen, dispatch]);
 
   // Handle note type change
   const handleNoteTypeChange = (noteTypeId: string) => {

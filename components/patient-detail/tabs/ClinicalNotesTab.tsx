@@ -1,5 +1,5 @@
 // components/patient-detail/tabs/ClinicalNotesTab.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -33,6 +33,10 @@ export function ClinicalNotesTab({
 }: ClinicalNotesTabProps) {
   const dispatch = useDispatch<AppDispatch>();
 
+  // Use ref to track if initial load has been done
+  const initialLoadDone = useRef(false);
+  const lastPatientId = useRef<number | null>(null);
+
   // Redux state
   const {
     notes,
@@ -61,7 +65,7 @@ export function ClinicalNotesTab({
   const [selectedNote, setSelectedNote] = useState<ClinicalNote | null>(null);
 
   // Extract patient information from patientData with better error handling
-  const getPatientId = () => {
+  const getPatientId = useCallback(() => {
     const id =
       patientData?.personalInfo?.id ||
       patientData?.id ||
@@ -69,9 +73,9 @@ export function ClinicalNotesTab({
       patientData?.patient_id;
     console.log("Extracted patient ID:", id, "from patientData:", patientData);
     return id || 1; // Fallback to 1 if not available
-  };
+  }, [patientData]);
 
-  const getPatientName = () => {
+  const getPatientName = useCallback(() => {
     let name = "Unknown Patient";
 
     if (patientData?.personalInfo) {
@@ -86,97 +90,97 @@ export function ClinicalNotesTab({
 
     console.log("Extracted patient name:", name);
     return name;
-  };
+  }, [patientData]);
 
   const patientId = getPatientId();
   const patientName = getPatientName();
 
-  // Load initial data when component mounts
+  // Load note types and templates only once on component mount
   useEffect(() => {
-    console.log("ClinicalNotesTab mounted, loading data...");
+    if (!initialLoadDone.current) {
+      console.log("Initial load - fetching note types and templates");
+      dispatch(fetchNoteTypes());
+      dispatch(fetchNoteTemplates());
+      initialLoadDone.current = true;
+    }
+  }, [dispatch]);
 
-    // Clear any previous errors and success states
-    dispatch(clearErrors());
-    dispatch(clearSuccessStates());
+  // Load patient notes only when patient ID changes
+  useEffect(() => {
+    if (patientId && patientId !== lastPatientId.current) {
+      console.log("Patient ID changed, loading notes for patient:", patientId);
+      lastPatientId.current = patientId;
 
-    // Load patient notes if we have a patient ID
-    if (patientId) {
-      console.log("Loading clinical notes for patient:", patientId);
+      // Clear any previous errors and success states
+      dispatch(clearErrors());
+      dispatch(clearSuccessStates());
+
       dispatch(fetchPatientNotes({ patientId }));
     }
-
-    // Load note types and templates for filtering and creation
-    console.log("Loading note types and templates...");
-    dispatch(fetchNoteTypes());
-    dispatch(fetchNoteTemplates());
   }, [dispatch, patientId]);
 
-  // Handle success states
+  // Handle success states - reload notes only when necessary
   useEffect(() => {
     if (createSuccess) {
       console.log("Clinical note created successfully");
       setIsNewNoteModalOpen(false);
-      // Reload patient notes to get the latest list
-      if (patientId) {
-        dispatch(fetchPatientNotes({ patientId }));
-      }
+      // Note is already added to the store by the reducer, no need to reload
       // Clear success state after a delay
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
       }, 3000);
+      return () => clearTimeout(timeout);
     }
-  }, [createSuccess, dispatch, patientId]);
+  }, [createSuccess, dispatch]);
 
   useEffect(() => {
     if (updateSuccess) {
       console.log("Clinical note updated successfully");
-      // Reload patient notes to get the updated list
-      if (patientId) {
-        dispatch(fetchPatientNotes({ patientId }));
-      }
+      // Note is already updated in the store by the reducer, no need to reload
       // Clear success state after a delay
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
       }, 3000);
+      return () => clearTimeout(timeout);
     }
-  }, [updateSuccess, dispatch, patientId]);
+  }, [updateSuccess, dispatch]);
 
   useEffect(() => {
     if (signSuccess) {
       console.log("Clinical note signed successfully");
-      // Reload patient notes to get the updated list
-      if (patientId) {
-        dispatch(fetchPatientNotes({ patientId }));
-      }
+      // Note is already updated in the store by the reducer, no need to reload
       // Clear success state after a delay
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
       }, 3000);
+      return () => clearTimeout(timeout);
     }
-  }, [signSuccess, dispatch, patientId]);
+  }, [signSuccess, dispatch]);
 
   useEffect(() => {
     if (deleteSuccess) {
       console.log("Clinical note deleted successfully");
-      // Notes list will be automatically updated by the Redux store
+      // Note is already removed from the store by the reducer, no need to reload
       // Clear success state after a delay
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
       }, 3000);
+      return () => clearTimeout(timeout);
     }
   }, [deleteSuccess, dispatch]);
 
   useEffect(() => {
     if (amendSuccess) {
       console.log("Clinical note amendment created successfully");
-      // Reload patient notes to get the updated list
-      if (patientId) {
+      // For amendments, we might want to reload to get the updated note status
+      if (patientId && patientId === lastPatientId.current) {
         dispatch(fetchPatientNotes({ patientId }));
       }
       // Clear success state after a delay
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
       }, 3000);
+      return () => clearTimeout(timeout);
     }
   }, [amendSuccess, dispatch, patientId]);
 
@@ -187,84 +191,108 @@ export function ClinicalNotesTab({
   const canSign = (note: ClinicalNote) => note.status === "draft";
 
   // Event handlers
-  const handleNewNoteClick = () => {
+  const handleNewNoteClick = useCallback(() => {
     console.log("Opening new note modal for patient:", patientId);
     setIsNewNoteModalOpen(true);
     // Also call the prop callback if provided (for backward compatibility)
     if (setIsNewNoteOpen) {
       setIsNewNoteOpen(true);
     }
-  };
+  }, [patientId, setIsNewNoteOpen]);
 
-  const handleViewNote = (note: ClinicalNote) => {
+  const handleViewNote = useCallback((note: ClinicalNote) => {
     console.log("Opening note view modal for note:", note.id, note);
     setSelectedNote(note);
     setIsViewModalOpen(true);
-  };
+  }, []);
 
-  const handleEditNote = (note: ClinicalNote) => {
-    // For now, we'll just view the note. You can implement edit functionality later
-    console.log(
-      "Edit functionality not yet implemented, viewing note instead:",
-      note.id
-    );
-    handleViewNote(note);
-  };
+  const handleEditNote = useCallback(
+    (note: ClinicalNote) => {
+      // For now, we'll just view the note. You can implement edit functionality later
+      console.log(
+        "Edit functionality not yet implemented, viewing note instead:",
+        note.id
+      );
+      handleViewNote(note);
+    },
+    [handleViewNote]
+  );
 
-  const handleDeleteNote = async (noteId: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this note? This action cannot be undone."
-      )
-    ) {
-      console.log("Deleting note:", noteId);
-      try {
-        await dispatch(deleteClinicalNote(noteId)).unwrap();
-      } catch (error) {
-        console.error("Error deleting note:", error);
+  const handleDeleteNote = useCallback(
+    async (noteId: number) => {
+      if (
+        window.confirm(
+          "Are you sure you want to delete this note? This action cannot be undone."
+        )
+      ) {
+        console.log("Deleting note:", noteId);
+        try {
+          await dispatch(deleteClinicalNote(noteId)).unwrap();
+        } catch (error) {
+          console.error("Error deleting note:", error);
+        }
       }
-    }
-  };
+    },
+    [dispatch]
+  );
 
-  const handleSignNote = async (noteId: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to sign this note? Once signed, it cannot be edited."
-      )
-    ) {
-      console.log("Signing note:", noteId);
-      try {
-        await dispatch(signClinicalNote(noteId)).unwrap();
-      } catch (error) {
-        console.error("Error signing note:", error);
+  const handleSignNote = useCallback(
+    async (noteId: number) => {
+      if (
+        window.confirm(
+          "Are you sure you want to sign this note? Once signed, it cannot be edited."
+        )
+      ) {
+        console.log("Signing note:", noteId);
+        try {
+          await dispatch(signClinicalNote(noteId)).unwrap();
+        } catch (error) {
+          console.error("Error signing note:", error);
+        }
       }
-    }
-  };
+    },
+    [dispatch]
+  );
 
-  const handleUnsignNote = async (noteId: number) => {
+  const handleUnsignNote = useCallback(async (noteId: number) => {
     // This functionality would need to be implemented in the backend
     console.log("Unsign functionality not yet implemented for note:", noteId);
     alert(
       "Unsign functionality is not yet implemented. Once signed, notes cannot be unsigned for regulatory compliance."
     );
-  };
+  }, []);
 
-  const handleCloseNewNoteModal = (open: boolean) => {
-    console.log("New note modal state changed:", open);
-    setIsNewNoteModalOpen(open);
-    if (!open) {
-      dispatch(clearErrors());
-    }
-  };
+  const handleCloseNewNoteModal = useCallback(
+    (open: boolean) => {
+      console.log("New note modal state changed:", open);
+      setIsNewNoteModalOpen(open);
+      if (!open) {
+        dispatch(clearErrors());
+      }
+    },
+    [dispatch]
+  );
 
-  const handleCloseViewModal = (open: boolean) => {
-    console.log("View note modal state changed:", open);
-    setIsViewModalOpen(open);
-    if (!open) {
-      setSelectedNote(null);
-      dispatch(clearErrors());
+  const handleCloseViewModal = useCallback(
+    (open: boolean) => {
+      console.log("View note modal state changed:", open);
+      setIsViewModalOpen(open);
+      if (!open) {
+        setSelectedNote(null);
+        dispatch(clearErrors());
+      }
+    },
+    [dispatch]
+  );
+
+  const handleRetry = useCallback(() => {
+    dispatch(clearErrors());
+    if (patientId) {
+      dispatch(fetchPatientNotes({ patientId }));
     }
-  };
+    dispatch(fetchNoteTypes());
+    dispatch(fetchNoteTemplates());
+  }, [dispatch, patientId]);
 
   // Error state
   const hasErrors = notesError || noteTypesError || templatesError;
@@ -317,15 +345,7 @@ export function ClinicalNotesTab({
             </AlertDescription>
           </Alert>
           <div className="text-center">
-            <Button
-              onClick={() => {
-                dispatch(clearErrors());
-                dispatch(fetchPatientNotes({ patientId }));
-                dispatch(fetchNoteTypes());
-                dispatch(fetchNoteTemplates());
-              }}
-              className="mt-4"
-            >
+            <Button onClick={handleRetry} className="mt-4">
               Retry Loading
             </Button>
           </div>
@@ -352,27 +372,6 @@ export function ClinicalNotesTab({
           </AlertDescription>
         </Alert>
       ))}
-
-      {/* Patient Information Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
-              Clinical Notes for {patientName}
-            </div>
-            <div className="text-sm font-normal text-muted-foreground">
-              Patient ID: {patientId}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-sm text-muted-foreground">
-            Total Notes: {notes.length} | Note Types Available:{" "}
-            {noteTypes.length} | Templates Available: {templates.length}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Main Notes List */}
       <Card>
