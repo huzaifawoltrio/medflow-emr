@@ -256,7 +256,7 @@ export default function PatientDetailPage() {
       case "medications":
         return (
           <MedicationsTab
-            patientData={unifiedPatientData}
+            patientData={selectedPatient}
             setIsOrderMedOpen={setIsOrderMedOpen}
           />
         );

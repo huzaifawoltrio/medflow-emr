@@ -7,6 +7,7 @@ import chatReducer from "./features/chat/chatSlice";
 import googleCalendarReducer from "./features/googleCalendar/googleCalendarSlice";
 import clinicalNotesReducer from "./features/clinicalNotes/clinicalNotesSlice";
 import documentReducer from "./features/documents/documentSlice";
+import medicationReducer from "./features/medications/medicationSlice";
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -19,6 +20,7 @@ export const makeStore = () => {
       googleCalendar: googleCalendarReducer,
       clinicalNotes: clinicalNotesReducer,
       documents: documentReducer,
+      medications: medicationReducer,
     },
   });
 };

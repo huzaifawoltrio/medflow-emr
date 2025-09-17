@@ -1,4 +1,4 @@
-// components/patient-detail/dialogs/OrderMedicationDialog.tsx
+// components/patient-detail/dialogs/EditMedicationDialog.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,113 +25,133 @@ import {
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  createMedication,
-  type CreateMedicationRequest,
+  updateMedication,
+  type UpdateMedicationRequest,
 } from "../../../app/redux/features/medications/medicationActions";
 import { clearError } from "../../../app/redux/features/medications/medicationSlice";
 import type { RootState, AppDispatch } from "../../../app/redux/store";
 
-interface OrderMedicationDialogProps {
+interface EditMedicationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   patientId: number;
-  appointmentId?: number;
 }
 
-export function OrderMedicationDialog({
+export function EditMedicationDialog({
   isOpen,
   onOpenChange,
   patientId,
-  appointmentId,
-}: OrderMedicationDialogProps) {
+}: EditMedicationDialogProps) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const { operationLoading, error } = useSelector(
+  const { selectedMedication, operationLoading, error } = useSelector(
     (state: RootState) => state.medications
   );
 
-  const [formData, setFormData] = useState<
-    Omit<CreateMedicationRequest, "patient_id">
-  >({
+  const [formData, setFormData] = useState<UpdateMedicationRequest>({
     generic_name: "",
     brand_name: "",
     strength: "",
-    route_of_administration: "Oral",
+    route_of_administration: "",
     frequency: "",
     sig_instructions: "",
     duration_days: "",
     quantity_prescribed: "",
-    refills_allowed: "0",
+    refills_allowed: "",
     indication: "",
     notes: "",
-    start_date: new Date().toISOString().split("T")[0],
+    start_date: "",
     end_date: "",
     status: "active",
     priority: "routine",
-    appointment_id: appointmentId,
+    change_reason: "",
   });
 
   const [formErrors, setFormErrors] = useState<
-    Partial<Record<keyof typeof formData, string>>
+    Partial<Record<keyof UpdateMedicationRequest, string>>
   >({});
 
-  // Reset form when dialog opens/closes
+  // Populate form with selected medication data
+  useEffect(() => {
+    if (isOpen && selectedMedication) {
+      setFormData({
+        generic_name: selectedMedication.generic_name || "",
+        brand_name: selectedMedication.brand_name || "",
+        strength: selectedMedication.strength || "",
+        route_of_administration:
+          selectedMedication.route_of_administration || "",
+        frequency: selectedMedication.frequency || "",
+        sig_instructions: selectedMedication.sig_instructions || "",
+        duration_days: selectedMedication.duration_days || "",
+        quantity_prescribed: selectedMedication.quantity_prescribed || "",
+        refills_allowed: selectedMedication.refills_allowed || "",
+        indication: selectedMedication.indication || "",
+        notes: selectedMedication.notes || "",
+        start_date: selectedMedication.start_date
+          ? new Date(selectedMedication.start_date).toISOString().split("T")[0]
+          : "",
+        end_date: selectedMedication.end_date
+          ? new Date(selectedMedication.end_date).toISOString().split("T")[0]
+          : "",
+        status: selectedMedication.status,
+        priority: selectedMedication.priority,
+        change_reason: "",
+      });
+      setFormErrors({});
+      dispatch(clearError());
+    }
+  }, [isOpen, selectedMedication, dispatch]);
+
+  // Reset form when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setFormData({
         generic_name: "",
         brand_name: "",
         strength: "",
-        route_of_administration: "Oral",
+        route_of_administration: "",
         frequency: "",
         sig_instructions: "",
         duration_days: "",
         quantity_prescribed: "",
-        refills_allowed: "0",
+        refills_allowed: "",
         indication: "",
         notes: "",
-        start_date: new Date().toISOString().split("T")[0],
+        start_date: "",
         end_date: "",
         status: "active",
         priority: "routine",
-        appointment_id: appointmentId,
+        change_reason: "",
       });
       setFormErrors({});
       dispatch(clearError());
     }
-  }, [isOpen, appointmentId, dispatch]);
+  }, [isOpen, dispatch]);
 
   const validateForm = () => {
-    const errors: Partial<Record<keyof typeof formData, string>> = {};
+    const errors: Partial<Record<keyof UpdateMedicationRequest, string>> = {};
 
-    if (!formData.generic_name.trim()) {
-      errors.generic_name = "Generic name is required";
+    if (formData.generic_name && !formData.generic_name.trim()) {
+      errors.generic_name = "Generic name cannot be empty";
     }
-    if (!formData.strength.trim()) {
-      errors.strength = "Strength is required";
+    if (formData.strength && !formData.strength.trim()) {
+      errors.strength = "Strength cannot be empty";
     }
-    if (!formData.frequency.trim()) {
-      errors.frequency = "Frequency is required";
+    if (formData.frequency && !formData.frequency.trim()) {
+      errors.frequency = "Frequency cannot be empty";
     }
-    if (!formData.sig_instructions.trim()) {
-      errors.sig_instructions = "Instructions are required";
+    if (formData.sig_instructions && !formData.sig_instructions.trim()) {
+      errors.sig_instructions = "Instructions cannot be empty";
     }
-    if (!formData.duration_days.trim()) {
-      errors.duration_days = "Duration is required";
-    } else if (
-      isNaN(Number(formData.duration_days)) ||
-      Number(formData.duration_days) <= 0
+    if (
+      formData.duration_days &&
+      (isNaN(Number(formData.duration_days)) ||
+        Number(formData.duration_days) <= 0)
     ) {
       errors.duration_days = "Duration must be a positive number";
     }
-    if (!formData.quantity_prescribed.trim()) {
-      errors.quantity_prescribed = "Quantity is required";
-    }
-    if (!formData.indication.trim()) {
-      errors.indication = "Indication is required";
-    }
-    if (!formData.start_date) {
-      errors.start_date = "Start date is required";
+    if (formData.indication && !formData.indication.trim()) {
+      errors.indication = "Indication cannot be empty";
     }
     if (
       formData.end_date &&
@@ -140,38 +160,104 @@ export function OrderMedicationDialog({
     ) {
       errors.end_date = "End date must be after start date";
     }
+    if (!formData.change_reason.trim()) {
+      errors.change_reason = "Reason for change is required";
+    }
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !selectedMedication) return;
 
-    // Create medication data matching API structure
-    const medicationData: CreateMedicationRequest = {
-      ...formData,
-      patient_id: patientId,
-      // Convert dates to ISO format for API
-      start_date: new Date(formData.start_date + "T00:00:00Z").toISOString(),
-      end_date: formData.end_date
-        ? new Date(formData.end_date + "T00:00:00Z").toISOString()
-        : undefined,
+    // Create update data with only changed fields and required change_reason
+    const updateData: UpdateMedicationRequest = {
+      change_reason: formData.change_reason,
     };
 
+    // Only include fields that have been modified
+    if (formData.generic_name !== selectedMedication.generic_name) {
+      updateData.generic_name = formData.generic_name;
+    }
+    if (formData.brand_name !== selectedMedication.brand_name) {
+      updateData.brand_name = formData.brand_name;
+    }
+    if (formData.strength !== selectedMedication.strength) {
+      updateData.strength = formData.strength;
+    }
+    if (
+      formData.route_of_administration !==
+      selectedMedication.route_of_administration
+    ) {
+      updateData.route_of_administration = formData.route_of_administration;
+    }
+    if (formData.frequency !== selectedMedication.frequency) {
+      updateData.frequency = formData.frequency;
+    }
+    if (formData.sig_instructions !== selectedMedication.sig_instructions) {
+      updateData.sig_instructions = formData.sig_instructions;
+    }
+    if (formData.duration_days !== selectedMedication.duration_days) {
+      updateData.duration_days = formData.duration_days;
+    }
+    if (
+      formData.quantity_prescribed !== selectedMedication.quantity_prescribed
+    ) {
+      updateData.quantity_prescribed = formData.quantity_prescribed;
+    }
+    if (formData.refills_allowed !== selectedMedication.refills_allowed) {
+      updateData.refills_allowed = formData.refills_allowed;
+    }
+    if (formData.indication !== selectedMedication.indication) {
+      updateData.indication = formData.indication;
+    }
+    if (formData.notes !== (selectedMedication.notes || "")) {
+      updateData.notes = formData.notes;
+    }
+    if (formData.status !== selectedMedication.status) {
+      updateData.status = formData.status;
+    }
+    if (formData.priority !== selectedMedication.priority) {
+      updateData.priority = formData.priority;
+    }
+
+    // Handle dates
+    const originalStartDate = selectedMedication.start_date
+      ? new Date(selectedMedication.start_date).toISOString().split("T")[0]
+      : "";
+    const originalEndDate = selectedMedication.end_date
+      ? new Date(selectedMedication.end_date).toISOString().split("T")[0]
+      : "";
+
+    if (formData.start_date !== originalStartDate) {
+      updateData.start_date = formData.start_date
+        ? new Date(formData.start_date + "T00:00:00Z").toISOString()
+        : undefined;
+    }
+    if (formData.end_date !== originalEndDate) {
+      updateData.end_date = formData.end_date
+        ? new Date(formData.end_date + "T00:00:00Z").toISOString()
+        : undefined;
+    }
+
     try {
-      const result = await dispatch(createMedication(medicationData));
-      if (createMedication.fulfilled.match(result)) {
+      const result = await dispatch(
+        updateMedication({
+          id: selectedMedication.id,
+          data: updateData,
+        })
+      );
+      if (updateMedication.fulfilled.match(result)) {
         onOpenChange(false);
       }
     } catch (error) {
-      // Error will be handled by Redux and displayed in the component
-      console.error("Failed to create medication:", error);
+      console.error("Failed to update medication:", error);
     }
   };
 
   const handleInputChange = (
-    field: keyof typeof formData,
+    field: keyof UpdateMedicationRequest,
     value: string | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value || "" }));
@@ -209,14 +295,17 @@ export function OrderMedicationDialog({
     "After meals (PC)",
   ];
 
+  if (!selectedMedication) return null;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Order New Medication</DialogTitle>
+          <DialogTitle>Edit Medication</DialogTitle>
           <DialogDescription>
-            Prescribe medication for the patient. All required fields must be
-            completed.
+            Update medication details for {selectedMedication.generic_name}
+            {selectedMedication.brand_name &&
+              ` (${selectedMedication.brand_name})`}
           </DialogDescription>
         </DialogHeader>
 
@@ -228,6 +317,33 @@ export function OrderMedicationDialog({
         )}
 
         <div className="grid gap-6 py-4">
+          {/* Reason for Change - Required */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
+              Reason for Change
+            </h3>
+            <div className="space-y-2">
+              <Label htmlFor="change_reason">
+                Reason for Change <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="change_reason"
+                placeholder="e.g., Dose adjustment for better pain control"
+                value={formData.change_reason}
+                onChange={(e) =>
+                  handleInputChange("change_reason", e.target.value)
+                }
+                className={formErrors.change_reason ? "border-red-500" : ""}
+                rows={2}
+              />
+              {formErrors.change_reason && (
+                <p className="text-sm text-red-500">
+                  {formErrors.change_reason}
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Basic Medication Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
@@ -235,9 +351,7 @@ export function OrderMedicationDialog({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="generic_name">
-                  Generic Name <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="generic_name">Generic Name</Label>
                 <Input
                   id="generic_name"
                   placeholder="e.g., Ibuprofen"
@@ -268,9 +382,7 @@ export function OrderMedicationDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="strength">
-                  Strength <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="strength">Strength</Label>
                 <Input
                   id="strength"
                   placeholder="e.g., 400 mg"
@@ -285,10 +397,7 @@ export function OrderMedicationDialog({
                 )}
               </div>
               <div className="space-y-2">
-                <Label>
-                  Route of Administration{" "}
-                  <span className="text-red-500">*</span>
-                </Label>
+                <Label>Route of Administration</Label>
                 <Select
                   value={formData.route_of_administration}
                   onValueChange={(value) =>
@@ -317,9 +426,7 @@ export function OrderMedicationDialog({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>
-                  Frequency <span className="text-red-500">*</span>
-                </Label>
+                <Label>Frequency</Label>
                 <Select
                   value={formData.frequency}
                   onValueChange={(value) =>
@@ -344,9 +451,7 @@ export function OrderMedicationDialog({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration_days">
-                  Duration (days) <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="duration_days">Duration (days)</Label>
                 <Input
                   id="duration_days"
                   placeholder="e.g., 7"
@@ -367,9 +472,7 @@ export function OrderMedicationDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sig_instructions">
-                Sig Instructions <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="sig_instructions">Sig Instructions</Label>
               <Textarea
                 id="sig_instructions"
                 placeholder="e.g., Take 1 tablet by mouth three times daily with food for pain"
@@ -395,9 +498,7 @@ export function OrderMedicationDialog({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="quantity_prescribed">
-                  Quantity Prescribed <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="quantity_prescribed">Quantity Prescribed</Label>
                 <Input
                   id="quantity_prescribed"
                   placeholder="e.g., 21 tablets"
@@ -440,9 +541,7 @@ export function OrderMedicationDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="indication">
-                Indication <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="indication">Indication</Label>
               <Input
                 id="indication"
                 placeholder="e.g., Pain and inflammation"
@@ -458,16 +557,14 @@ export function OrderMedicationDialog({
             </div>
           </div>
 
-          {/* Schedule & Priority */}
+          {/* Schedule, Status & Priority */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">
-              Schedule & Priority
+              Schedule, Status & Priority
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start_date">
-                  Start Date <span className="text-red-500">*</span>
-                </Label>
+                <Label htmlFor="start_date">Start Date</Label>
                 <Input
                   id="start_date"
                   type="date"
@@ -498,6 +595,26 @@ export function OrderMedicationDialog({
                 {formErrors.end_date && (
                   <p className="text-sm text-red-500">{formErrors.end_date}</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    handleInputChange(
+                      "status",
+                      value as "active" | "inactive" | "discontinued"
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Priority</Label>
@@ -552,10 +669,6 @@ export function OrderMedicationDialog({
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 rows={3}
               />
-              <p className="text-sm text-gray-500">
-                Include any special instructions, warnings, or additional
-                information for the patient.
-              </p>
             </div>
           </div>
         </div>
@@ -564,22 +677,22 @@ export function OrderMedicationDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={operationLoading.create}
+            disabled={operationLoading.update}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             className="bg-blue-600 hover:bg-blue-700"
-            disabled={operationLoading.create}
+            disabled={operationLoading.update}
           >
-            {operationLoading.create ? (
+            {operationLoading.update ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Ordering Medication...
+                Updating...
               </>
             ) : (
-              "Order Medication"
+              "Update Medication"
             )}
           </Button>
         </DialogFooter>
