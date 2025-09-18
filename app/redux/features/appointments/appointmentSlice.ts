@@ -2,30 +2,63 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   fetchAppointments,
   createAppointment,
-  Appointment,
   deleteAppointment,
+  fetchDailyAppointments,
+  fetchTodaysAppointments,
+  Appointment,
+  DailyAppointmentsResponse,
+  DateRangeAppointmentsResponse,
+  DailyAppointment,
 } from "./appointmentActions";
-
-// Interface for the appointment state
+// Enhanced interface for the appointment state
 interface AppointmentState {
   appointments: Appointment[];
+  dailyAppointments: DailyAppointment[];
+  dateRangeAppointments: Record<string, DailyAppointment[]>;
+  currentDate: string | null;
+  doctorName: string | null;
+  totalDailyAppointments: number;
   loading: boolean;
+  dailyLoading: boolean;
+  dateRangeLoading: boolean;
   error: string | null;
 }
 
 const initialState: AppointmentState = {
   appointments: [],
+  dailyAppointments: [],
+  dateRangeAppointments: {},
+  currentDate: null,
+  doctorName: null,
+  totalDailyAppointments: 0,
   loading: false,
+  dailyLoading: false,
+  dateRangeLoading: false,
   error: null,
 };
 
 const appointmentSlice = createSlice({
   name: "appointment",
   initialState,
-  reducers: {},
+  reducers: {
+    // Clear daily appointments
+    clearDailyAppointments: (state) => {
+      state.dailyAppointments = [];
+      state.currentDate = null;
+      state.totalDailyAppointments = 0;
+    },
+    // Clear date range appointments
+    clearDateRangeAppointments: (state) => {
+      state.dateRangeAppointments = {};
+    },
+    // Clear all errors
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // Fetch appointments
+      // Existing reducers for fetchAppointments, createAppointment, deleteAppointment
       .addCase(fetchAppointments.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -44,7 +77,6 @@ const appointmentSlice = createSlice({
           state.error = action.payload;
         }
       )
-      // Create appointment
       .addCase(createAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -63,7 +95,6 @@ const appointmentSlice = createSlice({
           state.error = action.payload;
         }
       )
-      // Delete appointment
       .addCase(deleteAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -72,10 +103,14 @@ const appointmentSlice = createSlice({
         deleteAppointment.fulfilled,
         (state, action: PayloadAction<number>) => {
           state.loading = false;
-          // Filter out the deleted appointment using the ID from the payload
           state.appointments = state.appointments.filter(
             (appointment) => appointment.id !== action.payload
           );
+          // Also remove from daily appointments if present
+          state.dailyAppointments = state.dailyAppointments.filter(
+            (appointment) => appointment.id !== action.payload
+          );
+          state.totalDailyAppointments = state.dailyAppointments.length;
         }
       )
       .addCase(
@@ -84,8 +119,60 @@ const appointmentSlice = createSlice({
           state.loading = false;
           state.error = action.payload;
         }
+      )
+
+      // Daily appointments reducers
+      .addCase(fetchDailyAppointments.pending, (state) => {
+        state.dailyLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchDailyAppointments.fulfilled,
+        (state, action: PayloadAction<DailyAppointmentsResponse>) => {
+          state.dailyLoading = false;
+          state.dailyAppointments = action.payload.appointments;
+          state.currentDate = action.payload.date;
+          state.doctorName = action.payload.doctor_name;
+          state.totalDailyAppointments = action.payload.total_appointments;
+        }
+      )
+      .addCase(
+        fetchDailyAppointments.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.dailyLoading = false;
+          state.error = action.payload;
+        }
+      )
+
+      // Today's appointments reducers (same as daily)
+      .addCase(fetchTodaysAppointments.pending, (state) => {
+        state.dailyLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchTodaysAppointments.fulfilled,
+        (state, action: PayloadAction<DailyAppointmentsResponse>) => {
+          state.dailyLoading = false;
+          state.dailyAppointments = action.payload.appointments;
+          state.currentDate = action.payload.date;
+          state.doctorName = action.payload.doctor_name;
+          state.totalDailyAppointments = action.payload.total_appointments;
+        }
+      )
+      .addCase(
+        fetchTodaysAppointments.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.dailyLoading = false;
+          state.error = action.payload;
+        }
       );
   },
 });
+
+export const {
+  clearDailyAppointments,
+  clearDateRangeAppointments,
+  clearError,
+} = appointmentSlice.actions;
 
 export default appointmentSlice.reducer;

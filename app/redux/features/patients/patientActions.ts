@@ -3,7 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../../../lib/axiosConfig";
 
 // Define the type for the patient data
-interface Patient {
+export interface Patient {
   user_id: number;
   username: string;
   email: string;

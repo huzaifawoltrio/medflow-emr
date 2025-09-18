@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { getUserDetails } from "../redux/features/auth/authActions";
+import { fetchTodaysAppointments } from "../../app/redux/features/appointments/appointmentActions";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,9 @@ import {
   ScanLine,
   FileText,
   Loader2,
+  Clock,
+  MapPin,
+  User,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import Link from "next/link";
@@ -44,20 +48,78 @@ const QuickActionButton = ({
   </div>
 );
 
+// Helper function to format time
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+// Helper function to get status color
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "scheduled":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "completed":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "cancelled":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "in-progress":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+// Helper function to determine if appointment is next
+const getNextAppointment = (appointments: any[]) => {
+  if (!appointments.length) return null;
+
+  const now = new Date();
+  const todayAppointments = appointments
+    .filter((apt) => {
+      const aptTime = new Date(apt.appointment_datetime);
+      return aptTime >= now;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.appointment_datetime).getTime() -
+        new Date(b.appointment_datetime).getTime()
+    );
+
+  return todayAppointments[0] || null;
+};
+
 export default function Dashboard() {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, loading, error } = useSelector(
+  const { user, loading: authLoading } = useSelector(
     (state: RootState) => state.auth
   );
+  const {
+    dailyAppointments,
+    totalDailyAppointments,
+    dailyLoading,
+    error: appointmentError,
+    currentDate,
+  } = useSelector((state: RootState) => state.appointment);
 
   useEffect(() => {
-    // Fetch user details if not already present in the store
+    // Fetch user details if not already present
     if (!user) {
       dispatch(getUserDetails());
     }
+
+    // Always fetch today's appointments on component mount
+    dispatch(fetchTodaysAppointments());
   }, [dispatch, user]);
 
-  const doctorName = user ? `${user.first_name} ${user.last_name}` : "Doctor";
+  const doctorName = user
+    ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+    : "Doctor";
+  const nextAppointment = getNextAppointment(dailyAppointments);
 
   return (
     <MainLayout>
@@ -66,8 +128,11 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {loading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
+              {authLoading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <span>Loading...</span>
+                </div>
               ) : (
                 `Good morning, Dr. ${doctorName}`
               )}
@@ -94,10 +159,14 @@ export default function Dashboard() {
             <CardContent className="p-4 flex justify-between items-center">
               <div>
                 <CardTitle className="text-sm font-medium text-blue-800">
-                  Appointments
+                  Today's Appointments
                 </CardTitle>
                 <div className="text-2xl md:text-3xl font-bold text-blue-900 mt-2">
-                  12
+                  {dailyLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    totalDailyAppointments
+                  )}
                 </div>
               </div>
               <div className="p-3 bg-blue-800 rounded-lg">
@@ -166,7 +235,6 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {/* Responsive grid for actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <Link href="/appointments">
                     <QuickActionButton
@@ -251,38 +319,90 @@ export default function Dashboard() {
           <div className="space-y-6 md:space-y-8">
             {/* Today's Schedule */}
             <Card className="rounded-xl shadow-sm">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-lg md:text-xl font-semibold">
                   Today's Schedule
                 </CardTitle>
+                {dailyLoading && (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                )}
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 bg-blue-50 border-l-4 border-blue-800 rounded-md flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-sm">John Doe</p>
-                    <p className="text-xs text-gray-500">Follow-up • 9:00 AM</p>
+                {appointmentError ? (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">
+                      Error loading appointments: {appointmentError}
+                    </p>
                   </div>
-                  <Badge className="bg-blue-800 hover:bg-blue-700 text-xs">
-                    Next
-                  </Badge>
-                </div>
-                <div className="p-3 bg-white border-l-4 border-gray-200 rounded-md">
-                  <p className="font-semibold text-sm">Sarah Johnson</p>
-                  <p className="text-xs text-gray-500">
-                    Initial Consult • 10:30 AM
-                  </p>
-                </div>
-                <div className="p-3 bg-white border-l-4 border-gray-200 rounded-md">
-                  <p className="font-semibold text-sm">Mike Wilson</p>
-                  <p className="text-xs text-gray-500">
-                    Therapy Session • 2:00 PM
-                  </p>
-                </div>
+                ) : dailyAppointments.length === 0 ? (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                    <p className="text-sm text-gray-600 text-center">
+                      No appointments scheduled for today
+                    </p>
+                  </div>
+                ) : (
+                  dailyAppointments.slice(0, 4).map((appointment, index) => (
+                    <div
+                      key={appointment.id}
+                      className={`p-3 rounded-md border-l-4 ${
+                        appointment.id === nextAppointment?.id
+                          ? "bg-blue-50 border-blue-800"
+                          : "bg-white border-gray-200"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <User className="h-4 w-4 text-gray-500" />
+                            <p className="font-semibold text-sm">
+                              {appointment.patient_name}
+                            </p>
+                            {appointment.id === nextAppointment?.id && (
+                              <Badge className="bg-blue-800 hover:bg-blue-700 text-xs">
+                                Next
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-4 text-xs text-gray-500">
+                            <div className="flex items-center space-x-1">
+                              <Clock className="h-3 w-3" />
+                              <span>
+                                {formatTime(appointment.appointment_datetime)}
+                              </span>
+                            </div>
+                            {appointment.location && (
+                              <div className="flex items-center space-x-1">
+                                <MapPin className="h-3 w-3" />
+                                <span>{appointment.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          {appointment.services &&
+                            appointment.services.length > 0 && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                {appointment.services.join(", ")}
+                              </p>
+                            )}
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${getStatusColor(
+                            appointment.status
+                          )}`}
+                        >
+                          {appointment.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
               <div className="p-4 border-t border-gray-100">
-                <Button variant="outline" className="w-full bg-white">
-                  View Full Schedule
-                </Button>
+                <Link href="/appointments">
+                  <Button variant="outline" className="w-full bg-white">
+                    View Full Schedule
+                  </Button>
+                </Link>
               </div>
             </Card>
 

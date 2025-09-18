@@ -28,6 +28,40 @@ interface FetchAppointmentsParams {
   endDate: string;
 }
 
+// Interface for daily appointments response
+export interface DailyAppointmentsResponse {
+  date: string;
+  doctor_id: number;
+  doctor_name: string;
+  total_appointments: number;
+  appointments: DailyAppointment[];
+}
+
+// Interface for individual daily appointment
+export interface DailyAppointment {
+  id: number;
+  patient_id: number;
+  patient_name: string;
+  appointment_datetime: string;
+  duration: number;
+  location: string;
+  services: string[];
+  appointment_fee: number;
+  billing_type: string;
+  status: string;
+  created_at: string;
+}
+
+// Interface for date range appointments response
+export interface DateRangeAppointmentsResponse {
+  start_date: string;
+  end_date: string;
+  doctor_id: number;
+  doctor_name: string;
+  total_appointments: number;
+  appointments_by_date: Record<string, DailyAppointment[]>;
+}
+
 /**
  * Async thunk for fetching appointments within a date range.
  * It returns an array of appointments on success.
@@ -95,5 +129,52 @@ export const deleteAppointment = createAsyncThunk<
     } else {
       return rejectWithValue(error.message || "Failed to delete appointment");
     }
+  }
+});
+
+/**
+ * Async thunk for fetching appointments for a specific date.
+ */
+export const fetchDailyAppointments = createAsyncThunk<
+  DailyAppointmentsResponse,
+  string, // date parameter (YYYY-MM-DD)
+  { rejectValue: string }
+>("appointments/fetchDaily", async (date, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/appointments/daily", {
+      params: { date },
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.error) {
+      return rejectWithValue(error.response.data.error);
+    }
+    return rejectWithValue(
+      error.message || "Failed to fetch daily appointments"
+    );
+  }
+});
+
+/**
+ * Async thunk for fetching today's appointments (convenience function).
+ */
+export const fetchTodaysAppointments = createAsyncThunk<
+  DailyAppointmentsResponse,
+  void,
+  { rejectValue: string }
+>("appointments/fetchTodays", async (_, { rejectWithValue, dispatch }) => {
+  const today = new Date().toISOString().split("T")[0];
+  try {
+    // Reuse the fetchDailyAppointments logic
+    const result = await dispatch(fetchDailyAppointments(today));
+    if (fetchDailyAppointments.fulfilled.match(result)) {
+      return result.payload;
+    } else {
+      return rejectWithValue(result.payload as string);
+    }
+  } catch (error: any) {
+    return rejectWithValue(
+      error.message || "Failed to fetch today's appointments"
+    );
   }
 });
