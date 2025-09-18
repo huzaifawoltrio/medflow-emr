@@ -221,10 +221,17 @@ const medicationSlice = createSlice({
       })
       .addCase(
         fetchPatientMedications.fulfilled,
-        (state, action: PayloadAction<MedicationListResponse>) => {
+        (state, action: PayloadAction<any>) => {
           state.loading = false;
-          state.medications = action.payload.medications;
-          state.pagination = action.payload.pagination;
+          // FIX: Combine all medication arrays from the actual payload structure
+          state.medications = [
+            ...(action.payload.active_medications || []),
+            ...(action.payload.recently_completed || []),
+            ...(action.payload.recently_discontinued || []),
+          ];
+          // This specific endpoint payload doesn't have a `pagination` object.
+          // You might want to get total counts from the payload if needed.
+          state.pagination = null;
         }
       )
       .addCase(
@@ -232,6 +239,7 @@ const medicationSlice = createSlice({
         (state, action: PayloadAction<any>) => {
           state.loading = false;
           state.error = action.payload;
+          state.medications = []; // Clear medications on error
         }
       );
   },

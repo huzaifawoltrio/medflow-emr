@@ -159,6 +159,8 @@ export function OrderMedicationDialog({
         : undefined,
     };
 
+    console.log("the create medication data is", medicationData);
+
     try {
       const result = await dispatch(createMedication(medicationData));
       if (createMedication.fulfilled.match(result)) {

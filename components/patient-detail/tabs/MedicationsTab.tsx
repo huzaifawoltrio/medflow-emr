@@ -21,6 +21,7 @@ import {
 } from "../../../app/redux/features/medications/medicationSlice";
 import type { RootState, AppDispatch } from "../../../app/redux/store";
 import { EditMedicationDialog } from "../dialogs/EditMedicationDialog";
+import { DiscontinueMedicationDialog } from "../dialogs/DiscontinueMedicationDialog";
 
 interface MedicationsTabProps {
   patientData: any;
@@ -39,6 +40,8 @@ export function MedicationsTab({
   console.log("medications in the med tab is", medications);
   const [isEditMedOpen, setIsEditMedOpen] = useState(false);
   const [isDiscontinueDialogOpen, setIsDiscontinueDialogOpen] = useState(false);
+  const [selectedMedicationForAction, setSelectedMedicationForAction] =
+    useState<Medication | null>(null);
 
   // Extract patient ID from patientData
   const patientId = patientData?.user_id || patientData?.id;
@@ -82,7 +85,7 @@ export function MedicationsTab({
   };
 
   const handleDiscontinueMedication = (medication: Medication) => {
-    dispatch(setSelectedMedication(medication));
+    setSelectedMedicationForAction(medication);
     setIsDiscontinueDialogOpen(true);
   };
 
@@ -436,6 +439,12 @@ export function MedicationsTab({
         isOpen={isEditMedOpen}
         onOpenChange={setIsEditMedOpen}
         patientId={patientId}
+      />
+
+      <DiscontinueMedicationDialog
+        isOpen={isDiscontinueDialogOpen}
+        onOpenChange={setIsDiscontinueDialogOpen}
+        medication={selectedMedicationForAction}
       />
     </div>
   );

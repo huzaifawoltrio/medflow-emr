@@ -353,9 +353,7 @@ export default function PatientDetailPage() {
       <OrderMedicationDialog
         isOpen={isOrderMedOpen}
         onOpenChange={setIsOrderMedOpen}
-        newMedication={newMedication}
-        setNewMedication={setNewMedication}
-        handleOrderMedication={handleOrderMedication}
+        patientId={selectedPatient.user_id}
       />
 
       <OrderLabDialog
