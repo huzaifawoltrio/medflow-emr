@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { getUserDetails } from "../redux/features/auth/authActions";
 import { fetchTodaysAppointments } from "../../app/redux/features/appointments/appointmentActions";
+import { fetchPriorityMessages } from "../redux/features/chat/chatActions";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   Clock,
   MapPin,
   User,
+  AlertCircle,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import Link from "next/link";
@@ -56,6 +58,24 @@ const formatTime = (dateString: string) => {
     minute: "2-digit",
     hour12: true,
   });
+};
+
+// Helper function to format relative time
+const formatRelativeTime = (dateString: string) => {
+  const now = new Date();
+  const messageTime = new Date(dateString);
+  const diffInMinutes = Math.floor(
+    (now.getTime() - messageTime.getTime()) / (1000 * 60)
+  );
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
 };
 
 // Helper function to get status color
@@ -93,6 +113,12 @@ const getNextAppointment = (appointments: any[]) => {
   return todayAppointments[0] || null;
 };
 
+// Helper function to truncate message content
+const truncateMessage = (content: string, maxLength: number = 50) => {
+  if (content.length <= maxLength) return content;
+  return content.slice(0, maxLength) + "...";
+};
+
 export default function Dashboard() {
   const dispatch = useDispatch<AppDispatch>();
   const { user, loading: authLoading } = useSelector(
@@ -106,6 +132,13 @@ export default function Dashboard() {
     currentDate,
   } = useSelector((state: RootState) => state.appointment);
 
+  // Get priority messages from chat state
+  const {
+    priorityMessages,
+    loading: { priorityMessages: priorityLoading },
+    error: { priorityMessages: priorityError },
+  } = useSelector((state: RootState) => state.chat);
+
   useEffect(() => {
     // Fetch user details if not already present
     if (!user) {
@@ -114,12 +147,20 @@ export default function Dashboard() {
 
     // Always fetch today's appointments on component mount
     dispatch(fetchTodaysAppointments());
+
+    // Fetch priority messages (limit to first 3)
+    dispatch(
+      fetchPriorityMessages({ page: 1, perPage: 3, includeRead: false })
+    );
   }, [dispatch, user]);
 
   const doctorName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
     : "Doctor";
   const nextAppointment = getNextAppointment(dailyAppointments);
+
+  // Get total priority message count for the stat card
+  const priorityMessageCount = priorityMessages?.length || 0;
 
   return (
     <MainLayout>
@@ -175,18 +216,22 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-green-50 border-none rounded-xl shadow-sm">
+          <Card className="bg-red-50 border-none rounded-xl shadow-sm">
             <CardContent className="p-4 flex justify-between items-center">
               <div>
-                <CardTitle className="text-sm font-medium text-green-800">
-                  Active Messages
+                <CardTitle className="text-sm font-medium text-red-800">
+                  Priority Messages
                 </CardTitle>
-                <div className="text-2xl md:text-3xl font-bold text-green-900 mt-2">
-                  7
+                <div className="text-2xl md:text-3xl font-bold text-red-900 mt-2">
+                  {priorityLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    priorityMessageCount
+                  )}
                 </div>
               </div>
-              <div className="p-3 bg-green-600 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-white" />
+              <div className="p-3 bg-red-600 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-white" />
               </div>
             </CardContent>
           </Card>
@@ -408,53 +453,76 @@ export default function Dashboard() {
 
             {/* Priority Messages */}
             <Card className="rounded-xl shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg md:text-xl font-semibold">
-                  Priority Messages
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-lg md:text-xl font-semibold flex items-center space-x-2">
+                  <span>Priority Messages</span>
+                  {priorityMessageCount > 0 && (
+                    <Badge className="bg-red-100 text-red-700 border-red-200">
+                      {priorityMessageCount}
+                    </Badge>
+                  )}
                 </CardTitle>
+                {priorityLoading && (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                )}
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge
-                      variant="destructive"
-                      className="bg-red-100 text-red-700 border-red-200"
-                    >
-                      Urgent
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      Patient Portal
-                    </span>
+                {priorityError ? (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">
+                      Error loading priority messages: {priorityError}
+                    </p>
                   </div>
-                  <p className="font-semibold text-sm text-gray-900">
-                    Mike Wilson
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Experiencing severe side effects...
-                  </p>
-                </div>
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge
-                      variant="outline"
-                      className="bg-yellow-100 text-yellow-800 border-yellow-200"
-                    >
-                      Follow-up
-                    </Badge>
-                    <span className="text-xs text-gray-500">Staff Message</span>
+                ) : priorityMessages.length === 0 ? (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-md">
+                    <p className="text-sm text-gray-600 text-center">
+                      No priority messages at this time
+                    </p>
                   </div>
-                  <p className="font-semibold text-sm text-gray-900">
-                    Nurse Janet
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Lab results ready for J. Doe's review
-                  </p>
-                </div>
+                ) : (
+                  priorityMessages.slice(0, 3).map((message) => (
+                    <div
+                      key={message.id}
+                      className={`p-3 rounded-lg border ${
+                        !message.is_read
+                          ? "bg-red-50 border-red-200"
+                          : "bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="flex items-center space-x-2">
+                          <Badge
+                            variant="destructive"
+                            className="bg-red-100 text-red-700 border-red-200 text-xs"
+                          >
+                            Priority
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-semibold text-sm text-gray-900">
+                          {message.sender_info?.full_name ||
+                            message.sender_info?.username}
+                        </p>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {truncateMessage(message.content, 60)}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-gray-400 capitalize">
+                            {message.sender_info?.role || "Patient"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
               <div className="p-4 border-t border-gray-100">
-                <Button variant="outline" className="w-full bg-white">
-                  View All Messages
-                </Button>
+                <Link href="/messages">
+                  <Button variant="outline" className="w-full bg-white">
+                    View All Messages
+                  </Button>
+                </Link>
               </div>
             </Card>
           </div>

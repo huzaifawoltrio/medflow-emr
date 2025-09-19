@@ -10,10 +10,12 @@ interface Message {
   content: string;
   sent_at: string;
   is_read?: boolean;
+  is_priority?: boolean; // NEW: Add priority flag
   read_at?: string;
   sender_info?: {
     username: string;
     role: string;
+    full_name?: string; // NEW: Add full name for better display
   };
 }
 
@@ -24,12 +26,15 @@ interface Conversation {
   other_user_role: string;
   is_online: boolean;
   unread_count: number;
+  priority_unread_count?: number; // NEW: Add priority unread count
   last_message_at: string;
   last_message: {
     content: string;
     sender_id: number;
+    is_priority?: boolean; // NEW: Add priority flag to last message
     sent_at: string;
   } | null;
+  messages?: Message[]; // NEW: Add optional messages array
 }
 
 interface ChatHistory {
@@ -51,6 +56,33 @@ interface ChateableUser {
   full_name: string;
   is_online: boolean;
   specialization?: string;
+}
+
+// NEW: Priority messages types
+interface PriorityMessage extends Message {
+  sender_info: {
+    username: string;
+    role: string;
+    full_name: string;
+  };
+}
+
+interface PriorityMessagesResponse {
+  priority_messages: PriorityMessage[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total: number;
+    pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+}
+
+interface PriorityMessagesSummary {
+  total_priority_messages: number;
+  unread_priority_messages: number;
+  patients_with_priority_messages: number;
 }
 
 /**
@@ -116,6 +148,56 @@ export const fetchChateableUsers = createAsyncThunk<
 });
 
 /**
+ * NEW: Fetch priority messages for doctors
+ */
+export const fetchPriorityMessages = createAsyncThunk<
+  PriorityMessagesResponse,
+  { page?: number; perPage?: number; includeRead?: boolean },
+  { rejectValue: string }
+>(
+  "chat/fetchPriorityMessages",
+  async (
+    { page = 1, perPage = 20, includeRead = false },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.get(
+        `/chat/priority-messages?page=${page}&per_page=${perPage}&include_read=${includeRead}`
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        return rejectWithValue(error.response.data.message);
+      }
+      return rejectWithValue(
+        error.message || "Failed to fetch priority messages"
+      );
+    }
+  }
+);
+
+/**
+ * NEW: Fetch priority messages summary for doctors
+ */
+export const fetchPriorityMessagesSummary = createAsyncThunk<
+  PriorityMessagesSummary,
+  void,
+  { rejectValue: string }
+>("chat/fetchPriorityMessagesSummary", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/chat/priority-messages/summary");
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      return rejectWithValue(error.response.data.message);
+    }
+    return rejectWithValue(
+      error.message || "Failed to fetch priority messages summary"
+    );
+  }
+});
+
+/**
  * Mark messages as read via REST API
  */
 export const markMessagesAsRead = createAsyncThunk<
@@ -160,3 +242,12 @@ export const deleteMessage = createAsyncThunk<
     return rejectWithValue(error.message || "Failed to delete message");
   }
 });
+
+// Export new types
+export type {
+  Message,
+  Conversation,
+  PriorityMessage,
+  PriorityMessagesResponse,
+  PriorityMessagesSummary,
+};

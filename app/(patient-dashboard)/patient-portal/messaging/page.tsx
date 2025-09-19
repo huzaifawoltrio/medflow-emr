@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch"; // NEW: Import Switch component
 import {
   Select,
   SelectContent,
@@ -38,6 +39,8 @@ import {
   Stethoscope,
   Users,
   AlertCircle,
+  AlertTriangle, // NEW: For priority indicator
+  Zap, // NEW: For priority icon
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import MainLayout from "@/components/layout/main-layout";
@@ -73,12 +76,14 @@ export default function PatientSecureMessaging() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [newMessageText, setNewMessageText] = useState("");
+  const [isPriorityMessage, setIsPriorityMessage] = useState(false); // NEW: Priority message state
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [newConversation, setNewConversation] = useState({
     recipient: "",
     subject: "",
     content: "",
     category: "general",
+    isPriority: false, // NEW: Priority for new conversations
   });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -170,15 +175,23 @@ export default function PatientSecureMessaging() {
     }
   };
 
+  // UPDATED: Handle sending messages with priority flag
   const handleSendChatMessage = () => {
     if (!newMessageText.trim() || !selectedConversation) {
       return;
     }
 
-    sendMessage(selectedConversation.other_user_id, newMessageText.trim());
+    sendMessage(
+      selectedConversation.other_user_id,
+      newMessageText.trim(),
+      isPriorityMessage // NEW: Pass priority flag
+    );
+
     setNewMessageText("");
+    setIsPriorityMessage(false); // NEW: Reset priority flag after sending
   };
 
+  // UPDATED: Handle starting new conversation with priority
   const handleStartNewConversation = () => {
     if (!newConversation.recipient || !newConversation.content.trim()) {
       return;
@@ -195,8 +208,12 @@ export default function PatientSecureMessaging() {
     if (existingConversation) {
       handleSelectConversation(existingConversation);
     } else {
-      // Send message to start new conversation
-      sendMessage(recipientId, newConversation.content.trim());
+      // Send message to start new conversation with priority flag
+      sendMessage(
+        recipientId,
+        newConversation.content.trim(),
+        newConversation.isPriority // NEW: Pass priority flag
+      );
     }
 
     // Reset form and close dialog
@@ -206,6 +223,7 @@ export default function PatientSecureMessaging() {
       subject: "",
       content: "",
       category: "general",
+      isPriority: false, // NEW: Reset priority flag
     });
   };
 
@@ -251,8 +269,13 @@ export default function PatientSecureMessaging() {
     })}`;
   };
 
+  // NEW: Calculate priority unread count
   const unreadCount = conversations.reduce(
     (count, conv) => count + conv.unread_count,
+    0
+  );
+  const priorityUnreadCount = conversations.reduce(
+    (count, conv) => count + (conv.priority_unread_count || 0),
     0
   );
   const totalMessages = conversations.reduce(
@@ -273,20 +296,27 @@ export default function PatientSecureMessaging() {
             <div className="flex items-center mt-2 text-sm text-gray-600">
               <Shield className="h-4 w-4 mr-2 text-green-600" />
               <span>
-                Communicate securely with your healthcare team â€¢ HIPAA
-                compliant
+                Communicate securely with your healthcare team • HIPAA compliant
               </span>
               {isConnected && (
-                <span className="ml-2 text-green-600">â€¢ Connected</span>
+                <span className="ml-2 text-green-600">• Connected</span>
               )}
             </div>
-            {unreadCount > 0 && (
-              <div className="mt-2">
+            {/* NEW: Enhanced message count display with priority */}
+            <div className="flex items-center gap-3 mt-2">
+              {unreadCount > 0 && (
                 <Badge className="bg-blue-100 text-blue-800">
                   {unreadCount} new message{unreadCount > 1 ? "s" : ""}
                 </Badge>
-              </div>
-            )}
+              )}
+              {priorityUnreadCount > 0 && (
+                <Badge className="bg-red-100 text-red-800 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {priorityUnreadCount} priority message
+                  {priorityUnreadCount > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </div>
           </div>
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <DialogTrigger asChild>
@@ -369,6 +399,34 @@ export default function PatientSecureMessaging() {
                   </Select>
                 </div>
 
+                {/* NEW: Priority toggle for new conversations */}
+                <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <div>
+                      <Label
+                        htmlFor="new-priority"
+                        className="text-sm font-medium text-orange-900"
+                      >
+                        Priority Message
+                      </Label>
+                      <p className="text-xs text-orange-700">
+                        Mark as urgent - requires immediate attention
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="new-priority"
+                    checked={newConversation.isPriority}
+                    onCheckedChange={(checked) =>
+                      setNewConversation({
+                        ...newConversation,
+                        isPriority: checked,
+                      })
+                    }
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject</Label>
                   <Input
@@ -413,14 +471,20 @@ export default function PatientSecureMessaging() {
                 </Button>
                 <Button
                   onClick={handleStartNewConversation}
-                  className="bg-blue-800 hover:bg-blue-700"
+                  className={
+                    newConversation.isPriority
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-blue-800 hover:bg-blue-700"
+                  }
                   disabled={
                     !newConversation.recipient ||
                     !newConversation.content.trim()
                   }
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  Send Message
+                  {newConversation.isPriority
+                    ? "Send Priority Message"
+                    : "Send Message"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -539,9 +603,15 @@ export default function PatientSecureMessaging() {
                           >
                             {convo.other_user_username}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {formatMessageTime(convo.last_message_at)}
-                          </p>
+                          <div className="flex items-center space-x-1">
+                            {/* NEW: Priority indicator for last message */}
+                            {convo.last_message?.is_priority && (
+                              <AlertTriangle className="h-3 w-3 text-red-500" />
+                            )}
+                            <p className="text-xs text-gray-500">
+                              {formatMessageTime(convo.last_message_at)}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center justify-between mt-1">
                           <p
@@ -553,13 +623,23 @@ export default function PatientSecureMessaging() {
                           >
                             {convo.last_message?.content || "No messages yet"}
                           </p>
-                          {convo.unread_count > 0 && (
-                            <div className="bg-blue-800 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
-                              {convo.unread_count > 99
-                                ? "99+"
-                                : convo.unread_count}
-                            </div>
-                          )}
+                          <div className="flex items-center space-x-1">
+                            {/* NEW: Priority unread count */}
+                            {(convo.priority_unread_count || 0) > 0 && (
+                              <div className="bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
+                                {convo.priority_unread_count! > 99
+                                  ? "99+"
+                                  : convo.priority_unread_count}
+                              </div>
+                            )}
+                            {convo.unread_count > 0 && (
+                              <div className="bg-blue-800 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2 flex-shrink-0">
+                                {convo.unread_count > 99
+                                  ? "99+"
+                                  : convo.unread_count}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="mt-1">
                           <Badge
@@ -698,18 +778,37 @@ export default function PatientSecureMessaging() {
                             </Avatar>
                           )}
                           <div
-                            className={`rounded-lg px-4 py-2 ${
+                            className={`rounded-lg px-4 py-2 relative ${
                               isOwn
-                                ? "bg-blue-800 text-white"
+                                ? message.is_priority
+                                  ? "bg-red-500 text-white" // NEW: Red for own priority messages
+                                  : "bg-blue-800 text-white"
+                                : message.is_priority
+                                ? "bg-red-50 text-gray-900 shadow-sm border-2 border-red-200" // NEW: Red border for received priority messages
                                 : "bg-white text-gray-900 shadow-sm border"
                             }`}
                           >
+                            {/* NEW: Priority indicator */}
+                            {message.is_priority && (
+                              <div
+                                className={`flex items-center gap-1 text-xs mb-1 ${
+                                  isOwn ? "text-red-100" : "text-red-600"
+                                }`}
+                              >
+                                <AlertTriangle className="h-3 w-3" />
+                                <span className="font-medium">Priority</span>
+                              </div>
+                            )}
                             <p className="text-sm whitespace-pre-wrap">
                               {message.content}
                             </p>
                             <div
                               className={`text-xs mt-1 flex items-center ${
-                                isOwn ? "text-blue-100" : "text-gray-500"
+                                isOwn
+                                  ? message.is_priority
+                                    ? "text-red-100"
+                                    : "text-blue-100"
+                                  : "text-gray-500"
                               }`}
                             >
                               {formatMessageTime(message.sent_at)}
@@ -728,6 +827,40 @@ export default function PatientSecureMessaging() {
 
               {/* Message Input */}
               <div className="border-t p-4 bg-white">
+                {/* NEW: Priority toggle for current conversation */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg border">
+                    <div className="flex items-center space-x-2">
+                      <AlertTriangle
+                        className={`h-4 w-4 ${
+                          isPriorityMessage ? "text-red-600" : "text-gray-400"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm ${
+                          isPriorityMessage
+                            ? "text-red-900 font-medium"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {isPriorityMessage
+                          ? "Priority Message"
+                          : "Mark as Priority"}
+                      </span>
+                    </div>
+                    <Switch
+                      checked={isPriorityMessage}
+                      onCheckedChange={setIsPriorityMessage}
+                    />
+                  </div>
+                  {isPriorityMessage && (
+                    <p className="text-xs text-red-600 mt-1 px-2">
+                      This message will be flagged as urgent and requires
+                      immediate attention.
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex space-x-2">
                   <Input
                     placeholder="Type a message..."
@@ -745,9 +878,17 @@ export default function PatientSecureMessaging() {
                   <Button
                     onClick={handleSendChatMessage}
                     disabled={!newMessageText.trim() || !isConnected}
-                    className="bg-blue-800 hover:bg-blue-700"
+                    className={
+                      isPriorityMessage
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-blue-800 hover:bg-blue-700"
+                    }
                   >
-                    <Send className="h-4 w-4" />
+                    {isPriorityMessage ? (
+                      <AlertTriangle className="h-4 w-4" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 {!isConnected && (

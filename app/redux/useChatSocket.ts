@@ -18,6 +18,7 @@ interface Message {
   content: string;
   sent_at: string;
   is_read?: boolean;
+  is_priority?: boolean; // NEW: Add priority flag
   read_at?: string;
   sender_info?: {
     username: string;
@@ -27,7 +28,11 @@ interface Message {
 
 interface UseChatSocketReturn {
   socket: Socket | null;
-  sendMessage: (recipientId: number, content: string) => void;
+  sendMessage: (
+    recipientId: number,
+    content: string,
+    isPriority?: boolean
+  ) => void; // NEW: Add priority parameter
   markAsRead: (messageIds: number[]) => void;
   getOnlineStatus: (userIds: number[]) => void;
   isConnected: boolean;
@@ -100,14 +105,25 @@ export const useChatSocket = (): UseChatSocketReturn => {
       console.log("Successfully authenticated:", data);
     });
 
-    // Message events - FIXED to handle duplicates
+    // Message events - UPDATED to handle priority messages
     const handleNewMessage = (message: Message) => {
       console.log("New message received:", message);
+      // Log if it's a priority message
+      if (message.is_priority) {
+        console.log(
+          "🚨 Priority message received from:",
+          message.sender_info?.username
+        );
+      }
       dispatch(addMessage(message));
     };
 
     const handleMessageSent = (message: Message) => {
       console.log("Message sent confirmation:", message);
+      // Log if it was sent as priority
+      if (message.is_priority) {
+        console.log("🚨 Priority message sent successfully");
+      }
       // Only add to state if it's our own message and doesn't exist yet
       dispatch(addMessage(message));
     };
@@ -159,9 +175,9 @@ export const useChatSocket = (): UseChatSocketReturn => {
     };
   }, [dispatch, getAuthToken]);
 
-  // Socket action methods
+  // Socket action methods - UPDATED to support priority messages
   const sendMessage = useCallback(
-    (recipientId: number, content: string) => {
+    (recipientId: number, content: string, isPriority: boolean = false) => {
       if (!socketRef.current?.connected) {
         dispatch(setConnectionError("Not connected to messaging server"));
         return;
@@ -171,9 +187,13 @@ export const useChatSocket = (): UseChatSocketReturn => {
         recipient_id: recipientId,
         content: content.trim(),
         message_type: "text",
+        is_priority: isPriority, // NEW: Include priority flag
       };
 
       console.log("Sending message:", messageData);
+      if (isPriority) {
+        console.log("🚨 Sending as priority message");
+      }
       socketRef.current.emit("send_message", messageData);
     },
     [dispatch]

@@ -6,37 +6,13 @@ import {
   fetchChateableUsers,
   markMessagesAsRead,
   deleteMessage,
+  fetchPriorityMessages,
+  fetchPriorityMessagesSummary,
+  Message,
+  Conversation,
+  PriorityMessage,
+  PriorityMessagesSummary,
 } from "./chatActions";
-
-interface Message {
-  id: number;
-  sender_id: number;
-  recipient_id: number;
-  content: string;
-  sent_at: string;
-  is_read?: boolean;
-  read_at?: string;
-  sender_info?: {
-    username: string;
-    role: string;
-  };
-}
-
-interface Conversation {
-  room_id: number;
-  other_user_id: number;
-  other_user_username: string;
-  other_user_role: string;
-  is_online: boolean;
-  unread_count: number;
-  last_message_at: string;
-  last_message: {
-    content: string;
-    sender_id: number;
-    sent_at: string;
-  } | null;
-  messages?: Message[];
-}
 
 interface ChateableUser {
   id: number;
@@ -49,22 +25,36 @@ interface ChateableUser {
 
 interface ChatState {
   conversations: Conversation[];
-  selectedConversation: Conversation | null;
+  selectedConversation: (Conversation & { messages?: Message[] }) | null; // Fixed: Ensure messages is optional
   chateableUsers: ChateableUser[];
+  priorityMessages: PriorityMessage[];
+  prioritySummary: PriorityMessagesSummary | null;
   isConnected: boolean;
   loading: {
     conversations: boolean;
     chatHistory: boolean;
     chateableUsers: boolean;
     sendMessage: boolean;
+    priorityMessages: boolean;
+    prioritySummary: boolean;
   };
   error: {
     conversations: string | null;
     chatHistory: string | null;
     chateableUsers: string | null;
     connection: string | null;
+    priorityMessages: string | null;
+    prioritySummary: string | null;
   };
   pagination: {
+    page: number;
+    per_page: number;
+    total: number;
+    pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  } | null;
+  priorityPagination: {
     page: number;
     per_page: number;
     total: number;
@@ -78,20 +68,27 @@ const initialState: ChatState = {
   conversations: [],
   selectedConversation: null,
   chateableUsers: [],
+  priorityMessages: [],
+  prioritySummary: null,
   isConnected: false,
   loading: {
     conversations: false,
     chatHistory: false,
     chateableUsers: false,
     sendMessage: false,
+    priorityMessages: false,
+    prioritySummary: false,
   },
   error: {
     conversations: null,
     chatHistory: null,
     chateableUsers: null,
     connection: null,
+    priorityMessages: null,
+    prioritySummary: null,
   },
   pagination: null,
+  priorityPagination: null,
 };
 
 const chatSlice = createSlice({
@@ -111,10 +108,15 @@ const chatSlice = createSlice({
       state.isConnected = false;
     },
 
-    // Message management - FIXED to prevent duplicates
+    // Message management - UPDATED to handle priority flag
     addMessage: (state, action: PayloadAction<Message>) => {
       const message = action.payload;
-      console.log("Adding message to Redux:", message.id, message.content);
+      console.log(
+        "Adding message to Redux:",
+        message.id,
+        message.content,
+        `Priority: ${message.is_priority}`
+      );
 
       // Update conversations list
       const conversationIndex = state.conversations.findIndex(
@@ -138,6 +140,7 @@ const chatSlice = createSlice({
           conversation.last_message = {
             content: message.content,
             sender_id: message.sender_id,
+            is_priority: message.is_priority,
             sent_at: message.sent_at,
           };
           conversation.last_message_at = message.sent_at;
@@ -149,6 +152,12 @@ const chatSlice = createSlice({
           state.selectedConversation?.other_user_id !== message.sender_id
         ) {
           conversation.unread_count += 1;
+
+          // NEW: Update priority unread count
+          if (message.is_priority) {
+            conversation.priority_unread_count =
+              (conversation.priority_unread_count || 0) + 1;
+          }
         }
 
         // Add to messages if this is the selected conversation
@@ -160,7 +169,7 @@ const chatSlice = createSlice({
             state.selectedConversation.messages = [];
           }
 
-          // CHECK FOR DUPLICATES BEFORE ADDING - Use both ID and content/timestamp
+          // CHECK FOR DUPLICATES BEFORE ADDING
           const messageExists = state.selectedConversation.messages.some(
             (existingMessage) =>
               existingMessage.id === message.id ||
@@ -189,6 +198,26 @@ const chatSlice = createSlice({
           state.conversations.unshift(updatedConversation);
         }
       }
+
+      // NEW: Add to priority messages if it's a priority message from a patient
+      if (message.is_priority && message.sender_info?.role === "patient") {
+        // Check if already exists in priority messages
+        const priorityExists = state.priorityMessages.some(
+          (pm) => pm.id === message.id
+        );
+
+        if (!priorityExists) {
+          state.priorityMessages.unshift(message as PriorityMessage);
+        }
+
+        // Update priority summary
+        if (state.prioritySummary) {
+          state.prioritySummary.total_priority_messages += 1;
+          if (!message.is_read) {
+            state.prioritySummary.unread_priority_messages += 1;
+          }
+        }
+      }
     },
 
     updateMessageReadStatus: (
@@ -207,23 +236,42 @@ const chatSlice = createSlice({
           (m) => m.id === messageId
         );
         if (messageIndex !== -1) {
-          state.selectedConversation.messages[messageIndex].is_read = true;
-          state.selectedConversation.messages[messageIndex].read_at = readAt;
+          const message = state.selectedConversation.messages[messageIndex];
+          message.is_read = true;
+          message.read_at = readAt;
+
+          // NEW: Update priority summary if this was a priority message
+          if (message.is_priority && state.prioritySummary) {
+            state.prioritySummary.unread_priority_messages = Math.max(
+              0,
+              state.prioritySummary.unread_priority_messages - 1
+            );
+          }
         }
       }
 
-      // Update in conversations list
+      // Update in conversations list - Fixed: Check if messages exists
       state.conversations.forEach((conversation) => {
         if (conversation.messages) {
           const messageIndex = conversation.messages.findIndex(
             (m) => m.id === messageId
           );
           if (messageIndex !== -1) {
-            conversation.messages[messageIndex].is_read = true;
-            conversation.messages[messageIndex].read_at = readAt;
+            const message = conversation.messages[messageIndex];
+            message.is_read = true;
+            message.read_at = readAt;
           }
         }
       });
+
+      // NEW: Update in priority messages
+      const priorityMessageIndex = state.priorityMessages.findIndex(
+        (m) => m.id === messageId
+      );
+      if (priorityMessageIndex !== -1) {
+        state.priorityMessages[priorityMessageIndex].is_read = true;
+        state.priorityMessages[priorityMessageIndex].read_at = readAt;
+      }
     },
 
     updateOnlineStatus: (
@@ -249,12 +297,13 @@ const chatSlice = createSlice({
       );
       if (conversation) {
         conversation.unread_count = 0;
+        conversation.priority_unread_count = 0;
       }
     },
 
     setSelectedConversation: (
       state,
-      action: PayloadAction<Conversation | null>
+      action: PayloadAction<(Conversation & { messages?: Message[] }) | null>
     ) => {
       state.selectedConversation = action.payload;
       if (action.payload) {
@@ -264,11 +313,15 @@ const chatSlice = createSlice({
         );
         if (conversation) {
           conversation.unread_count = 0;
+          conversation.priority_unread_count = 0;
         }
       }
     },
 
-    addNewConversation: (state, action: PayloadAction<Conversation>) => {
+    addNewConversation: (
+      state,
+      action: PayloadAction<Conversation & { messages?: Message[] }>
+    ) => {
       // Check if conversation already exists
       const exists = state.conversations.some(
         (c) => c.other_user_id === action.payload.other_user_id
@@ -302,7 +355,7 @@ const chatSlice = createSlice({
         state.loading.conversations = false;
         state.conversations = action.payload.map((c) => ({
           ...c,
-          messages: [],
+          messages: [], // Initialize empty messages array
         }));
       })
       .addCase(fetchConversations.rejected, (state, action) => {
@@ -347,6 +400,39 @@ const chatSlice = createSlice({
           action.payload || "Failed to fetch chateable users";
       });
 
+    // NEW: Fetch Priority Messages
+    builder
+      .addCase(fetchPriorityMessages.pending, (state) => {
+        state.loading.priorityMessages = true;
+        state.error.priorityMessages = null;
+      })
+      .addCase(fetchPriorityMessages.fulfilled, (state, action) => {
+        state.loading.priorityMessages = false;
+        state.priorityMessages = action.payload.priority_messages;
+        state.priorityPagination = action.payload.pagination;
+      })
+      .addCase(fetchPriorityMessages.rejected, (state, action) => {
+        state.loading.priorityMessages = false;
+        state.error.priorityMessages =
+          action.payload || "Failed to fetch priority messages";
+      });
+
+    // NEW: Fetch Priority Messages Summary
+    builder
+      .addCase(fetchPriorityMessagesSummary.pending, (state) => {
+        state.loading.prioritySummary = true;
+        state.error.prioritySummary = null;
+      })
+      .addCase(fetchPriorityMessagesSummary.fulfilled, (state, action) => {
+        state.loading.prioritySummary = false;
+        state.prioritySummary = action.payload;
+      })
+      .addCase(fetchPriorityMessagesSummary.rejected, (state, action) => {
+        state.loading.prioritySummary = false;
+        state.error.prioritySummary =
+          action.payload || "Failed to fetch priority messages summary";
+      });
+
     // Mark Messages as Read
     builder
       .addCase(markMessagesAsRead.fulfilled, (state) => {
@@ -369,7 +455,7 @@ const chatSlice = createSlice({
             );
         }
 
-        // Remove from conversations list
+        // Remove from conversations list - Fixed: Check if messages exists
         state.conversations.forEach((conversation) => {
           if (conversation.messages) {
             conversation.messages = conversation.messages.filter(
@@ -377,6 +463,11 @@ const chatSlice = createSlice({
             );
           }
         });
+
+        // NEW: Remove from priority messages
+        state.priorityMessages = state.priorityMessages.filter(
+          (m) => m.id !== messageId
+        );
       })
       .addCase(deleteMessage.rejected, (state, action) => {
         console.error("Failed to delete message:", action.payload);
