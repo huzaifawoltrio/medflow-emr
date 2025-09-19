@@ -2,12 +2,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/authSlice";
 import patientReducer from "./features/patients/patientSlice";
-import appointmentReducer from "./features/appointments/appointmentSlice"; // Added appointment reducer
+import appointmentReducer from "./features/appointments/appointmentSlice";
 import chatReducer from "./features/chat/chatSlice";
 import googleCalendarReducer from "./features/googleCalendar/googleCalendarSlice";
 import clinicalNotesReducer from "./features/clinicalNotes/clinicalNotesSlice";
 import documentReducer from "./features/documents/documentSlice";
 import medicationReducer from "./features/medications/medicationSlice";
+import vitalsReducer from "./features/vitals/vitalsSlice"; // Added vitals reducer
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -21,11 +22,10 @@ export const makeStore = () => {
       clinicalNotes: clinicalNotesReducer,
       documents: documentReducer,
       medications: medicationReducer,
+      vitals: vitalsReducer, // Added vitals reducer
     },
   });
 };
-// Infer the type of makeStore
 export type AppStore = ReturnType<typeof makeStore>;
-// Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<AppStore["getState"]>;
 export type AppDispatch = AppStore["dispatch"];
