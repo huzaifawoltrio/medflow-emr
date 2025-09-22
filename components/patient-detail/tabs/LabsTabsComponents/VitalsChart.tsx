@@ -43,7 +43,6 @@ export function VitalsChart({ data }: VitalsChartProps) {
 
   return (
     <div>
-      <h3 className="font-medium mb-3 text-gray-700">Vitals Trends</h3>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>

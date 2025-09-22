@@ -1,3 +1,4 @@
+// components/patient-detail/tabs/LabsTab.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +23,10 @@ interface LabsTabProps {
 }
 
 export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
+  // Extract patient ID from the patient data
+  const patientId =
+    patientData?.user_id || patientData?.id || patientData?.personalInfo?.id;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -59,7 +64,8 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
 
         <TabsContent value="labs" className="mt-6">
           <div className="space-y-6">
-            <VitalsSection />
+            {/* Pass patientId to VitalsSection */}
+            <VitalsSection patientId={patientId} />
             <LabTrendsSection />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <RecentResultsSection patientData={patientData} />
