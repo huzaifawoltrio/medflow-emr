@@ -13,6 +13,9 @@ const vitalsConfig = [
   { key: "hr", name: "Heart Rate", color: "#ef4444", unit: "bpm" },
   { key: "temp", name: "Temperature", color: "#f97316", unit: "°F" },
   { key: "resp", name: "Respiratory", color: "#10b981", unit: "rpm" },
+  { key: "systolic", name: "Systolic BP", color: "#3b82f6", unit: "mmHg" },
+  { key: "diastolic", name: "Diastolic BP", color: "#1d4ed8", unit: "mmHg" },
+  { key: "oxygen", name: "Oxygen Saturation", color: "#8b5cf6", unit: "%" },
 ];
 
 interface VitalsChartProps {
@@ -60,6 +63,8 @@ export function VitalsChart({ data }: VitalsChartProps) {
             <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomVitalsTooltip />} />
             <Legend />
+
+            {/* Heart Rate */}
             <Line
               type="monotone"
               dataKey="hr"
@@ -69,6 +74,8 @@ export function VitalsChart({ data }: VitalsChartProps) {
               dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
               activeDot={{ r: 5, strokeWidth: 2 }}
             />
+
+            {/* Temperature */}
             <Line
               type="monotone"
               dataKey="temp"
@@ -78,11 +85,46 @@ export function VitalsChart({ data }: VitalsChartProps) {
               dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
               activeDot={{ r: 5, strokeWidth: 2 }}
             />
+
+            {/* Respiratory Rate */}
             <Line
               type="monotone"
               dataKey="resp"
               name="Respiratory"
               stroke="#10b981"
+              strokeWidth={2}
+              dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+            />
+
+            {/* Systolic Blood Pressure */}
+            <Line
+              type="monotone"
+              dataKey="systolic"
+              name="Systolic BP"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+            />
+
+            {/* Diastolic Blood Pressure */}
+            <Line
+              type="monotone"
+              dataKey="diastolic"
+              name="Diastolic BP"
+              stroke="#1d4ed8"
+              strokeWidth={2}
+              dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
+              activeDot={{ r: 5, strokeWidth: 2 }}
+            />
+
+            {/* Oxygen Saturation */}
+            <Line
+              type="monotone"
+              dataKey="oxygen"
+              name="Oxygen Saturation"
+              stroke="#8b5cf6"
               strokeWidth={2}
               dot={{ r: 3, strokeWidth: 2, fill: "#fff" }}
               activeDot={{ r: 5, strokeWidth: 2 }}

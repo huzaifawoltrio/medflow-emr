@@ -32,23 +32,23 @@ export function VitalsSection({ patientId }: VitalsSectionProps) {
     useSelector((state: RootState) => state.vitals);
 
   const [isAddVitalsOpen, setIsAddVitalsOpen] = useState(false);
-  const [chartTimeRange, setChartTimeRange] = useState("6months"); // 6months, 1year, 2years
 
   // Get current patient ID from props or URL params
   const currentPatientId = patientId || 1; // Fallback for demo
 
   const latestVitals = patientLatestVitals[currentPatientId];
   const vitalsHistory = patientVitals[currentPatientId] || [];
+  console.log("vitals history", vitalsHistory);
 
   useEffect(() => {
     if (currentPatientId) {
       // Fetch latest vitals for current display
       dispatch(fetchPatientLatestVitals(currentPatientId));
 
-      // Fetch historical vitals for trends (last 2 years)
+      // Fetch historical vitals for trends (last 1 year only)
       const endDate = new Date().toISOString().split("T")[0];
       const startDate = new Date();
-      startDate.setFullYear(startDate.getFullYear() - 2);
+      startDate.setFullYear(startDate.getFullYear() - 1);
 
       dispatch(
         fetchPatientVitalSigns({
@@ -63,30 +63,17 @@ export function VitalsSection({ patientId }: VitalsSectionProps) {
     }
   }, [dispatch, currentPatientId, success.creating]); // Refresh when new vitals are added
 
-  // Format vitals data for the chart
+  // Format vitals data for the chart (1 year only)
   const formatChartData = () => {
     if (!vitalsHistory.length) return [];
 
-    // Filter data based on selected time range
+    // Filter data for the last 1 year
     const now = new Date();
-    const filterDate = new Date();
-
-    switch (chartTimeRange) {
-      case "6months":
-        filterDate.setMonth(now.getMonth() - 6);
-        break;
-      case "1year":
-        filterDate.setFullYear(now.getFullYear() - 1);
-        break;
-      case "2years":
-        filterDate.setFullYear(now.getFullYear() - 2);
-        break;
-      default:
-        filterDate.setMonth(now.getMonth() - 6);
-    }
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(now.getFullYear() - 1);
 
     return vitalsHistory
-      .filter((vital) => new Date(vital.recorded_date) >= filterDate)
+      .filter((vital) => new Date(vital.recorded_date) >= oneYearAgo)
       .map((vital) => ({
         date: vital.recorded_date.split("T")[0], // Format to YYYY-MM-DD
         bp:
@@ -96,6 +83,8 @@ export function VitalsSection({ patientId }: VitalsSectionProps) {
         hr: vital.heart_rate ? parseInt(vital.heart_rate) : null,
         temp: vital.temperature ? parseFloat(vital.temperature) : null,
         resp: vital.respiratory_rate ? parseInt(vital.respiratory_rate) : null,
+        systolic: vital.systolic_bp ? parseInt(vital.systolic_bp) : null,
+        diastolic: vital.diastolic_bp ? parseInt(vital.diastolic_bp) : null,
         oxygen: vital.oxygen_saturation
           ? parseInt(vital.oxygen_saturation)
           : null,
@@ -207,11 +196,7 @@ export function VitalsSection({ patientId }: VitalsSectionProps) {
               getVitalStatus={getVitalStatus}
               onAddVitals={() => setIsAddVitalsOpen(true)}
             />
-            <VitalsChartSection
-              chartData={chartData}
-              chartTimeRange={chartTimeRange}
-              setChartTimeRange={setChartTimeRange}
-            />
+            <VitalsChartSection chartData={chartData} />
           </div>
         </CardContent>
       </Card>
@@ -397,42 +382,11 @@ function VitalsCurrent({
   );
 }
 
-function VitalsChartSection({
-  chartData,
-  chartTimeRange,
-  setChartTimeRange,
-}: {
-  chartData: any[];
-  chartTimeRange: string;
-  setChartTimeRange: (range: string) => void;
-}) {
+function VitalsChartSection({ chartData }: { chartData: any[] }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium text-gray-700">Vitals Trends</h3>
-        <div className="flex gap-1">
-          <Button
-            variant={chartTimeRange === "6months" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setChartTimeRange("6months")}
-          >
-            6M
-          </Button>
-          <Button
-            variant={chartTimeRange === "1year" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setChartTimeRange("1year")}
-          >
-            1Y
-          </Button>
-          <Button
-            variant={chartTimeRange === "2years" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setChartTimeRange("2years")}
-          >
-            2Y
-          </Button>
-        </div>
+        <h3 className="font-medium text-gray-700">Vitals Trends (Past Year)</h3>
       </div>
 
       {chartData.length > 0 ? (
