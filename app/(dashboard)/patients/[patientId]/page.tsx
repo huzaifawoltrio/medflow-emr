@@ -16,27 +16,18 @@ import { CareTeamTab } from "@/components/patient-detail/tabs/CareTeamTab";
 import { ClinicalNotesDialog } from "@/components/patient-detail/dialogs/ClinicalNotesDialog";
 import { OrderMedicationDialog } from "../../../../components/patient-detail/dialogs/OrderMedicationDialog";
 import { OrderLabDialog } from "@/components/patient-detail/dialogs/OrderLabDialog";
-import {
-  Loader2,
-  LayoutDashboard,
-  User,
-  Pill,
-  FlaskConical,
-  FileText,
-  CreditCard,
-  Users,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { patientData } from "./data";
 
-// Updated tabs with new order and icons, removed Imaging (now part of Results) and Vitals
+// Updated tabs with icons removed
 const clinicalTabs = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "notes", label: "Clinical Notes", icon: FileText },
-  { id: "medications", label: "Medications", icon: Pill },
-  { id: "labs", label: "Results Review", icon: FlaskConical }, // Changed from "Lab Results" to "Results" since it now includes imaging
-  { id: "billing", label: "Billing", icon: CreditCard },
-  { id: "care-team", label: "Provider Relationships", icon: Users },
-  { id: "patient-info", label: "Patient Information", icon: User },
+  { id: "overview", label: "Overview" },
+  { id: "notes", label: "Clinical Notes" },
+  { id: "medications", label: "Medications" },
+  { id: "labs", label: "Results Review" },
+  { id: "billing", label: "Billing" },
+  { id: "care-team", label: "Provider Relationships" },
+  { id: "patient-info", label: "Patient Information" },
 ];
 
 /**

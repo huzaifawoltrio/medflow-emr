@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 interface ClinicalTab {
   id: string;
   label: string;
-  icon: React.ComponentType<any>;
 }
 
 interface ClinicalTabsProps {
@@ -22,7 +21,6 @@ export function ClinicalTabs({
     <div className="border-b border-gray-200">
       <nav className="-mb-px flex space-x-1 overflow-x-auto">
         {clinicalTabs.map((tab) => {
-          const Icon = tab.icon;
           return (
             <button
               key={tab.id}
@@ -34,7 +32,6 @@ export function ClinicalTabs({
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-50"
               )}
             >
-              <Icon className="h-4 w-4 mr-2" />
               {tab.label}
             </button>
           );

@@ -4,14 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus,
-  FlaskConical,
-  Scan,
-  Clipboard,
-  TrendingUp,
-  Activity,
-} from "lucide-react";
-import {
   ResponsiveContainer,
   LineChart,
   CartesianGrid,
@@ -238,11 +230,9 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
             onClick={() => setIsOrderLabOpen(true)}
             className="bg-purple-600 hover:bg-purple-700"
           >
-            <Plus className="mr-2 h-4 w-4" />
             Order Lab Test
           </Button>
           <Button className="bg-indigo-600 hover:bg-indigo-700">
-            <Plus className="mr-2 h-4 w-4" />
             Order Imaging
           </Button>
         </div>
@@ -250,18 +240,9 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
 
       <Tabs defaultValue="labs" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="labs" className="flex items-center gap-2">
-            <FlaskConical className="h-4 w-4" />
-            Results Review
-          </TabsTrigger>
-          <TabsTrigger value="imaging" className="flex items-center gap-2">
-            <Scan className="h-4 w-4" />
-            Medical Imaging
-          </TabsTrigger>
-          <TabsTrigger value="scales" className="flex items-center gap-2">
-            <Clipboard className="h-4 w-4" />
-            Rating Scales
-          </TabsTrigger>
+          <TabsTrigger value="labs">Results Review</TabsTrigger>
+          <TabsTrigger value="imaging">Medical Imaging</TabsTrigger>
+          <TabsTrigger value="scales">Rating Scales</TabsTrigger>
         </TabsList>
 
         <TabsContent value="labs" className="mt-6">
@@ -269,10 +250,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
             {/* Vitals Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-red-600" />
-                  Vitals Monitoring
-                </CardTitle>
+                <CardTitle>Vitals Monitoring</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -308,7 +286,6 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
                       </div>
                     </div>
                     <Button className="w-full mt-4 bg-red-600 hover:bg-red-700">
-                      <Plus className="mr-2 h-4 w-4" />
                       Record New Vitals
                     </Button>
                   </div>
@@ -380,10 +357,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
             {/* Lab Trends Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  Lab Value Trends
-                </CardTitle>
+                <CardTitle>Lab Value Trends</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80 w-full">
@@ -432,13 +406,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
                         key={config.key}
                         className="flex justify-between items-center"
                       >
-                        <span className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: config.color }}
-                          />
-                          {config.name}:
-                        </span>
+                        <span>{config.name}:</span>
                         <span className="font-medium text-slate-600">
                           {config.normalRange} {config.unit}
                         </span>
@@ -453,10 +421,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
               {/* Recent Labs */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FlaskConical className="h-5 w-5 text-purple-600" />
-                    Recent Lab Results
-                  </CardTitle>
+                  <CardTitle>Recent Lab Results</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {patientData.labs.map((lab: any, index: number) => (
@@ -546,10 +511,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
             {/* Recent Imaging */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Scan className="h-5 w-5 text-indigo-600" />
-                  Recent Imaging Studies
-                </CardTitle>
+                <CardTitle>Recent Imaging Studies</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="p-3 border rounded-lg hover:bg-slate-50 transition-colors">
@@ -721,10 +683,7 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
             {/* Rating Scale Trends Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clipboard className="h-5 w-5 text-emerald-600" />
-                  Assessment Score Trends
-                </CardTitle>
+                <CardTitle>Assessment Score Trends</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80 w-full">

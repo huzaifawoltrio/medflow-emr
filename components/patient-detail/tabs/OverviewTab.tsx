@@ -1,14 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  ChevronRight,
-  FlaskConical,
-  FileText,
-  Heart,
-  Pill,
-  Plus,
-  Video,
-} from "lucide-react";
 
 // Define the structure of a single medication object
 interface Medication {
@@ -51,8 +42,7 @@ export function OverviewTab({
       {/* Quick Actions */}
       <Card className="rounded-xl shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold flex items-center">
-            <ChevronRight className="h-4 w-4 mr-2" />
+          <CardTitle className="text-base font-semibold">
             Quick Actions
           </CardTitle>
         </CardHeader>
@@ -61,25 +51,21 @@ export function OverviewTab({
             onClick={() => setIsNewNoteOpen(true)}
             className="bg-green-600 hover:bg-green-700 text-left justify-start"
           >
-            <FileText className="mr-2 h-4 w-4" />
             Clinical Note
           </Button>
           <Button className="bg-yellow-600 hover:bg-yellow-700 text-left justify-start">
-            <Video className="mr-2 h-4 w-4" />
             Telemedicine
           </Button>
           <Button
             onClick={() => setIsOrderMedOpen(true)}
             className="bg-blue-800 hover:bg-blue-700 text-left justify-start"
           >
-            <Pill className="mr-2 h-4 w-4" />
             Order Medication
           </Button>
           <Button
             onClick={() => setIsOrderLabOpen(true)}
             className="bg-purple-600 hover:bg-purple-700 text-left justify-start"
           >
-            <FlaskConical className="mr-2 h-4 w-4" />
             Order Labs
           </Button>
         </CardContent>
@@ -89,10 +75,7 @@ export function OverviewTab({
       <Card className="rounded-xl shadow-sm">
         <CardHeader>
           <CardTitle className="text-base font-semibold flex items-center justify-between">
-            <span className="flex items-center">
-              <Heart className="h-4 w-4 mr-2" />
-              Latest Vitals
-            </span>
+            <span>Latest Vitals</span>
             <span className="text-xs text-gray-500">
               {patientData.vitals.recorded}
             </span>
@@ -127,7 +110,6 @@ export function OverviewTab({
           </div>
           <div className="p-3 bg-gray-50 rounded-lg">
             <Button variant="outline" size="sm" className="h-full w-full">
-              <Plus className="h-3 w-3 mr-1" />
               Record
             </Button>
           </div>
@@ -138,12 +120,8 @@ export function OverviewTab({
       <Card className="rounded-xl shadow-sm lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-base font-semibold flex items-center justify-between">
-            <span className="flex items-center">
-              <Pill className="h-4 w-4 mr-2" />
-              Current Medications
-            </span>
+            <span>Current Medications</span>
             <Button size="sm" onClick={() => setIsOrderMedOpen(true)}>
-              <Plus className="h-3 w-3 mr-1" />
               Add
             </Button>
           </CardTitle>
@@ -155,12 +133,9 @@ export function OverviewTab({
                 key={med.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
-                <div className="flex items-center space-x-3">
-                  <Pill className="h-4 w-4 text-blue-800" />
-                  <div>
-                    <p className="font-medium text-slate-800">{med.name}</p>
-                    <p className="text-sm text-slate-600">{med.dosage}</p>
-                  </div>
+                <div>
+                  <p className="font-medium text-slate-800">{med.name}</p>
+                  <p className="text-sm text-slate-600">{med.dosage}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm">

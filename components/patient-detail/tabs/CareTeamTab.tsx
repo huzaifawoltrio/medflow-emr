@@ -223,7 +223,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                       </h3>
                       {provider.isPrimary && (
                         <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
-                          <Star className="h-3 w-3 mr-1" />
                           Primary
                         </Badge>
                       )}
@@ -251,21 +250,17 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
 
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center text-xs text-slate-600">
-                    <Building2 className="h-3 w-3 mr-2 text-blue-600" />
                     <span className="truncate">{provider.facility}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
                     <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-2 text-blue-600" />
                       <span>{provider.yearsWorking}</span>
                     </div>
                     <div className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-blue-600 fill-current" />
                       <span>{provider.rating}/5.0</span>
                     </div>
                   </div>
                   <div className="flex items-center text-xs text-slate-600">
-                    <Calendar className="h-3 w-3 mr-2 text-blue-600" />
                     <span>
                       Last contact:{" "}
                       {new Date(provider.lastContact).toLocaleDateString()}
@@ -280,7 +275,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                       size="sm"
                       className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
                     >
-                      <Phone className="h-3 w-3 mr-1" />
                       Call
                     </Button>
                     <Button
@@ -288,7 +282,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                       size="sm"
                       className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
                     >
-                      <Mail className="h-3 w-3 mr-1" />
                       Email
                     </Button>
                   </div>
@@ -440,7 +433,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                     </Badge>
                     {contact.isPrimary && (
                       <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-                        <Star className="h-3 w-3 mr-1" />
                         Primary
                       </Badge>
                     )}
@@ -453,14 +445,8 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                   <p className="text-slate-600">{contact.relation}</p>
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Phone className="h-3 w-3 mr-2 text-blue-600" />
-                    {contact.phone}
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Mail className="h-3 w-3 mr-2 text-blue-600" />
-                    {contact.email}
-                  </div>
+                  <div className="text-sm text-slate-600">{contact.phone}</div>
+                  <div className="text-sm text-slate-600">{contact.email}</div>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -468,7 +454,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                     size="sm"
                     className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
                   >
-                    <Phone className="h-3 w-3 mr-1" />
                     Call
                   </Button>
                   <Button
@@ -476,7 +461,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                     size="sm"
                     className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
                   >
-                    <Mail className="h-3 w-3 mr-1" />
                     Email
                   </Button>
                 </div>
@@ -542,12 +526,10 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Phone className="h-3 w-3 mr-2 text-blue-600" />
+                        <div className="text-sm text-slate-600">
                           {contact.phone}
                         </div>
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Mail className="h-3 w-3 mr-2 text-blue-600" />
+                        <div className="text-sm text-slate-600">
                           {contact.email}
                         </div>
                       </div>
@@ -555,7 +537,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                     <TableCell>
                       {contact.canMakeDecisions && (
                         <Badge className="bg-blue-600 text-white text-xs">
-                          <UserCheck className="h-3 w-3 mr-1" />
                           Decision Maker
                         </Badge>
                       )}
