@@ -9,6 +9,7 @@ import {
   Clipboard,
   TrendingUp,
   Activity,
+  FileText,
 } from "lucide-react";
 import { VitalsSection } from "./LabsTabsComponents/VitalsSection";
 import { LabTrendsSection } from "./LabsTabsComponents/LabsTrendsSection";
@@ -16,6 +17,8 @@ import { RecentResultsSection } from "./LabsTabsComponents/RecentResultsSection"
 import { PendingOrdersSection } from "./LabsTabsComponents/PendingOrdersSection";
 import { RatingScalesSection } from "./LabsTabsComponents/RatingScalesSection";
 import { ImagingTab } from "./ImagingTab";
+import { AddLabResultsDialog } from "../dialogs/AddLabResultsDialog";
+import { useState } from "react";
 
 interface LabsTabProps {
   patientData: any;
@@ -23,6 +26,9 @@ interface LabsTabProps {
 }
 
 export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
+  // Local state for Add Lab Results dialog
+  const [isAddLabResultsOpen, setIsAddLabResultsOpen] = useState(false);
+
   // Extract patient ID from the patient data
   const patientId =
     patientData?.user_id || patientData?.id || patientData?.personalInfo?.id;
@@ -32,6 +38,13 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Results & Diagnostics</h2>
         <div className="flex gap-2">
+          <Button
+            onClick={() => setIsAddLabResultsOpen(true)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Enter Results
+          </Button>
           <Button
             onClick={() => setIsOrderLabOpen(true)}
             className="bg-purple-600 hover:bg-purple-700"
@@ -64,6 +77,8 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
 
         <TabsContent value="labs" className="mt-6">
           <div className="space-y-6">
+            {/* Quick Action Button within Labs Tab */}
+
             {/* Pass patientId to VitalsSection */}
             <VitalsSection patientId={patientId} />
             <LabTrendsSection />
@@ -82,6 +97,13 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
           <RatingScalesSection />
         </TabsContent>
       </Tabs>
+
+      {/* Add Lab Results Dialog */}
+      <AddLabResultsDialog
+        isOpen={isAddLabResultsOpen}
+        onOpenChange={setIsAddLabResultsOpen}
+        patientId={patientId}
+      />
     </div>
   );
 }
