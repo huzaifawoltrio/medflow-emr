@@ -8,7 +8,8 @@ import googleCalendarReducer from "./features/googleCalendar/googleCalendarSlice
 import clinicalNotesReducer from "./features/clinicalNotes/clinicalNotesSlice";
 import documentReducer from "./features/documents/documentSlice";
 import medicationReducer from "./features/medications/medicationSlice";
-import vitalsReducer from "./features/vitals/vitalsSlice"; // Added vitals reducer
+import vitalsReducer from "./features/vitals/vitalsSlice";
+import labResultsReducer from "./features/labResults/labResultsSlice"; // Added lab results reducer
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -22,7 +23,8 @@ export const makeStore = () => {
       clinicalNotes: clinicalNotesReducer,
       documents: documentReducer,
       medications: medicationReducer,
-      vitals: vitalsReducer, // Added vitals reducer
+      vitals: vitalsReducer,
+      labResults: labResultsReducer,
     },
   });
 };

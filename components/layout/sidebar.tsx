@@ -6,46 +6,23 @@ import { Fragment, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Calendar,
-  FileText,
-  MessageSquare,
-  DollarSign,
-  Pill,
-  Video,
-  ClipboardList,
-  FolderOpen,
-  ScanLine,
-  LayoutDashboard,
-  UserCircle,
-  Users,
   X,
-  Stethoscope,
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
-  Handshake,
-  Zap,
-  PanelLeft, // Lucide logo
+  PanelLeft,
+  Stethoscope,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Appointments", href: "/appointments", icon: Calendar },
-  { name: "Patients", href: "/patients", icon: Users },
-  { name: "Patient Intake", href: "/patient-intake", icon: FileText },
-  { name: "Patient Portal", href: "/patient-portal", icon: UserCircle },
-  { name: "Secure Messaging", href: "/messaging", icon: MessageSquare },
-  { name: "Billing", href: "/billing", icon: DollarSign },
-  // {
-  //   name: "Patient Provider Relationships",
-  //   href: "/relationships",
-  //   icon: Handshake,
-  // },
-  { name: "Telemedicine", href: "/telemedicine", icon: Video },
-  { name: "Documents", href: "/documents", icon: ClipboardList },
-  // { name: "Results Review", href: "/results-review", icon: TrendingUp },
-  { name: "File Management", href: "/file-management", icon: FolderOpen },
-  { name: "OCR Workflow", href: "/ocr-workflow", icon: ScanLine },
+  { name: "Dashboard", href: "/", initial: "D" },
+  { name: "Appointments", href: "/appointments", initial: "A" },
+  { name: "Patients", href: "/patients", initial: "P" },
+  { name: "Patient Intake", href: "/patient-intake", initial: "PI" },
+  { name: "Secure Messaging", href: "/messaging", initial: "SM" },
+  { name: "Billing", href: "/billing", initial: "B" },
+  { name: "Telemedicine", href: "/telemedicine", initial: "T" },
+  { name: "File Management", href: "/file-management", initial: "FM" },
+  { name: "OCR Workflow", href: "/ocr-workflow", initial: "O" },
 ];
 
 export function Sidebar({
@@ -140,7 +117,7 @@ export function Sidebar({
               {isCollapsed && !isMobile && !isHovered ? (
                 <PanelLeft className="h-5 w-5 text-white" />
               ) : (
-                <Stethoscope className="h-6 w-6 text-white p-0.5" />
+                <Stethoscope className="text-white" />
               )}
             </div>
 
@@ -212,16 +189,21 @@ export function Sidebar({
                       : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
                   )}
                 >
-                  <item.icon
+                  {/* Initial letter circle */}
+                  <div
                     className={cn(
-                      "transition-all duration-200 ease-in-out shrink-0",
+                      "rounded-full flex items-center justify-center font-semibold transition-all duration-200 ease-in-out shrink-0",
                       isCollapsed && !isMobile && !isHovered
-                        ? "h-6 w-6"
-                        : "h-5 w-5",
+                        ? "w-8 h-8 text-xs"
+                        : "w-6 h-6 text-xs",
                       (!isCollapsed || isMobile || isHovered) && "mr-3",
-                      isActive ? "text-blue-800" : "text-gray-400"
+                      isActive
+                        ? "bg-blue-200 text-blue-800"
+                        : "bg-gray-100 text-gray-600"
                     )}
-                  />
+                  >
+                    {item.initial}
+                  </div>
 
                   {/* Text with smooth transition */}
                   <span

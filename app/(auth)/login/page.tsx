@@ -22,7 +22,7 @@ import { loginUser } from "@/app/redux/features/auth/authActions";
 
 export default function Login() {
   const [username, setUsername] = useState("janedoe6");
-  const [password, setPassword] = useState("N}7~Lf/;fZ,_");
+  const [password, setPassword] = useState("e/SvEX6.~9]L");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -39,7 +39,7 @@ export default function Login() {
   };
 
   const handlePatientLogin = () => {
-    dispatch(loginUser({ username: "johnsmith2", password: "D1f3W9\\yh]sG" }));
+    dispatch(loginUser({ username: "johnsmith", password: "T#,x7@`(^%\\E" }));
   };
 
   // 2. Update the useEffect to handle role-based redirection
