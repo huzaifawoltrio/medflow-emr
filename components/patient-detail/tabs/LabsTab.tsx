@@ -77,11 +77,9 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
 
         <TabsContent value="labs" className="mt-6">
           <div className="space-y-6">
-            {/* Quick Action Button within Labs Tab */}
-
-            {/* Pass patientId to VitalsSection */}
+            {/* Pass patientId to both VitalsSection and LabTrendsSection */}
             <VitalsSection patientId={patientId} />
-            <LabTrendsSection />
+            <LabTrendsSection patientId={patientId} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <RecentResultsSection patientData={patientData} />
               <PendingOrdersSection />
