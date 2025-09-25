@@ -206,24 +206,24 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                     <Button
                       type="button"
                       onClick={() => handleTimeChange("period", "AM")}
-                      className={`w-12 ${
+                      className={`w-12 transition-colors ${
+                        // <-- Added transition here
                         time.period === "AM"
-                          ? "bg-blue-800 text-white"
-                          : "bg-gray-200 text-gray-700"
+                          ? "bg-blue-800 text-white pointer-events-none"
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white" // <-- Added hover styles
                       }`}
-                      disabled={time.period === "AM"}
                     >
                       AM
                     </Button>
                     <Button
                       type="button"
                       onClick={() => handleTimeChange("period", "PM")}
-                      className={`w-12 ${
+                      className={`w-12 transition-colors ${
+                        // <-- Added transition here
                         time.period === "PM"
-                          ? "bg-blue-800 text-white"
-                          : "bg-gray-200 text-gray-700"
+                          ? "bg-blue-800 text-white pointer-events-none"
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white" // <-- Added hover styles
                       }`}
-                      disabled={time.period === "PM"}
                     >
                       PM
                     </Button>
