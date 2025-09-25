@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, Lock, Unlock } from "lucide-react";
 import { ClinicalNote } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 import { Loader2, User, Calendar } from "lucide-react";
+import { ToastService } from "@/services/toastService";
 
 interface NoteCardProps {
   note: ClinicalNote;
@@ -124,6 +125,34 @@ export const NoteCard = ({
     return cleanText.slice(0, 150) + (cleanText.length > 150 ? "..." : "");
   };
 
+  const handleEdit = () => {
+    if (!canEdit(note)) {
+      ToastService.error("You don't have permission to edit this note.");
+      return;
+    }
+    onEdit(note);
+  };
+
+  const handleDelete = () => {
+    if (!canDelete(note)) {
+      ToastService.error("Only draft notes can be deleted.");
+      return;
+    }
+    onDelete(note.id);
+  };
+
+  const handleSign = () => {
+    if (!canSign(note)) {
+      ToastService.error("Only draft notes can be signed.");
+      return;
+    }
+    onSign(note.id);
+  };
+
+  const handleUnsign = () => {
+    onUnsign(note.id);
+  };
+
   return (
     <div className="border rounded-xl shadow-sm bg-white hover:shadow-md transition-shadow duration-200 overflow-hidden">
       <div className="p-5">
@@ -174,7 +203,7 @@ export const NoteCard = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onEdit(note)}
+                onClick={handleEdit}
                 title="Edit Note"
               >
                 <Edit className="h-4 w-4" />
@@ -186,21 +215,29 @@ export const NoteCard = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onUnsign(note.id)}
+                  onClick={handleUnsign}
                   title="Unsign Note"
                   disabled={signing}
                 >
-                  <Unlock className="h-4 w-4 text-orange-500" />
+                  {signing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Unlock className="h-4 w-4 text-orange-500" />
+                  )}
                 </Button>
               ) : (
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => onSign(note.id)}
+                  onClick={handleSign}
                   title="Sign Note"
                   disabled={signing}
                 >
-                  <Lock className="h-4 w-4 text-green-500" />
+                  {signing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Lock className="h-4 w-4 text-green-500" />
+                  )}
                 </Button>
               )
             ) : null}
@@ -210,11 +247,15 @@ export const NoteCard = ({
                 variant="ghost"
                 size="icon"
                 className="text-red-500 hover:text-red-600"
-                onClick={() => onDelete(note.id)}
+                onClick={handleDelete}
                 title="Delete Note"
                 disabled={deleting}
               >
-                <Trash2 className="h-4 w-4" />
+                {deleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
               </Button>
             )}
           </div>

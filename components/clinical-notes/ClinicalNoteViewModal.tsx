@@ -33,6 +33,7 @@ import {
   amendClinicalNote,
   signClinicalNote,
 } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
+import { ToastService } from "@/services/toastService";
 
 interface ClinicalNoteViewModalProps {
   isOpen: boolean;
@@ -91,6 +92,8 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle amendment success
   useEffect(() => {
     if (amendSuccess && isOpen) {
+      ToastService.success("Amendment added successfully!");
+
       setShowAmendForm(false);
       setAmendmentText("");
       setAmendmentReason("");
@@ -106,12 +109,27 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle sign success
   useEffect(() => {
     if (signSuccess && isOpen) {
+      ToastService.success("Clinical note signed successfully!");
+
       // Reload note details only if we have a note ID
       if (note?.id) {
         dispatch(fetchClinicalNote(note.id));
       }
     }
   }, [signSuccess, note?.id, dispatch, isOpen]);
+
+  // Handle errors with toast notifications
+  useEffect(() => {
+    if (notesError && isOpen) {
+      ToastService.error(`Error loading note: ${notesError}`);
+    }
+  }, [notesError, isOpen]);
+
+  useEffect(() => {
+    if (amendmentsError && isOpen) {
+      ToastService.error(`Error loading amendments: ${amendmentsError}`);
+    }
+  }, [amendmentsError, isOpen]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -144,9 +162,17 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   const handleSignNote = async () => {
     if (!note?.id) return;
 
+    const loadingToastId = ToastService.loading("Signing clinical note...");
+
     try {
       await dispatch(signClinicalNote(note.id)).unwrap();
-    } catch (error) {
+      ToastService.dismiss(loadingToastId);
+      // Success toast is handled in the useEffect above
+    } catch (error: any) {
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to sign note. Please try again."
+      );
       console.error("Failed to sign note:", error);
     }
   };
@@ -169,6 +195,8 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   const handleSubmitAmendment = async () => {
     if (!validateAmendmentForm() || !note?.id) return;
 
+    const loadingToastId = ToastService.loading("Adding amendment...");
+
     try {
       await dispatch(
         amendClinicalNote({
@@ -177,7 +205,14 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
           reason: amendmentReason,
         })
       ).unwrap();
-    } catch (error) {
+
+      ToastService.dismiss(loadingToastId);
+      // Success toast is handled in the useEffect above
+    } catch (error: any) {
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to add amendment. Please try again."
+      );
       console.error("Failed to add amendment:", error);
     }
   };
@@ -277,22 +312,7 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
               </div>
             </div>
 
-            {/* Success Messages */}
-            {signSuccess && (
-              <Alert className="border-green-200 bg-green-50">
-                <AlertDescription className="text-green-800">
-                  Note has been successfully signed!
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {amendSuccess && (
-              <Alert className="border-green-200 bg-green-50">
-                <AlertDescription className="text-green-800">
-                  Amendment has been added successfully!
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Success Messages - Removed since we're using toasts now */}
 
             {/* Note Content */}
             <Card>
@@ -455,14 +475,7 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
               </Card>
             )}
 
-            {/* Errors */}
-            {(notesError || amendmentsError) && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {notesError || amendmentsError}
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Errors - Removed since we're using toasts now */}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t">

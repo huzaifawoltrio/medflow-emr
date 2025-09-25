@@ -21,6 +21,7 @@ import {
   deleteClinicalNote,
 } from "../../../app/redux/features/clinicalNotes/clinicalNotesActions";
 import { AppDispatch, RootState } from "../../../app/redux/store";
+import { ToastService } from "@/services/toastService";
 
 interface ClinicalNotesTabProps {
   patientData: any;
@@ -95,10 +96,6 @@ export function ClinicalNotesTab({
   const patientId = getPatientId();
   const patientName = getPatientName();
 
-  // REMOVED: The duplicate API calls for note types and templates
-  // These will be loaded by the ClinicalNotesList component instead
-  // No longer loading note types and templates here to avoid duplicates
-
   // Load patient notes only when patient ID changes
   useEffect(() => {
     if (patientId && patientId !== lastPatientId.current) {
@@ -113,12 +110,13 @@ export function ClinicalNotesTab({
     }
   }, [dispatch, patientId]);
 
-  // Handle success states - reload notes only when necessary
+  // Handle success states - with toast notifications
   useEffect(() => {
     if (createSuccess) {
       console.log("Clinical note created successfully");
+      // Note: Don't show toast here as it's already shown in ClinicalNotesModal
       setIsNewNoteModalOpen(false);
-      // Note is already added to the store by the reducer, no need to reload
+
       // Clear success state after a delay
       const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
@@ -142,7 +140,7 @@ export function ClinicalNotesTab({
   useEffect(() => {
     if (signSuccess) {
       console.log("Clinical note signed successfully");
-      // Note is already updated in the store by the reducer, no need to reload
+      // Note: Don't show toast here as it's already shown in the signing component
       // Clear success state after a delay
       const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
@@ -154,6 +152,8 @@ export function ClinicalNotesTab({
   useEffect(() => {
     if (deleteSuccess) {
       console.log("Clinical note deleted successfully");
+      ToastService.success("Clinical note deleted successfully!");
+
       // Note is already removed from the store by the reducer, no need to reload
       // Clear success state after a delay
       const timeout = setTimeout(() => {
@@ -166,10 +166,13 @@ export function ClinicalNotesTab({
   useEffect(() => {
     if (amendSuccess) {
       console.log("Clinical note amendment created successfully");
+      // Note: Don't show toast here as it's already shown in ClinicalNoteViewModal
+
       // For amendments, we might want to reload to get the updated note status
       if (patientId && patientId === lastPatientId.current) {
         dispatch(fetchPatientNotes({ patientId }));
       }
+
       // Clear success state after a delay
       const timeout = setTimeout(() => {
         dispatch(clearSuccessStates());
@@ -177,6 +180,25 @@ export function ClinicalNotesTab({
       return () => clearTimeout(timeout);
     }
   }, [amendSuccess, dispatch, patientId]);
+
+  // Handle errors with toast notifications
+  useEffect(() => {
+    if (notesError) {
+      ToastService.error(`Error loading notes: ${notesError}`);
+    }
+  }, [notesError]);
+
+  useEffect(() => {
+    if (noteTypesError) {
+      ToastService.error(`Error loading note types: ${noteTypesError}`);
+    }
+  }, [noteTypesError]);
+
+  useEffect(() => {
+    if (templatesError) {
+      ToastService.error(`Error loading templates: ${templatesError}`);
+    }
+  }, [templatesError]);
 
   // Simplified permissions - just allow everything for authenticated users
   const canCreate = true;
@@ -207,6 +229,9 @@ export function ClinicalNotesTab({
         "Edit functionality not yet implemented, viewing note instead:",
         note.id
       );
+      ToastService.error(
+        "Edit functionality not yet implemented. Viewing note instead."
+      );
       handleViewNote(note);
     },
     [handleViewNote]
@@ -220,9 +245,20 @@ export function ClinicalNotesTab({
         )
       ) {
         console.log("Deleting note:", noteId);
+
+        const loadingToastId = ToastService.loading(
+          "Deleting clinical note..."
+        );
+
         try {
           await dispatch(deleteClinicalNote(noteId)).unwrap();
-        } catch (error) {
+          ToastService.dismiss(loadingToastId);
+          // Success toast is handled in the useEffect above
+        } catch (error: any) {
+          ToastService.dismiss(loadingToastId);
+          ToastService.error(
+            error?.message || "Failed to delete note. Please try again."
+          );
           console.error("Error deleting note:", error);
         }
       }
@@ -238,9 +274,18 @@ export function ClinicalNotesTab({
         )
       ) {
         console.log("Signing note:", noteId);
+
+        const loadingToastId = ToastService.loading("Signing clinical note...");
+
         try {
           await dispatch(signClinicalNote(noteId)).unwrap();
-        } catch (error) {
+          ToastService.dismiss(loadingToastId);
+          ToastService.success("Clinical note signed successfully!");
+        } catch (error: any) {
+          ToastService.dismiss(loadingToastId);
+          ToastService.error(
+            error?.message || "Failed to sign note. Please try again."
+          );
           console.error("Error signing note:", error);
         }
       }
@@ -251,7 +296,7 @@ export function ClinicalNotesTab({
   const handleUnsignNote = useCallback(async (noteId: number) => {
     // This functionality would need to be implemented in the backend
     console.log("Unsign functionality not yet implemented for note:", noteId);
-    alert(
+    ToastService.error(
       "Unsign functionality is not yet implemented. Once signed, notes cannot be unsigned for regulatory compliance."
     );
   }, []);
@@ -282,9 +327,21 @@ export function ClinicalNotesTab({
   const handleRetry = useCallback(() => {
     dispatch(clearErrors());
     if (patientId) {
-      dispatch(fetchPatientNotes({ patientId }));
+      const loadingToastId = ToastService.loading("Retrying to load notes...");
+
+      dispatch(fetchPatientNotes({ patientId }))
+        .unwrap()
+        .then(() => {
+          ToastService.dismiss(loadingToastId);
+          ToastService.success("Notes loaded successfully!");
+        })
+        .catch((error: any) => {
+          ToastService.dismiss(loadingToastId);
+          ToastService.error(
+            error?.message || "Failed to load notes. Please try again."
+          );
+        });
     }
-    // Let ClinicalNotesList handle note types and templates loading
   }, [dispatch, patientId]);
 
   // Error state - only for notes loading since note types/templates are handled by ClinicalNotesList
@@ -342,25 +399,8 @@ export function ClinicalNotesTab({
     );
   }
 
-  // Show success messages
-  const successMessages = [];
-  if (createSuccess) successMessages.push("Note created successfully!");
-  if (updateSuccess) successMessages.push("Note updated successfully!");
-  if (signSuccess) successMessages.push("Note signed successfully!");
-  if (deleteSuccess) successMessages.push("Note deleted successfully!");
-  if (amendSuccess) successMessages.push("Amendment added successfully!");
-
   return (
     <div className="space-y-6">
-      {/* Success Messages */}
-      {successMessages.map((message, index) => (
-        <Alert key={index} className="border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">
-            {message}
-          </AlertDescription>
-        </Alert>
-      ))}
-
       {/* Main Notes List */}
       <Card>
         <CardContent className="p-6">

@@ -26,6 +26,7 @@ import {
   NoteTemplate,
 } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 import { DynamicFormRenderer } from "./DynamicFormRenderer";
+import { ToastService } from "@/services/toastService";
 
 interface ClinicalNotesModalProps {
   isOpen: boolean;
@@ -202,15 +203,34 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
       appointment_id: appointmentId,
     };
 
+    // Show loading toast
+    const loadingToastId = ToastService.loading(
+      action === "sign"
+        ? "Creating and signing clinical note..."
+        : "Saving clinical note as draft..."
+    );
+
     try {
       await dispatch(createClinicalNote(noteData)).unwrap();
+
+      // Dismiss loading toast and show success
+      ToastService.dismiss(loadingToastId);
+      ToastService.success(
+        action === "sign"
+          ? "Clinical note created and signed successfully!"
+          : "Clinical note saved as draft successfully!"
+      );
 
       if (action === "sign") {
         // If we need to sign immediately after creation, we could dispatch signClinicalNote here
         // For now, we'll just create as draft and handle signing separately
       }
-    } catch (error) {
-      // Error is handled by Redux
+    } catch (error: any) {
+      // Dismiss loading toast and show error
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to create clinical note. Please try again."
+      );
       console.error("Failed to create note:", error);
     }
   };
@@ -223,6 +243,14 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
       }, 1500);
     }
   }, [createSuccess]);
+
+  // Handle errors with toast notifications
+  useEffect(() => {
+    const anyError = notesError || templatesError || noteTypesError;
+    if (anyError && isOpen) {
+      ToastService.error(`Error: ${anyError}`);
+    }
+  }, [notesError, templatesError, noteTypesError, isOpen]);
 
   const resetForm = () => {
     setSelectedNoteTypeId(null);
@@ -406,12 +434,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
                 </div>
               )}
 
-              {/* Errors */}
-              {anyError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{anyError}</AlertDescription>
-                </Alert>
-              )}
+              {/* Errors - Removed since we're using toasts now */}
 
               {/* Action Buttons */}
               {selectedNoteType && selectedTemplate && (
