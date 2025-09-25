@@ -8,17 +8,16 @@ import {
   Document,
 } from "@/app/redux/features/documents/documentActions";
 import {
-  clearError,
   clearDeleteError,
+  clearUploadError,
+  clearUploadSuccess,
 } from "@/app/redux/features/documents/documentSlice";
 import { fetchPatients } from "@/app/redux/features/patients/patientActions";
-
 import MainLayout from "@/components/layout/main-layout";
 import UploadDocumentModal from "@/components/document/UploadDocumentModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Search,
   Upload,
@@ -36,10 +35,10 @@ import {
   Tags,
   Calendar,
   Loader2,
-  AlertTriangle,
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ToastService } from "@/services/toastService";
 
 // Define FileJson icon component since it doesn't exist in lucide-react
 const FileJson = FileText;
@@ -412,8 +411,14 @@ const StructuredFoldersView = () => {
 // --- Main Page Component ---
 export default function FileManagement() {
   const dispatch = useAppDispatch();
-  const { myUploadedDocuments, loading, deleting, error, deleteError } =
-    useAppSelector((state) => state.documents);
+  const {
+    myUploadedDocuments,
+    loading,
+    deleting,
+    error,
+    deleteError,
+    uploadSuccess,
+  } = useAppSelector((state) => state.documents);
   const { patients } = useAppSelector((state) => state.patient);
 
   // Local state
@@ -435,16 +440,37 @@ export default function FileManagement() {
     }
   }, [dispatch, patients.length]);
 
+  // Toast notifications for errors
+  useEffect(() => {
+    if (error) {
+      ToastService.error(error);
+    }
+    if (deleteError) {
+      ToastService.error(deleteError);
+      dispatch(clearDeleteError());
+    }
+  }, [error, deleteError, dispatch]);
+
+  useEffect(() => {
+    if (uploadSuccess) {
+      ToastService.success("Document uploaded successfully!");
+      dispatch(clearUploadSuccess()); // You'll need to import this action
+    }
+  }, [uploadSuccess, dispatch]);
+
   // Handle document deletion
   const handleDeleteDocument = async (documentId: number) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
+      const toastId = ToastService.loading("Deleting document...");
       try {
         await dispatch(deleteDocument(documentId)).unwrap();
+        ToastService.dismiss(toastId);
+        ToastService.success("Document deleted successfully!");
         // Refresh the documents list after successful deletion
         dispatch(fetchMyUploadedDocuments({}));
-      } catch (error) {
-        // Error is already handled by Redux, shown in the alert
-        console.error("Failed to delete document:", error);
+      } catch (err: any) {
+        ToastService.dismiss(toastId);
+        // The error will be caught and displayed by the useEffect hook
       }
     }
   };
@@ -452,12 +478,6 @@ export default function FileManagement() {
   // Handle refresh
   const handleRefresh = () => {
     dispatch(fetchMyUploadedDocuments({}));
-  };
-
-  // Clear errors
-  const handleClearError = () => {
-    dispatch(clearError());
-    dispatch(clearDeleteError());
   };
 
   // Filter documents based on search and tags
@@ -472,7 +492,7 @@ export default function FileManagement() {
 
     const matchesTags =
       selectedTags.length === 0 ||
-      selectedTags.some((tag) => doc.tags.includes(tag));
+      selectedTags.some((tag) => (doc.tags || []).includes(tag));
 
     return matchesSearch && matchesTags;
   });
@@ -513,19 +533,6 @@ export default function FileManagement() {
             <Upload className="h-4 w-4 mr-2" /> Upload Document
           </Button>
         </div>
-
-        {/* Error Alerts */}
-        {(error || deleteError) && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex justify-between items-center">
-              <span>{error || deleteError}</span>
-              <Button variant="ghost" size="sm" onClick={handleClearError}>
-                Dismiss
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Tabs */}
         <div className="flex border-b border-gray-200 mb-6">

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -30,7 +30,6 @@ import {
   AlertCircle,
   Clock,
   Plus,
-  Mail,
   CalendarDays,
   ExternalLink,
   LogOut,
@@ -41,7 +40,6 @@ import {
   Trash2,
   Edit3,
   FileText,
-  Phone,
   Search,
   UserCheck,
 } from "lucide-react";
@@ -59,6 +57,7 @@ import {
 import { fetchPatients } from "../../redux/features/patients/patientActions"; // Updated import
 import { RootState, AppDispatch } from "../../redux/store";
 import MainLayout from "@/components/layout/main-layout";
+import { ToastService } from "@/services/toastService";
 
 interface Patient {
   user_id: number;
@@ -111,15 +110,11 @@ export default function GoogleTelemedicine() {
       // Clear URL params and refresh connection status
       window.history.replaceState({}, "", "/telemedicine");
       dispatch(checkGoogleConnection());
-      // Show success message
-      setTimeout(() => {
-        alert("Successfully connected to Google Account!");
-      }, 500);
+      ToastService.success("Successfully connected to Google Account!");
     } else if (googleAuth === "error") {
       const message = urlParams.get("message") || "Authentication failed";
-      console.error("Google auth error:", message);
       window.history.replaceState({}, "", "/telemedicine");
-      alert(`Authentication failed: ${message}`);
+      ToastService.error(`Authentication failed: ${message}`);
     }
   }, [dispatch]);
 
@@ -174,33 +169,38 @@ export default function GoogleTelemedicine() {
 
   // Event handlers
   const handleGoogleConnect = () => {
-    // Instead of using Redux thunk, redirect directly to the backend endpoint
-    // This avoids CORS issues with OAuth redirects
     const baseUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     window.location.href = `${baseUrl}/google/authorize`;
   };
 
-  const handleGoogleDisconnect = async () => {
+  const handleGoogleDisconnect = () => {
     if (
       window.confirm("Are you sure you want to disconnect your Google account?")
     ) {
-      try {
-        await dispatch(disconnectGoogle()).unwrap();
-        alert("Successfully disconnected from Google Account");
-      } catch (error) {
-        console.error("Error disconnecting:", error);
-      }
+      const promise = dispatch(disconnectGoogle()).unwrap();
+      ToastService.promise(promise, {
+        loading: "Disconnecting...",
+        success: "Successfully disconnected from Google Account!",
+        error: "Failed to disconnect from Google Account.",
+      });
     }
   };
 
   const handleScheduleSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!scheduleForm.patientId || !scheduleForm.date || !scheduleForm.time) {
-      alert("Please fill in all required fields");
+      ToastService.error("Please fill in all required fields.");
       return;
     }
-    // Create ISO datetime strings
+
+    const patient = patients.find(
+      (p) => p.user_id.toString() === scheduleForm.patientId
+    );
+    const patientName = patient
+      ? `${patient.first_name} ${patient.last_name}`
+      : "Patient";
+
     const startDateTime = new Date(
       `${scheduleForm.date}T${scheduleForm.time}:00`
     ).toISOString();
@@ -208,31 +208,23 @@ export default function GoogleTelemedicine() {
       new Date(startDateTime).getTime() +
         parseInt(scheduleForm.duration) * 60000
     ).toISOString();
-    const patient = patients.find(
-      (p) => p.user_id.toString() === scheduleForm.patientId
-    );
-    const patientName = patient
-      ? `${patient.first_name} ${patient.last_name}`
-      : "Patient";
+
     const meetingData = {
       summary: `${scheduleForm.type} with ${patientName}`,
       start_time: startDateTime,
       end_time: endDateTime,
       patient_id: parseInt(scheduleForm.patientId),
-      description: `Session Type: ${scheduleForm.type}
-Duration: ${scheduleForm.duration} minutes
-Notes: ${scheduleForm.notes}`,
+      description: `Session Type: ${scheduleForm.type}\nDuration: ${scheduleForm.duration} minutes\nNotes: ${scheduleForm.notes}`,
     };
+
+    const toastId = ToastService.loading("Scheduling session...");
+
     try {
-      const result = await dispatch(createGoogleMeeting(meetingData)).unwrap();
-      alert(
-        `Session scheduled successfully!
-Patient: ${patientName}
-Date: ${scheduleForm.date} at ${scheduleForm.time}
-Google Meet link: ${result.meeting.meet_link}
-Calendar invitation sent to: ${patient?.email}`
-      );
-      // Reset form and close
+      await dispatch(createGoogleMeeting(meetingData)).unwrap();
+
+      ToastService.dismiss(toastId);
+      ToastService.success("Session scheduled successfully!");
+
       setShowScheduleForm(false);
       setScheduleForm({
         patientId: "",
@@ -243,11 +235,10 @@ Calendar invitation sent to: ${patient?.email}`
         notes: "",
       });
       setSelectedPatient(null);
-      // Refresh meetings list
       dispatch(fetchMeetings());
-    } catch (error: any) {
-      console.error("Error creating meeting:", error);
-      alert(`Failed to create meeting: ${error}`);
+    } catch (err: any) {
+      ToastService.dismiss(toastId);
+      ToastService.error(`Failed to create meeting: ${err.message || err}`);
     }
   };
 
@@ -256,16 +247,21 @@ Calendar invitation sent to: ${patient?.email}`
     startTime: string,
     endTime: string
   ) => {
+    const toastId = ToastService.loading("Rescheduling meeting...");
+
     try {
       await dispatch(
         rescheduleMeeting({ eventId, start_time: startTime, end_time: endTime })
       ).unwrap();
-      alert("Meeting rescheduled successfully!");
+
+      ToastService.dismiss(toastId);
+      ToastService.success("Meeting rescheduled successfully!");
+
       dispatch(fetchMeetings());
       setEditingMeeting(null);
-    } catch (error: any) {
-      console.error("Error rescheduling meeting:", error);
-      alert(`Failed to reschedule meeting: ${error}`);
+    } catch (err: any) {
+      ToastService.dismiss(toastId);
+      ToastService.error(`Failed to reschedule meeting: ${err.message || err}`);
     }
   };
 
@@ -275,14 +271,17 @@ Calendar invitation sent to: ${patient?.email}`
         `Are you sure you want to cancel the meeting with ${patientName}? This will notify all attendees.`
       )
     ) {
+      const toastId = ToastService.loading("Canceling meeting...");
+
       try {
         await dispatch(cancelMeeting(eventId)).unwrap();
-        alert(
-          "Meeting canceled successfully and attendees have been notified!"
+        ToastService.dismiss(toastId);
+        ToastService.success(
+          "Meeting canceled and attendees have been notified!"
         );
-      } catch (error: any) {
-        console.error("Error canceling meeting:", error);
-        alert(`Failed to cancel meeting: ${error}`);
+      } catch (err: any) {
+        ToastService.dismiss(toastId);
+        ToastService.error(`Failed to cancel meeting: ${err.message || err}`);
       }
     }
   };
@@ -446,23 +445,7 @@ Calendar invitation sent to: ${patient?.email}`
               )}
             </div>
           </div>
-          {/* Error Alert */}
-          {error && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
-                {error}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearErrorMessage}
-                  className="ml-2 text-red-600 hover:text-red-800"
-                >
-                  Dismiss
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
+
           {/* Google Account Connection */}
           <Card className="border-l-4 border-l-blue-500">
             <CardContent className="pt-6">
@@ -687,10 +670,7 @@ Calendar invitation sent to: ${patient?.email}`
                       <Select
                         value={scheduleForm.type}
                         onValueChange={(value) =>
-                          setScheduleForm({
-                            ...scheduleForm,
-                            type: value,
-                          })
+                          setScheduleForm({ ...scheduleForm, type: value })
                         }
                       >
                         <SelectTrigger>

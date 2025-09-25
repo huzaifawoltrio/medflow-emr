@@ -55,6 +55,10 @@ const documentSlice = createSlice({
       state.uploadError = null;
       state.uploadSuccess = false;
     },
+    clearUploadSuccess: (state) => {
+      // Add this reducer
+      state.uploadSuccess = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -188,7 +192,7 @@ const documentSlice = createSlice({
 export const {
   clearUploadError,
   clearDeleteError,
-  clearError,
+  clearUploadSuccess,
   resetUploadState,
 } = documentSlice.actions;
 export default documentSlice.reducer;

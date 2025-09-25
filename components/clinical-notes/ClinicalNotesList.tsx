@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,6 @@ interface ClinicalNotesListProps {
   canDelete: (note: ClinicalNote) => boolean;
   canSign: (note: ClinicalNote) => boolean;
 }
-
-// Note Card Component
 
 export function ClinicalNotesList({
   notes = [],
@@ -61,15 +59,36 @@ export function ClinicalNotesList({
   const [filterTemplateId, setFilterTemplateId] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Load note types and templates on mount
+  // Use refs to track if we've already loaded the data to prevent infinite loops
+  const noteTypesLoaded = useRef(false);
+  const templatesLoaded = useRef(false);
+
+  // Load note types and templates only once on mount - FIXED
   useEffect(() => {
-    if (noteTypes.length === 0) {
+    // Only dispatch if we haven't loaded and aren't currently loading
+    if (
+      !noteTypesLoaded.current &&
+      noteTypes.length === 0 &&
+      !noteTypesLoading
+    ) {
+      console.log("Loading note types for the first time");
+      noteTypesLoaded.current = true;
       dispatch(fetchNoteTypes());
     }
-    if (templates.length === 0) {
+  }, [dispatch, noteTypes.length, noteTypesLoading]);
+
+  useEffect(() => {
+    // Only dispatch if we haven't loaded and aren't currently loading
+    if (
+      !templatesLoaded.current &&
+      templates.length === 0 &&
+      !templatesLoading
+    ) {
+      console.log("Loading templates for the first time");
+      templatesLoaded.current = true;
       dispatch(fetchNoteTemplates());
     }
-  }, [dispatch, noteTypes.length, templates.length]);
+  }, [dispatch, templates.length, templatesLoading]);
 
   // Get shortened labels for the filter buttons
   const getTypeLabel = (type: any) => {

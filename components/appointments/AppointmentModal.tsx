@@ -1,7 +1,10 @@
-// components/appointments/AppointmentModal.tsx
 import { useState, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import { createAppointment } from "@/app/redux/features/appointments/appointmentActions";
+import {
+  clearSuccess,
+  clearError,
+} from "@/app/redux/features/appointments/appointmentSlice";
 import {
   fetchPatients,
   Patient,
@@ -20,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { ToastService } from "@/services/toastService";
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -40,6 +44,9 @@ interface NewAppointmentData {
 const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
   const dispatch = useAppDispatch();
   const { patients } = useAppSelector((state) => state.patient);
+  const { loading, error, success } = useAppSelector(
+    (state) => state.appointment
+  );
   const [formData, setFormData] = useState<
     Omit<NewAppointmentData, "appointment_datetime">
   >({
@@ -66,6 +73,18 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
       dispatch(fetchPatients());
     }
   }, [dispatch, patients.length]);
+
+  useEffect(() => {
+    if (success) {
+      ToastService.success("Appointment created successfully!");
+      dispatch(clearSuccess());
+      onClose();
+    }
+    if (error) {
+      ToastService.error(error);
+      dispatch(clearError());
+    }
+  }, [success, error, dispatch, onClose]);
 
   // --- Filter patients based on search input ---
   const filteredPatients = useMemo(() => {
@@ -100,7 +119,7 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
 
   const handleSubmit = () => {
     if (!selectedDate || !formData.patient_id) {
-      alert("Please select a patient and a date.");
+      ToastService.error("Please select a patient and a date.");
       return;
     }
 
@@ -117,7 +136,6 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
     };
 
     dispatch(createAppointment(submissionData));
-    onClose();
   };
 
   return (
@@ -144,7 +162,6 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                     value={patientSearch}
                     onChange={(e) => {
                       setPatientSearch(e.target.value);
-                      // Clear selection if user starts typing again
                       if (selectedPatient) {
                         setSelectedPatient(null);
                         handleInputChange("patient_id", 0);
@@ -152,7 +169,6 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                       setIsPatientListVisible(true);
                     }}
                     onFocus={() => setIsPatientListVisible(true)}
-                    // Use a timeout to allow click events on the list to register
                     onBlur={() =>
                       setTimeout(() => setIsPatientListVisible(false), 150)
                     }
@@ -166,7 +182,6 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                           <div
                             key={p.user_id}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                            // Use onMouseDown to ensure it fires before onBlur
                             onMouseDown={() => handlePatientSelect(p)}
                           >
                             {p.first_name} {p.last_name}
@@ -207,10 +222,9 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                       type="button"
                       onClick={() => handleTimeChange("period", "AM")}
                       className={`w-12 transition-colors ${
-                        // <-- Added transition here
                         time.period === "AM"
                           ? "bg-blue-800 text-white pointer-events-none"
-                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white" // <-- Added hover styles
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white"
                       }`}
                     >
                       AM
@@ -219,10 +233,9 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
                       type="button"
                       onClick={() => handleTimeChange("period", "PM")}
                       className={`w-12 transition-colors ${
-                        // <-- Added transition here
                         time.period === "PM"
                           ? "bg-blue-800 text-white pointer-events-none"
-                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white" // <-- Added hover styles
+                          : "bg-gray-200 text-gray-700 hover:bg-blue-700 hover:text-white"
                       }`}
                     >
                       PM
@@ -362,8 +375,9 @@ const AppointmentModal = ({ isOpen, onClose }: AppointmentModalProps) => {
             <Button
               onClick={handleSubmit}
               className="bg-blue-800 hover:bg-blue-700 text-white"
+              disabled={loading}
             >
-              Create Appointment
+              {loading ? "Creating..." : "Create Appointment"}
             </Button>
           </div>
         </DialogContent>

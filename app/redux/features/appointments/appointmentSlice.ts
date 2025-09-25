@@ -10,6 +10,7 @@ import {
   DateRangeAppointmentsResponse,
   DailyAppointment,
 } from "./appointmentActions";
+
 // Enhanced interface for the appointment state
 interface AppointmentState {
   appointments: Appointment[];
@@ -22,6 +23,7 @@ interface AppointmentState {
   dailyLoading: boolean;
   dateRangeLoading: boolean;
   error: string | null;
+  success: boolean; // <-- Added success state
 }
 
 const initialState: AppointmentState = {
@@ -35,6 +37,7 @@ const initialState: AppointmentState = {
   dailyLoading: false,
   dateRangeLoading: false,
   error: null,
+  success: false, // <-- Initialize success state
 };
 
 const appointmentSlice = createSlice({
@@ -55,6 +58,10 @@ const appointmentSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    // Clear success state
+    clearSuccess: (state) => {
+      state.success = false;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -62,6 +69,7 @@ const appointmentSlice = createSlice({
       .addCase(fetchAppointments.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(
         fetchAppointments.fulfilled,
@@ -80,11 +88,13 @@ const appointmentSlice = createSlice({
       .addCase(createAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(
         createAppointment.fulfilled,
         (state, action: PayloadAction<Appointment>) => {
           state.loading = false;
+          state.success = true;
           state.appointments.push(action.payload);
         }
       )
@@ -98,11 +108,13 @@ const appointmentSlice = createSlice({
       .addCase(deleteAppointment.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(
         deleteAppointment.fulfilled,
         (state, action: PayloadAction<number>) => {
           state.loading = false;
+          state.success = true;
           state.appointments = state.appointments.filter(
             (appointment) => appointment.id !== action.payload
           );
@@ -173,6 +185,7 @@ export const {
   clearDailyAppointments,
   clearDateRangeAppointments,
   clearError,
+  clearSuccess, // <-- Export the new action
 } = appointmentSlice.actions;
 
 export default appointmentSlice.reducer;

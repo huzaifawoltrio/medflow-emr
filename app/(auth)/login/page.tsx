@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hooks";
 import { loginUser } from "@/app/redux/features/auth/authActions";
+import { ToastService } from "@/services/toastService";
 
 export default function Login() {
   const [username, setUsername] = useState("janedoe6");
@@ -28,7 +29,6 @@ export default function Login() {
 
   const router = useRouter();
   const dispatch = useAppDispatch();
-  // 1. Get the user object from the Redux store
   const { loading, error, success, user } = useAppSelector(
     (state) => state.auth
   );
@@ -42,12 +42,18 @@ export default function Login() {
     dispatch(loginUser({ username: "johnsmith", password: "T#,x7@`(^%\\E" }));
   };
 
-  // 2. Update the useEffect to handle role-based redirection
   useEffect(() => {
     if (success && user) {
+      ToastService.success("Login successful!");
       router.push("/");
     }
   }, [success, user, router]);
+
+  useEffect(() => {
+    if (error) {
+      ToastService.error(error);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -143,7 +149,6 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
-              {error && <p className="text-red-500 text-xs">{error}</p>}
               <Button
                 type="submit"
                 className="w-full bg-blue-800 hover:bg-blue-700"

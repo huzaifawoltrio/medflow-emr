@@ -28,6 +28,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import api from "@/lib/axiosConfig";
 import { useRouter } from "next/navigation";
+import { ToastService } from "@/services/toastService";
 
 const sections = [
   { id: "personal", name: "Personal Info", icon: User },
@@ -39,8 +40,6 @@ const sections = [
 export default function PatientIntake() {
   const [activeSection, setActiveSection] = useState<string>("personal");
   const [completedSections, setCompletedSections] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -119,27 +118,26 @@ export default function PatientIntake() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
 
-    // Format data for the API
     const registrationData = {
       ...formData,
       allergies: formData.allergies.join(", "),
     };
 
-    try {
-      const response = await api.post("/patients/register", registrationData);
-      console.log("Patient registered successfully:", response.data);
-      // On success, redirect to the patients list
-      router.push("/patients");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "An unexpected error occurred.");
-    } finally {
-      setLoading(false);
-    }
+    const promise = api.post("/patients/register", registrationData);
+
+    ToastService.promise(promise, {
+      loading: "Registering patient...",
+      success: (data) => {
+        router.push("/patients");
+        return "Patient registered successfully!";
+      },
+      error: (err) => {
+        return err.response?.data?.message || "An unexpected error occurred.";
+      },
+    });
   };
 
   const renderPersonalInfo = () => (
@@ -688,14 +686,9 @@ export default function PatientIntake() {
         <Button
           type="submit"
           className="bg-blue-800 hover:bg-blue-700 flex items-center"
-          disabled={loading}
         >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="mr-2 h-4 w-4" />
-          )}
-          {loading ? "Submitting..." : "Complete & Submit Forms"}
+          <Send className="mr-2 h-4 w-4" />
+          Complete & Submit Forms
         </Button>
       </div>
     </div>
@@ -738,7 +731,6 @@ export default function PatientIntake() {
               </Button>
             </div>
           </div>
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
           <div className="mb-8">
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -756,6 +748,7 @@ export default function PatientIntake() {
               return (
                 <button
                   key={section.id}
+                  type="button"
                   onClick={() => setActiveSection(section.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex-1 justify-center ${
                     isActive

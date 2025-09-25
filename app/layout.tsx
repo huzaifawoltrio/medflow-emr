@@ -1,7 +1,7 @@
-"use client"; // Add this line to make it a client component
+"use client";
 
 import type React from "react";
-import type { Metadata } from "next";
+import { Toaster } from "react-hot-toast";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -19,7 +19,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          {children}
+          <Toaster position="top-center" reverseOrder={false} />
+        </StoreProvider>
       </body>
     </html>
   );

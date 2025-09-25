@@ -95,15 +95,9 @@ export function ClinicalNotesTab({
   const patientId = getPatientId();
   const patientName = getPatientName();
 
-  // Load note types and templates only once on component mount
-  useEffect(() => {
-    if (!initialLoadDone.current) {
-      console.log("Initial load - fetching note types and templates");
-      dispatch(fetchNoteTypes());
-      dispatch(fetchNoteTemplates());
-      initialLoadDone.current = true;
-    }
-  }, [dispatch]);
+  // REMOVED: The duplicate API calls for note types and templates
+  // These will be loaded by the ClinicalNotesList component instead
+  // No longer loading note types and templates here to avoid duplicates
 
   // Load patient notes only when patient ID changes
   useEffect(() => {
@@ -290,18 +284,14 @@ export function ClinicalNotesTab({
     if (patientId) {
       dispatch(fetchPatientNotes({ patientId }));
     }
-    dispatch(fetchNoteTypes());
-    dispatch(fetchNoteTemplates());
+    // Let ClinicalNotesList handle note types and templates loading
   }, [dispatch, patientId]);
 
-  // Error state
-  const hasErrors = notesError || noteTypesError || templatesError;
+  // Error state - only for notes loading since note types/templates are handled by ClinicalNotesList
+  const hasErrors = notesError;
 
-  // Loading states
-  const isInitialLoading =
-    (notesLoading && notes.length === 0) ||
-    (noteTypesLoading && noteTypes.length === 0) ||
-    (templatesLoading && templates.length === 0);
+  // Loading states - only for notes since note types/templates are handled by ClinicalNotesList
+  const isInitialLoading = notesLoading && notes.length === 0;
 
   // Show loading state for initial load
   if (isInitialLoading) {
@@ -339,8 +329,6 @@ export function ClinicalNotesTab({
             <AlertDescription>
               <div className="space-y-1">
                 {notesError && <div>Notes: {notesError}</div>}
-                {noteTypesError && <div>Note Types: {noteTypesError}</div>}
-                {templatesError && <div>Templates: {templatesError}</div>}
               </div>
             </AlertDescription>
           </Alert>
