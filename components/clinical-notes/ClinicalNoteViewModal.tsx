@@ -33,7 +33,6 @@ import {
   amendClinicalNote,
   signClinicalNote,
 } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
-import { ToastService } from "@/services/toastService";
 
 interface ClinicalNoteViewModalProps {
   isOpen: boolean;
@@ -92,8 +91,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle amendment success
   useEffect(() => {
     if (amendSuccess && isOpen) {
-      ToastService.success("Amendment added successfully!");
-
       setShowAmendForm(false);
       setAmendmentText("");
       setAmendmentReason("");
@@ -109,8 +106,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   // Handle sign success
   useEffect(() => {
     if (signSuccess && isOpen) {
-      ToastService.success("Clinical note signed successfully!");
-
       // Reload note details only if we have a note ID
       if (note?.id) {
         dispatch(fetchClinicalNote(note.id));
@@ -119,17 +114,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   }, [signSuccess, note?.id, dispatch, isOpen]);
 
   // Handle errors with toast notifications
-  useEffect(() => {
-    if (notesError && isOpen) {
-      ToastService.error(`Error loading note: ${notesError}`);
-    }
-  }, [notesError, isOpen]);
-
-  useEffect(() => {
-    if (amendmentsError && isOpen) {
-      ToastService.error(`Error loading amendments: ${amendmentsError}`);
-    }
-  }, [amendmentsError, isOpen]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -162,17 +146,9 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   const handleSignNote = async () => {
     if (!note?.id) return;
 
-    const loadingToastId = ToastService.loading("Signing clinical note...");
-
     try {
       await dispatch(signClinicalNote(note.id)).unwrap();
-      ToastService.dismiss(loadingToastId);
-      // Success toast is handled in the useEffect above
     } catch (error: any) {
-      ToastService.dismiss(loadingToastId);
-      ToastService.error(
-        error?.message || "Failed to sign note. Please try again."
-      );
       console.error("Failed to sign note:", error);
     }
   };
@@ -195,8 +171,6 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
   const handleSubmitAmendment = async () => {
     if (!validateAmendmentForm() || !note?.id) return;
 
-    const loadingToastId = ToastService.loading("Adding amendment...");
-
     try {
       await dispatch(
         amendClinicalNote({
@@ -205,14 +179,8 @@ export const ClinicalNoteViewModal: React.FC<ClinicalNoteViewModalProps> = ({
           reason: amendmentReason,
         })
       ).unwrap();
-
-      ToastService.dismiss(loadingToastId);
-      // Success toast is handled in the useEffect above
     } catch (error: any) {
-      ToastService.dismiss(loadingToastId);
-      ToastService.error(
-        error?.message || "Failed to add amendment. Please try again."
-      );
+      
       console.error("Failed to add amendment:", error);
     }
   };

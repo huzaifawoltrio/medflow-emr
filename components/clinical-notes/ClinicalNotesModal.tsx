@@ -26,7 +26,6 @@ import {
   NoteTemplate,
 } from "@/app/redux/features/clinicalNotes/clinicalNotesActions";
 import { DynamicFormRenderer } from "./DynamicFormRenderer";
-import { ToastService } from "@/services/toastService";
 
 interface ClinicalNotesModalProps {
   isOpen: boolean;
@@ -204,22 +203,13 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
     };
 
     // Show loading toast
-    const loadingToastId = ToastService.loading(
-      action === "sign"
-        ? "Creating and signing clinical note..."
-        : "Saving clinical note as draft..."
-    );
+    
 
     try {
       await dispatch(createClinicalNote(noteData)).unwrap();
 
       // Dismiss loading toast and show success
-      ToastService.dismiss(loadingToastId);
-      ToastService.success(
-        action === "sign"
-          ? "Clinical note created and signed successfully!"
-          : "Clinical note saved as draft successfully!"
-      );
+      
 
       if (action === "sign") {
         // If we need to sign immediately after creation, we could dispatch signClinicalNote here
@@ -227,10 +217,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
       }
     } catch (error: any) {
       // Dismiss loading toast and show error
-      ToastService.dismiss(loadingToastId);
-      ToastService.error(
-        error?.message || "Failed to create clinical note. Please try again."
-      );
+     
       console.error("Failed to create note:", error);
     }
   };
@@ -244,13 +231,7 @@ export const ClinicalNotesModal: React.FC<ClinicalNotesModalProps> = ({
     }
   }, [createSuccess]);
 
-  // Handle errors with toast notifications
-  useEffect(() => {
-    const anyError = notesError || templatesError || noteTypesError;
-    if (anyError && isOpen) {
-      ToastService.error(`Error: ${anyError}`);
-    }
-  }, [notesError, templatesError, noteTypesError, isOpen]);
+  
 
   const resetForm = () => {
     setSelectedNoteTypeId(null);

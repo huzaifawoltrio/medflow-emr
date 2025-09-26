@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Loader2, AlertCircle, Edit, Ban } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
 import {
   fetchPatientMedications,
   discontinueMedication,
@@ -33,7 +32,6 @@ export function MedicationsTab({
   setIsOrderMedOpen,
 }: MedicationsTabProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { toast } = useToast();
 
   const { medications, loading, error, success, operationLoading } =
     useSelector((state: RootState) => state.medications);
@@ -55,10 +53,6 @@ export function MedicationsTab({
 
   useEffect(() => {
     if (success) {
-      toast({
-        title: "Success",
-        description: "Medication operation completed successfully",
-      });
       dispatch(clearSuccess());
 
       // Refetch medications after successful operation
@@ -66,18 +60,13 @@ export function MedicationsTab({
         dispatch(fetchPatientMedications(patientId));
       }
     }
-  }, [success, dispatch, toast, patientId]);
+  }, [success, dispatch, patientId]);
 
   useEffect(() => {
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
       dispatch(clearError());
     }
-  }, [error, dispatch, toast]);
+  }, [error, dispatch]);
 
   const handleEditMedication = (medication: Medication) => {
     dispatch(setSelectedMedication(medication));
