@@ -69,26 +69,26 @@ export function OverviewTab({
         <CardContent className="grid grid-cols-2 gap-3">
           <Button
             onClick={() => setIsOrderMedOpen(true)}
-            className="bg-blue-800 hover:bg-blue-700 text-left justify-start"
+            className="bg-blue-800 hover:bg-blue-700 justify-center h-20"
           >
             <Pill className="mr-2 h-4 w-4" />
             Order Medication
           </Button>
           <Button
             onClick={() => setIsOrderLabOpen(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-left justify-start"
+            className="bg-purple-600 hover:bg-purple-700 justify-center h-20"
           >
             <FlaskConical className="mr-2 h-4 w-4" />
             Order Labs
           </Button>
           <Button
             onClick={() => setIsNewNoteOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-left justify-start"
+            className="bg-green-600 hover:bg-green-700 justify-center h-20"
           >
             <FileText className="mr-2 h-4 w-4" />
             Clinical Note
           </Button>
-          <Button className="bg-yellow-600 hover:bg-green-700 text-left justify-start">
+          <Button className="bg-yellow-600 hover:bg-green-700 justify-center h-20">
             <Video className="mr-2 h-4 w-4" />
             Telemedicine
           </Button>
@@ -110,13 +110,14 @@ export function OverviewTab({
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
+        <CardContent className="grid grid-cols-2 gap-3 text-center">
           {vitalsLoading.latest ? (
             <p>Loading vitals...</p>
           ) : vitalsError.latest ? (
             <p className="text-red-500">Error: {vitalsError.latest}</p>
           ) : latestVitals ? (
             <>
+              {/* Row 1 */}
               <div className="p-3 bg-blue-50 rounded-lg">
                 <p className="text-xs text-blue-700">BP</p>
                 <p className="font-bold text-blue-900">
@@ -129,6 +130,7 @@ export function OverviewTab({
                   {latestVitals.heart_rate} bpm
                 </p>
               </div>
+              {/* Row 2 */}
               <div className="p-3 bg-orange-50 rounded-lg">
                 <p className="text-xs text-orange-700">Temp</p>
                 <p className="font-bold text-orange-900">
@@ -141,7 +143,8 @@ export function OverviewTab({
                   {latestVitals.respiratory_rate} rpm
                 </p>
               </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
+              {/* Row 3 */}
+              <div className="col-span-2 p-3 bg-purple-50 rounded-lg">
                 <p className="text-xs text-purple-700">SpO2</p>
                 <p className="font-bold text-purple-900">
                   {latestVitals.oxygen_saturation}%
@@ -162,10 +165,6 @@ export function OverviewTab({
               <Pill className="h-4 w-4 mr-2" />
               Current Medications
             </span>
-            <Button size="sm" onClick={() => setIsOrderMedOpen(true)}>
-              <Plus className="h-3 w-3 mr-1" />
-              Add
-            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -183,14 +182,7 @@ export function OverviewTab({
                     {med.generic_name} {med.strength}
                   </span>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Discontinue
-                  </Button>
-                </div>
+                <div className="flex gap-2"></div>
               </div>
             ))
           ) : (

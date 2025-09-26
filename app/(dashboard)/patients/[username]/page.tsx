@@ -70,6 +70,10 @@ export default function PatientDetailPage() {
     (state: RootState) => state.patient
   );
 
+  useEffect(() => {
+    console.log("the selected patient it", selectedPatient);
+  }, [selectedPatient]);
+
   // Clinical notes Redux state for debugging
   const clinicalNotesState = useSelector(
     (state: RootState) => state.clinicalNotes
@@ -100,40 +104,11 @@ export default function PatientDetailPage() {
 
   useEffect(() => {
     if (username) {
-      console.log("Fetching patient data for username:", username);
       dispatch(fetchPatientByUsername(username));
     }
   }, [dispatch, username, retryCount]);
 
-  // Log clinical notes state changes for debugging
-  useEffect(() => {
-    console.log("Clinical notes state updated:", {
-      notesCount: clinicalNotesState.notes.length,
-      noteTypesCount: clinicalNotesState.noteTypes?.length || 0,
-      templatesCount: clinicalNotesState.templates.length,
-      loading: {
-        notes: clinicalNotesState.notesLoading,
-        noteTypes: clinicalNotesState.noteTypesLoading,
-        templates: clinicalNotesState.templatesLoading,
-        creating: clinicalNotesState.creating,
-      },
-      errors: {
-        notesError: clinicalNotesState.notesError,
-        noteTypesError: clinicalNotesState.noteTypesError,
-        templatesError: clinicalNotesState.templatesError,
-      },
-      success: {
-        create: clinicalNotesState.createSuccess,
-        update: clinicalNotesState.updateSuccess,
-        sign: clinicalNotesState.signSuccess,
-        delete: clinicalNotesState.deleteSuccess,
-        amend: clinicalNotesState.amendSuccess,
-      },
-    });
-  }, [clinicalNotesState]);
-
   const handleRetry = () => {
-    console.log("Retrying patient data fetch...");
     setRetryCount((prev) => prev + 1);
   };
 
@@ -236,13 +211,6 @@ export default function PatientDetailPage() {
       },
     };
 
-    console.log(
-      "Rendering tab:",
-      activeTab,
-      "with unified patient data keys:",
-      Object.keys(unifiedPatientData)
-    );
-
     switch (activeTab) {
       case "overview":
         return (
@@ -307,18 +275,6 @@ export default function PatientDetailPage() {
     admitDate: "2023-10-26", // Placeholder as this is not in the data
     primaryPhysician: selectedPatient.primary_care_physician,
     dischargeDate: null, // Assuming patient is active
-  };
-
-  console.log("Banner data created:", {
-    name: bannerData.name,
-    mrn: bannerData.mrn,
-    location: bannerData.location,
-  });
-
-  const handleOrderMedication = () => {
-    console.log("Ordering medication:", newMedication);
-    // TODO: Implement medication ordering functionality
-    alert("Medication ordering functionality will be implemented soon.");
   };
 
   const handleOrderLab = () => {
