@@ -78,6 +78,7 @@ export default function PatientDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
+  const [isNewNoteOpen, setIsNewNoteOpen] = useState(false); // Add this line
   const [retryCount, setRetryCount] = useState(0);
 
   // Dialog states for medication and lab orders
@@ -249,6 +250,7 @@ export default function PatientDetailPage() {
             patientData={unifiedPatientData}
             setIsOrderMedOpen={setIsOrderMedOpen}
             setIsOrderLabOpen={setIsOrderLabOpen}
+            setIsNewNoteOpen={setIsNewNoteOpen} // Add this line
           />
         );
       case "notes":
