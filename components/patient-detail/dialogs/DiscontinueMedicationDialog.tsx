@@ -30,6 +30,7 @@ import {
 } from "../../../app/redux/features/medications/medicationActions";
 import { clearError } from "../../../app/redux/features/medications/medicationSlice";
 import type { RootState, AppDispatch } from "../../../app/redux/store";
+import { ToastService } from "@/services/toastService";
 
 interface DiscontinueMedicationDialogProps {
   isOpen: boolean;
@@ -77,6 +78,13 @@ export function DiscontinueMedicationDialog({
     }
   }, [isOpen, dispatch]);
 
+  // Handle errors with toast notifications
+  useEffect(() => {
+    if (error && isOpen) {
+      ToastService.error(`Failed to discontinue medication: ${error}`);
+    }
+  }, [error, isOpen]);
+
   const validateForm = () => {
     if (!discontinueReason) {
       setReasonError("Please select a reason for discontinuation");
@@ -96,18 +104,30 @@ export function DiscontinueMedicationDialog({
     const finalReason =
       discontinueReason === "Other" ? customReason.trim() : discontinueReason;
 
+    // Show loading toast and handle the operation
+    const loadingToastId = ToastService.loading("Discontinuing medication...");
+
     try {
       const result = await dispatch(
         discontinueMedication({
           id: medication.id,
           reason: finalReason,
         })
+      ).unwrap();
+
+      // Dismiss loading toast and show success
+      ToastService.dismiss(loadingToastId);
+      ToastService.success(
+        `Medication "${medication.generic_name}" discontinued successfully!`
       );
 
-      if (discontinueMedication.fulfilled.match(result)) {
-        onOpenChange(false);
-      }
-    } catch (error) {
+      onOpenChange(false);
+    } catch (error: any) {
+      // Dismiss loading toast and show error
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to discontinue medication. Please try again."
+      );
       console.error("Failed to discontinue medication:", error);
     }
   };
@@ -161,6 +181,7 @@ export function DiscontinueMedicationDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Only show error alert for non-toast handled errors */}
         {error && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />

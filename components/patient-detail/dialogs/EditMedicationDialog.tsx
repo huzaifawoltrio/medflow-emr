@@ -30,6 +30,7 @@ import {
 } from "../../../app/redux/features/medications/medicationActions";
 import { clearError } from "../../../app/redux/features/medications/medicationSlice";
 import type { RootState, AppDispatch } from "../../../app/redux/store";
+import { ToastService } from "@/services/toastService";
 
 interface EditMedicationDialogProps {
   isOpen: boolean;
@@ -127,6 +128,13 @@ export function EditMedicationDialog({
       dispatch(clearError());
     }
   }, [isOpen, dispatch]);
+
+  // Handle errors with toast notifications
+  useEffect(() => {
+    if (error && isOpen) {
+      ToastService.error(`Failed to update medication: ${error}`);
+    }
+  }, [error, isOpen]);
 
   const validateForm = () => {
     const errors: Partial<Record<keyof UpdateMedicationRequest, string>> = {};
@@ -241,17 +249,30 @@ export function EditMedicationDialog({
         : undefined;
     }
 
+    // Show loading toast and handle the operation
+    const loadingToastId = ToastService.loading("Updating medication...");
+
     try {
       const result = await dispatch(
         updateMedication({
           id: selectedMedication.id,
           data: updateData,
         })
+      ).unwrap();
+
+      // Dismiss loading toast and show success
+      ToastService.dismiss(loadingToastId);
+      ToastService.success(
+        `Medication "${selectedMedication.generic_name}" updated successfully!`
       );
-      if (updateMedication.fulfilled.match(result)) {
-        onOpenChange(false);
-      }
-    } catch (error) {
+
+      onOpenChange(false);
+    } catch (error: any) {
+      // Dismiss loading toast and show error
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to update medication. Please try again."
+      );
       console.error("Failed to update medication:", error);
     }
   };
@@ -309,6 +330,7 @@ export function EditMedicationDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Only show error alert for non-toast handled errors */}
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />

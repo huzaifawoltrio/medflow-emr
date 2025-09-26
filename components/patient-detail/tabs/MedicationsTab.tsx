@@ -21,6 +21,7 @@ import {
 import type { RootState, AppDispatch } from "../../../app/redux/store";
 import { EditMedicationDialog } from "../dialogs/EditMedicationDialog";
 import { DiscontinueMedicationDialog } from "../dialogs/DiscontinueMedicationDialog";
+import { ToastService } from "@/services/toastService";
 
 interface MedicationsTabProps {
   patientData: any;
@@ -62,8 +63,10 @@ export function MedicationsTab({
     }
   }, [success, dispatch, patientId]);
 
+  // Handle errors with toast notifications
   useEffect(() => {
     if (error) {
+      ToastService.error(`Medication Error: ${error}`);
       dispatch(clearError());
     }
   }, [error, dispatch]);
@@ -144,6 +147,20 @@ export function MedicationsTab({
     )
     .slice(0, 5);
 
+  // Handle retry with toast
+  const handleRetryLoad = () => {
+    if (patientId) {
+      ToastService.handleAsync(
+        () => dispatch(fetchPatientMedications(patientId)).unwrap(),
+        {
+          loading: "Retrying to load medications...",
+          success: "Medications loaded successfully!",
+          error: "Failed to load medications. Please try again.",
+        }
+      );
+    }
+  };
+
   if (loading && medications.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -178,10 +195,23 @@ export function MedicationsTab({
         </Button>
       </div>
 
+      {/* Error Alert - Keep this for any errors not handled by toasts */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>
+            <div className="flex justify-between items-center">
+              <span>{error}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRetryLoad}
+                className="ml-2"
+              >
+                Retry
+              </Button>
+            </div>
+          </AlertDescription>
         </Alert>
       )}
 

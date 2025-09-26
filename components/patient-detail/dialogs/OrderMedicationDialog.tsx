@@ -30,6 +30,7 @@ import {
 } from "../../../app/redux/features/medications/medicationActions";
 import { clearError } from "../../../app/redux/features/medications/medicationSlice";
 import type { RootState, AppDispatch } from "../../../app/redux/store";
+import { ToastService } from "@/services/toastService";
 
 interface OrderMedicationDialogProps {
   isOpen: boolean;
@@ -101,6 +102,13 @@ export function OrderMedicationDialog({
     }
   }, [isOpen, appointmentId, dispatch]);
 
+  // Handle errors with toast notifications
+  useEffect(() => {
+    if (error && isOpen) {
+      ToastService.error(`Failed to order medication: ${error}`);
+    }
+  }, [error, isOpen]);
+
   const validateForm = () => {
     const errors: Partial<Record<keyof typeof formData, string>> = {};
 
@@ -161,13 +169,25 @@ export function OrderMedicationDialog({
 
     console.log("the create medication data is", medicationData);
 
+    // Show loading toast and handle the operation
+    const loadingToastId = ToastService.loading("Ordering medication...");
+
     try {
-      const result = await dispatch(createMedication(medicationData));
-      if (createMedication.fulfilled.match(result)) {
-        onOpenChange(false);
-      }
-    } catch (error) {
-      // Error will be handled by Redux and displayed in the component
+      const result = await dispatch(createMedication(medicationData)).unwrap();
+
+      // Dismiss loading toast and show success
+      ToastService.dismiss(loadingToastId);
+      ToastService.success(
+        `Medication "${formData.generic_name}" ordered successfully!`
+      );
+
+      onOpenChange(false);
+    } catch (error: any) {
+      // Dismiss loading toast and show error
+      ToastService.dismiss(loadingToastId);
+      ToastService.error(
+        error?.message || "Failed to order medication. Please try again."
+      );
       console.error("Failed to create medication:", error);
     }
   };
@@ -222,6 +242,7 @@ export function OrderMedicationDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Only show error alert for non-toast handled errors */}
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />

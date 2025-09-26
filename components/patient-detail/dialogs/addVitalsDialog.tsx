@@ -9,6 +9,7 @@ import {
   validateVitalSigns,
 } from "../../../app/redux/features/vitals/vitalsActions";
 import type { CreateVitalSignsData } from "../../../app/redux/features/vitals/vitalsActions";
+import { ToastService } from "../../../services/toastService";
 import {
   Dialog,
   DialogContent,
@@ -84,57 +85,7 @@ export function AddVitalsDialog({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate form data
-    const errors = validateVitalSigns(formData);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
-
-    // Convert recorded_date to proper ISO string if provided
-    const submitData = {
-      ...formData,
-      recorded_date: formData.recorded_date
-        ? new Date(formData.recorded_date).toISOString()
-        : new Date().toISOString(),
-    };
-
-    try {
-      await dispatch(
-        createVitalSigns(submitData as CreateVitalSignsData)
-      ).unwrap();
-      // Reset form and close dialog on success
-      setFormData({
-        patient_id: patientId,
-        appointment_id: appointmentId,
-        systolic_bp: "",
-        diastolic_bp: "",
-        heart_rate: "",
-        temperature: "",
-        temperature_unit: "F",
-        respiratory_rate: "",
-        oxygen_saturation: "",
-        weight: "",
-        weight_unit: "lbs",
-        height: "",
-        height_unit: "in",
-        pain_level: undefined,
-        pain_location: "",
-        pain_description: "",
-        notes: "",
-        recorded_date: new Date().toISOString().slice(0, 16),
-      });
-      onOpenChange(false);
-    } catch (error) {
-      // Error is handled by Redux
-      console.error("Failed to create vitals:", error);
-    }
-  };
-
-  const handleClose = () => {
+  const resetForm = () => {
     setFormData({
       patient_id: patientId,
       appointment_id: appointmentId,
@@ -156,7 +107,92 @@ export function AddVitalsDialog({
       recorded_date: new Date().toISOString().slice(0, 16),
     });
     setValidationErrors([]);
-    onOpenChange(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Client-side validation
+    const errors = validateVitalSigns(formData);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      ToastService.error(
+        "Please correct the validation errors before submitting."
+      );
+      return;
+    }
+
+    // Convert recorded_date to proper ISO string if provided
+    const submitData = {
+      ...formData,
+      recorded_date: formData.recorded_date
+        ? new Date(formData.recorded_date).toISOString()
+        : new Date().toISOString(),
+    };
+
+    try {
+      // Use ToastService.handleAsync for consistent loading/success/error handling
+      const result = await ToastService.handleAsync(
+        () =>
+          dispatch(
+            createVitalSigns(submitData as CreateVitalSignsData)
+          ).unwrap(),
+        {
+          loading: "Recording vital signs...",
+          success:
+            "Vital signs recorded successfully! The patient's health data has been updated.",
+          error: "Failed to record vital signs. Please try again.",
+        }
+      );
+
+      if (result) {
+        // Reset form and close dialog on success
+        resetForm();
+        onOpenChange(false);
+      }
+    } catch (error: any) {
+      // Error is already handled by ToastService.handleAsync
+      console.error("Failed to create vitals:", error);
+
+      // Show specific validation errors if they exist in the response
+      if (error?.response?.data?.errors) {
+        const apiErrors = Object.values(
+          error.response.data.errors
+        ).flat() as string[];
+        setValidationErrors(apiErrors);
+      }
+    }
+  };
+
+  const handleClose = () => {
+    // Only show confirmation if form has data
+    const hasFormData = Object.entries(formData).some(([key, value]) => {
+      if (
+        key === "patient_id" ||
+        key === "appointment_id" ||
+        key === "recorded_date" ||
+        key === "temperature_unit" ||
+        key === "weight_unit" ||
+        key === "height_unit"
+      ) {
+        return false; // Skip default values
+      }
+      return value !== "" && value !== undefined;
+    });
+
+    if (hasFormData) {
+      if (
+        window.confirm(
+          "You have unsaved changes. Are you sure you want to close?"
+        )
+      ) {
+        resetForm();
+        onOpenChange(false);
+      }
+    } else {
+      resetForm();
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -180,14 +216,6 @@ export function AddVitalsDialog({
                   ))}
                 </ul>
               </AlertDescription>
-            </Alert>
-          )}
-
-          {/* API Error */}
-          {error.creating && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error.creating}</AlertDescription>
             </Alert>
           )}
 
