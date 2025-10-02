@@ -9,7 +9,8 @@ import clinicalNotesReducer from "./features/clinicalNotes/clinicalNotesSlice";
 import documentReducer from "./features/documents/documentSlice";
 import medicationReducer from "./features/medications/medicationSlice";
 import vitalsReducer from "./features/vitals/vitalsSlice";
-import labResultsReducer from "./features/labResults/labResultsSlice"; // Added lab results reducer
+import labResultsReducer from "./features/labResults/labResultsSlice";
+import assessmentReducer from "./features/assessments/assessmentSlice";
 
 // Configure the Redux store
 export const makeStore = () => {
@@ -25,6 +26,7 @@ export const makeStore = () => {
       medications: medicationReducer,
       vitals: vitalsReducer,
       labResults: labResultsReducer,
+      assessments: assessmentReducer,
     },
   });
 };
