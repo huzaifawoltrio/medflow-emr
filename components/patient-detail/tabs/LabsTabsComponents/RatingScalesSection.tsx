@@ -1,44 +1,96 @@
+// components/patient-detail/tabs/LabsTabsComponents/RatingScalesSection.tsx
+import { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clipboard } from "lucide-react";
+import { Clipboard, Loader2 } from "lucide-react";
 import { RatingScalesChart } from "./RatingScalesChart";
+import { AppDispatch, RootState } from "@/app/redux/store";
+import {
+  getPatientAssessmentSummary,
+  getPatientAssessmentTrends,
+} from "@/app/redux/features/assessments/assessmentActions";
+import type { Assessment } from "@/app/redux/features/assessments/assessmentSlice";
 
-const ratingScaleData = [
-  { date: "2023-01-01", PHQ9: 12, GAD7: 8, PTSD: 25 },
-  { date: "2023-02-01", PHQ9: 8, GAD7: 7, PTSD: 30 },
-  { date: "2023-03-01", PHQ9: 6, GAD7: 5, PTSD: 20 },
-  { date: "2023-04-01", PHQ9: 4, GAD7: 3, PTSD: 15 },
-];
-
-const recentRatingScales = [
-  {
+const ASSESSMENT_DETAILS: {
+  [key: string]: {
+    name: string;
+    maxScore: number;
+    severity: (score: number) => string;
+  };
+} = {
+  phq9: {
     name: "PHQ-9 Depression Assessment",
-    date: "2025-09-01",
-    score: 4,
     maxScore: 27,
-    interpretation: "Minimal",
-    severity: "normal",
+    severity: (score) => {
+      if (score <= 4) return "normal";
+      if (score <= 9) return "mild";
+      if (score <= 14) return "moderate";
+      if (score <= 19) return "moderate-severe";
+      return "severe";
+    },
   },
-  {
+  gad7: {
     name: "GAD-7 Anxiety Assessment",
-    date: "2025-09-01",
-    score: 3,
     maxScore: 21,
-    interpretation: "Minimal",
-    severity: "normal",
+    severity: (score) => {
+      if (score <= 4) return "normal";
+      if (score <= 9) return "mild";
+      if (score <= 14) return "moderate";
+      return "severe";
+    },
   },
-  {
+  pcl5: {
     name: "PCL-5 PTSD Assessment",
-    date: "2025-08-15",
-    score: 25,
     maxScore: 80,
-    interpretation: "Below Threshold",
-    severity: "normal",
+    severity: (score) => {
+      if (score < 31) return "normal";
+      if (score <= 40) return "mild";
+      if (score <= 60) return "moderate";
+      return "severe";
+    },
   },
-];
+};
 
-export function RatingScalesSection() {
+export function RatingScalesSection({ patientId }: { patientId: number }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { patientSummary, patientTrends, loading } = useSelector(
+    (state: RootState) => state.assessments
+  );
+
+  useEffect(() => {
+    if (patientId) {
+      dispatch(getPatientAssessmentSummary(patientId));
+      dispatch(getPatientAssessmentTrends({ patientId }));
+    }
+  }, [dispatch, patientId]);
+
+  const chartData = useMemo(() => {
+    if (!patientTrends?.graph_data) return [];
+
+    const dataByDate: { [date: string]: any } = {};
+    patientTrends.graph_data.forEach((item) => {
+      const date = item.date.split("T")[0];
+      if (!dataByDate[date]) {
+        dataByDate[date] = { date };
+      }
+      dataByDate[date][item.type.toUpperCase()] = item.score;
+    });
+
+    return Object.values(dataByDate).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  }, [patientTrends]);
+
+  if (loading && !patientSummary) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -49,13 +101,21 @@ export function RatingScalesSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <RatingScalesChart data={ratingScaleData} />
+          {chartData.length > 0 ? (
+            <RatingScalesChart data={chartData} />
+          ) : (
+            <p className="text-center text-gray-500">
+              No trend data available.
+            </p>
+          )}
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentAssessmentScores />
-        <AssessmentHistory />
+        <RecentAssessmentScores summary={patientSummary} />
+        <AssessmentHistory
+          assessments={patientSummary?.attention_required ?? []}
+        />
       </div>
 
       <ClinicalInterpretations />
@@ -63,79 +123,124 @@ export function RatingScalesSection() {
   );
 }
 
-function RecentAssessmentScores() {
+function RecentAssessmentScores({ summary }: { summary: any }) {
+  const recentAssessments = summary
+    ? Object.values(summary.by_type).map((item: any) => item.latest)
+    : [];
+
+  if (!summary) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Assessment Scores</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>No recent assessments found.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Recent Assessment Scores</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {recentRatingScales.map((scale, index) => (
-          <div
-            key={index}
-            className="p-4 border rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <h4 className="font-medium text-slate-800">{scale.name}</h4>
-                <p className="text-sm text-slate-600">
-                  Completed: {new Date(scale.date).toLocaleDateString()}
-                </p>
-              </div>
-              <Badge
-                className={
-                  scale.severity === "normal"
-                    ? "bg-green-100 text-green-800"
-                    : scale.severity === "mild"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : scale.severity === "moderate"
-                    ? "bg-orange-100 text-orange-800"
-                    : "bg-red-100 text-red-800"
-                }
+        {recentAssessments.length > 0 ? (
+          recentAssessments.map((assessment: Assessment) => {
+            const details = ASSESSMENT_DETAILS[assessment.assessment_type];
+            if (!details) return null;
+            const severity = details.severity(assessment.total_score);
+
+            return (
+              <div
+                key={assessment.id}
+                className="p-4 border rounded-lg hover:bg-slate-50 transition-colors"
               >
-                {scale.interpretation}
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">
-                  Score: {scale.score}/{scale.maxScore}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {Math.round((scale.score / scale.maxScore) * 100)}%
-                </span>
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-slate-800">
+                      {details.name}
+                    </h4>
+                    <p className="text-sm text-slate-600">
+                      Completed:{" "}
+                      {new Date(
+                        assessment.assessment_date
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge className={getBadgeColor(severity)}>
+                    {assessment.interpretation}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">
+                      Score: {assessment.total_score}/{details.maxScore}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {Math.round(
+                        (assessment.total_score / details.maxScore) * 100
+                      )}
+                      %
+                    </span>
+                  </div>
+                  <ProgressBar
+                    score={assessment.total_score}
+                    maxScore={details.maxScore}
+                    severity={severity}
+                  />
+                </div>
               </div>
-
-              <ProgressBar scale={scale} />
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <Button variant="outline" size="sm">
-                View Details
-              </Button>
-              <Button variant="outline" size="sm">
-                Compare Previous
-              </Button>
-            </div>
-          </div>
-        ))}
+            );
+          })
+        ) : (
+          <p>No recent assessments found.</p>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function ProgressBar({ scale }: { scale: (typeof recentRatingScales)[0] }) {
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
+const getBadgeColor = (severity: string) => {
+  switch (severity) {
+    case "normal":
+      return "bg-green-100 text-green-800";
+    case "mild":
+      return "bg-yellow-100 text-yellow-800";
+    case "moderate":
+      return "bg-orange-100 text-orange-800";
+    case "moderate-severe":
+      return "bg-red-100 text-red-800";
+    case "severe":
+      return "bg-red-100 text-red-800 border-red-500";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
+function ProgressBar({
+  score,
+  maxScore,
+  severity,
+}: {
+  score: number;
+  maxScore: number;
+  severity: string;
+}) {
+  const getSeverityColor = (sev: string) => {
+    switch (sev) {
       case "normal":
         return "bg-green-500";
       case "mild":
         return "bg-yellow-500";
       case "moderate":
         return "bg-orange-500";
-      default:
+      case "moderate-severe":
         return "bg-red-500";
+      default:
+        return "bg-red-700";
     }
   };
 
@@ -143,62 +248,56 @@ function ProgressBar({ scale }: { scale: (typeof recentRatingScales)[0] }) {
     <div className="w-full bg-slate-200 rounded-full h-2">
       <div
         className={`h-2 rounded-full transition-all duration-300 ${getSeverityColor(
-          scale.severity
+          severity
         )}`}
-        style={{
-          width: `${(scale.score / scale.maxScore) * 100}%`,
-        }}
+        style={{ width: `${(score / maxScore) * 100}%` }}
       />
     </div>
   );
 }
 
-function AssessmentHistory() {
+function AssessmentHistory({ assessments }: { assessments: Assessment[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Assessment History</CardTitle>
+        <CardTitle>Assessment History (Requiring Attention)</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <p className="font-medium">PHQ-9 Depression Screen</p>
-                <p className="text-sm text-slate-600">July 15, 2024</p>
+          {assessments.length > 0 ? (
+            assessments.map((assessment) => (
+              <div key={assessment.id} className="p-3 bg-slate-50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">
+                      {ASSESSMENT_DETAILS[assessment.assessment_type]?.name}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {new Date(
+                        assessment.assessment_date
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      Score: {assessment.total_score}
+                    </p>
+                    <Badge
+                      className={getBadgeColor(
+                        ASSESSMENT_DETAILS[
+                          assessment.assessment_type
+                        ]?.severity(assessment.total_score)
+                      )}
+                    >
+                      {assessment.severity_level}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-medium">Score: 4</p>
-                <Badge className="bg-green-100 text-green-800">Minimal</Badge>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <p className="font-medium">GAD-7 Anxiety Screen</p>
-                <p className="text-sm text-slate-600">July 15, 2024</p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium">Score: 3</p>
-                <Badge className="bg-green-100 text-green-800">Minimal</Badge>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-slate-50 rounded-lg">
-            <div className="flex justify-between items-center mb-2">
-              <div>
-                <p className="font-medium">AUDIT Alcohol Screen</p>
-                <p className="text-sm text-slate-600">June 20, 2024</p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium">Score: 1</p>
-                <Badge className="bg-green-100 text-green-800">Low Risk</Badge>
-              </div>
-            </div>
-          </div>
+            ))
+          ) : (
+            <p>No assessments requiring attention.</p>
+          )}
 
           <Button variant="outline" className="w-full mt-3">
             View All History

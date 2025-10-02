@@ -4,7 +4,7 @@ import type React from "react";
 import { Toaster } from "react-hot-toast";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import "./globals.css";
+import "../styles/globals.css";
 import StoreProvider from "./redux/provider";
 
 export default function RootLayout({

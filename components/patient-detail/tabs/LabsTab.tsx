@@ -1,16 +1,7 @@
-// components/patient-detail/tabs/LabsTab.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Plus,
-  FlaskConical,
-  Scan,
-  Clipboard,
-  TrendingUp,
-  Activity,
-  FileText,
-} from "lucide-react";
+import { Plus, FlaskConical, Scan, Clipboard, FileText } from "lucide-react";
 import { VitalsSection } from "./LabsTabsComponents/VitalsSection";
 import { LabTrendsSection } from "./LabsTabsComponents/LabsTrendsSection";
 import { RecentResultsSection } from "./LabsTabsComponents/RecentResultsSection";
@@ -19,6 +10,7 @@ import { RatingScalesSection } from "./LabsTabsComponents/RatingScalesSection";
 import { ImagingTab } from "./ImagingTab";
 import { AddLabResultsDialog } from "../dialogs/AddLabResultsDialog";
 import { useState } from "react";
+import { AddAssessmentScoreDialog } from "../dialogs/AddAssessmentScoreDialog";
 
 interface LabsTabProps {
   patientData: any;
@@ -26,10 +18,10 @@ interface LabsTabProps {
 }
 
 export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
-  // Local state for Add Lab Results dialog
   const [isAddLabResultsOpen, setIsAddLabResultsOpen] = useState(false);
+  const [isAddAssessmentScoreOpen, setIsAddAssessmentScoreOpen] =
+    useState(false);
 
-  // Extract patient ID from the patient data
   const patientId =
     patientData?.user_id || patientData?.id || patientData?.personalInfo?.id;
 
@@ -37,13 +29,20 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Results & Diagnostics</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           <Button
             onClick={() => setIsAddLabResultsOpen(true)}
             className="bg-green-600 hover:bg-green-700"
           >
             <FileText className="mr-2 h-4 w-4" />
             Enter Results
+          </Button>
+          <Button
+            onClick={() => setIsAddAssessmentScoreOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Assessment
           </Button>
           <Button
             onClick={() => setIsOrderLabOpen(true)}
@@ -77,7 +76,6 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
 
         <TabsContent value="labs" className="mt-6">
           <div className="space-y-6">
-            {/* Pass patientId to both VitalsSection and LabTrendsSection */}
             <VitalsSection patientId={patientId} />
             <LabTrendsSection patientId={patientId} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -92,14 +90,19 @@ export function LabsTab({ patientData, setIsOrderLabOpen }: LabsTabProps) {
         </TabsContent>
 
         <TabsContent value="scales" className="mt-6">
-          <RatingScalesSection />
+          <RatingScalesSection patientId={patientId} />
         </TabsContent>
       </Tabs>
 
-      {/* Add Lab Results Dialog */}
       <AddLabResultsDialog
         isOpen={isAddLabResultsOpen}
         onOpenChange={setIsAddLabResultsOpen}
+        patientId={patientId}
+      />
+
+      <AddAssessmentScoreDialog
+        isOpen={isAddAssessmentScoreOpen}
+        onOpenChange={setIsAddAssessmentScoreOpen}
         patientId={patientId}
       />
     </div>
