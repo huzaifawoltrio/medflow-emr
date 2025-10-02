@@ -201,10 +201,9 @@ export default function PatientDetailPage() {
     // Create a unified patient data object for the tabs
     const unifiedPatientData = {
       ...selectedPatient,
-      ...patientData, // Include static data for sections that need it
-      // Add additional mappings for consistency
+      ...patientData,
       personalInfo: {
-        id: selectedPatient.user_id || selectedPatient.id,
+        id: selectedPatient.user_id,
         firstName: selectedPatient.first_name,
         lastName: selectedPatient.last_name,
         ...selectedPatient,
@@ -261,10 +260,7 @@ export default function PatientDetailPage() {
     }`,
     gender: selectedPatient.gender,
     age: calculateAge(selectedPatient.date_of_birth),
-    mrn:
-      selectedPatient.user_id?.toString() ||
-      selectedPatient.id?.toString() ||
-      "",
+    mrn: selectedPatient.user_id?.toString(),
     location: `${selectedPatient.city}, ${selectedPatient.state}`,
     contact: {
       phone: selectedPatient.phone_number,
@@ -272,7 +268,13 @@ export default function PatientDetailPage() {
       address: selectedPatient.address,
     },
     dob: selectedPatient.date_of_birth,
-    admitDate: "2023-10-26", // Placeholder as this is not in the data
+    admitDate: selectedPatient.created_at
+      ? new Date(selectedPatient.created_at).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "N/A",
     primaryPhysician: selectedPatient.primary_care_physician,
     dischargeDate: null, // Assuming patient is active
   };

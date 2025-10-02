@@ -1,7 +1,7 @@
 // components/patient-detail/PatientBanner.tsx
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Home, Mail, MapPin, Phone, Stethoscope } from "lucide-react";
+import { Calendar, Home, Mail, MapPin, Phone } from "lucide-react";
 
 interface PatientBannerProps {
   patientData: {
@@ -19,7 +19,6 @@ interface PatientBannerProps {
     };
     dob: string;
     admitDate: string;
-    primaryPhysician: string;
     dischargeDate: string | null;
   };
 }
@@ -104,7 +103,7 @@ export function PatientBanner({ patientData }: PatientBannerProps) {
           </div>
 
           {/* Right Section: Quick Info only */}
-          <div className="grid grid-cols-2 gap-3 text-sm w-full sm:w-auto flex-shrink-0">
+          <div className="grid grid-cols-1 gap-3 text-sm w-full sm:w-auto flex-shrink-0">
             <div className="bg-slate-50 rounded-lg px-4 py-2 border border-slate-200">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="h-4 w-4 text-blue-800" />
@@ -114,17 +113,6 @@ export function PatientBanner({ patientData }: PatientBannerProps) {
               </div>
               <span className="font-semibold text-slate-800 text-base">
                 {patientData.admitDate}
-              </span>
-            </div>
-            <div className="bg-slate-50 rounded-lg px-4 py-2 border border-slate-200">
-              <div className="flex items-center gap-2 mb-1">
-                <Stethoscope className="h-4 w-4 text-blue-800" />
-                <span className="text-slate-500 text-xs font-medium uppercase tracking-wider">
-                  Primary MD
-                </span>
-              </div>
-              <span className="font-semibold text-slate-800 text-base truncate">
-                {patientData.primaryPhysician}
               </span>
             </div>
           </div>

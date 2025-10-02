@@ -44,6 +44,7 @@ interface Patient {
   current_pain_level: number;
   additional_notes: string;
   profile_picture_url?: string;
+  created_at?: string; // Optional field
 }
 
 interface PatientState {
