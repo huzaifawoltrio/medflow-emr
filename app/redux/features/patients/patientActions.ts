@@ -178,5 +178,34 @@ export const fetchMyDoctors = createAsyncThunk<
   }
 });
 
+export const assignPatientToDoctor = createAsyncThunk(
+  "patients/assignPatientToDoctor",
+  async (patientId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/patients/${patientId}/assign`, {});
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data || "Failed to assign patient"
+      );
+    }
+  }
+);
+
+// Thunk to get all doctors assigned to a specific patient
+export const getPatientDoctors = createAsyncThunk(
+  "patients/getPatientDoctors",
+  async (patientId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/patients/${patientId}/doctors`);
+      return response.data.doctors;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data || "Failed to get patient doctors"
+      );
+    }
+  }
+);
+
 // Export the DetailedPatient type for use in other files
 export type { DetailedPatient, Doctor };

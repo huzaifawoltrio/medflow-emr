@@ -1,4 +1,8 @@
 // components/patient-detail/tabs/CareTeamTab.tsx
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../../app/redux/store";
+import { getPatientDoctors } from "../../../app/redux/features/patients/patientActions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,70 +34,11 @@ import {
   FileText,
   Video,
   MessageSquare,
+  Loader2,
+  Stethoscope,
+  GraduationCap,
+  Languages,
 } from "lucide-react";
-
-const providerRelationships = [
-  {
-    role: "Primary Care Physician",
-    name: "Dr. Sarah Johnson MD",
-    specialty: "Internal Medicine",
-    avatar: "/placeholder-user.jpg",
-    initials: "SJ",
-    status: "Active",
-    lastContact: "2024-08-28",
-    phone: "(555) 123-4567",
-    email: "s.johnson@healthsystem.com",
-    facility: "Metro General Hospital",
-    yearsWorking: "3 years",
-    rating: 4.8,
-    isPrimary: true,
-  },
-  {
-    role: "Case Manager",
-    name: "Nino Kafka LCSW",
-    specialty: "Social Work",
-    avatar: "/placeholder-user.jpg",
-    initials: "NK",
-    status: "Active",
-    lastContact: "2024-08-30",
-    phone: "(555) 234-5678",
-    email: "n.kafka@carecoord.com",
-    facility: "Community Care Center",
-    yearsWorking: "2 years",
-    rating: 4.9,
-    isPrimary: false,
-  },
-  {
-    role: "Therapist",
-    name: "Steven Shmeinecke LPC",
-    specialty: "Behavioral Health",
-    avatar: "/placeholder-user.jpg",
-    initials: "SS",
-    status: "Active",
-    lastContact: "2024-08-25",
-    phone: "(555) 345-6789",
-    email: "s.shmeinecke@therapy.com",
-    facility: "Wellness Therapy Group",
-    yearsWorking: "1 year",
-    rating: 4.7,
-    isPrimary: false,
-  },
-  {
-    role: "Specialist",
-    name: "Dr. Ayo Odesina MD",
-    specialty: "Cardiology",
-    avatar: "/placeholder-user.jpg",
-    initials: "AO",
-    status: "Consulting",
-    lastContact: "2024-08-20",
-    phone: "(555) 456-7890",
-    email: "a.odesina@heartcare.com",
-    facility: "Heart Care Specialists",
-    yearsWorking: "6 months",
-    rating: 4.6,
-    isPrimary: false,
-  },
-];
 
 const patientRelationships = [
   {
@@ -163,6 +108,34 @@ interface CareTeamTabProps {
 }
 
 export function CareTeamTab({ patientData }: CareTeamTabProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { patientDoctors, loading, error } = useSelector(
+    (state: RootState) => state.patient
+  );
+
+  // Extract user_id to prevent unnecessary re-renders
+  const patientId = patientData?.user_id;
+
+  useEffect(() => {
+    if (patientId) {
+      dispatch(getPatientDoctors(patientId));
+    }
+  }, [dispatch, patientId]);
+
+  // Helper function to get initials
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -197,121 +170,191 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {providerRelationships.map((provider) => (
-              <div
-                key={provider.name}
-                className={`p-4 rounded-xl border-l-4 transition-all duration-300 hover:shadow-md ${
-                  provider.isPrimary
-                    ? "border-l-amber-400 bg-amber-50"
-                    : provider.status === "Active"
-                    ? "border-l-blue-600 bg-blue-50"
-                    : "border-l-slate-400 bg-slate-50"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <Avatar className="w-12 h-12 ring-2 ring-white shadow-sm">
-                    <AvatarImage src={provider.avatar} />
-                    <AvatarFallback className="bg-blue-600 text-white font-semibold">
-                      {provider.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-slate-800 truncate">
-                        {provider.name}
-                      </h3>
-                      {provider.isPrimary && (
-                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
-                          <Star className="h-3 w-3 mr-1" />
-                          Primary
-                        </Badge>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+                <p className="text-slate-600 text-sm">Loading care team...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center max-w-md">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Failed to Load Providers
+                </h3>
+                <p className="text-slate-600 text-sm mb-4">{error}</p>
+                <Button
+                  onClick={() =>
+                    dispatch(getPatientDoctors(patientData.user_id))
+                  }
+                  variant="outline"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && patientDoctors.length === 0 && (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center max-w-md">
+                <Stethoscope className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  No Providers Assigned
+                </h3>
+                <p className="text-slate-600 text-sm mb-4">
+                  This patient doesn't have any healthcare providers assigned
+                  yet. Click the button above to add a provider.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Doctors Grid */}
+          {!loading && !error && patientDoctors.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {patientDoctors.map((doctor, index) => (
+                <div
+                  key={doctor.user_id}
+                  className={`p-4 rounded-xl border-l-4 transition-all duration-300 hover:shadow-md ${
+                    index === 0
+                      ? "border-l-amber-400 bg-amber-50"
+                      : doctor.is_active
+                      ? "border-l-blue-600 bg-blue-50"
+                      : "border-l-slate-400 bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-12 h-12 ring-2 ring-white shadow-sm">
+                      {doctor.profile_picture_url ? (
+                        <AvatarImage src={doctor.profile_picture_url} />
+                      ) : null}
+                      <AvatarFallback className="bg-blue-600 text-white font-semibold">
+                        {getInitials(doctor.first_name, doctor.last_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-slate-800 truncate">
+                          Dr. {doctor.first_name} {doctor.last_name}
+                        </h3>
+                        {index === 0 && (
+                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs">
+                            <Star className="h-3 w-3 mr-1" />
+                            Primary
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-blue-600">
+                        {doctor.specialization}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {doctor.department}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={doctor.is_active ? "default" : "secondary"}
+                      className={
+                        doctor.is_active
+                          ? "bg-blue-600 text-white"
+                          : "bg-slate-200 text-slate-700"
+                      }
+                    >
+                      {doctor.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center text-xs text-slate-600">
+                      <GraduationCap className="h-3 w-3 mr-2 text-blue-600" />
+                      <span className="truncate">{doctor.qualifications}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-2 text-blue-600" />
+                        <span>{doctor.years_of_experience} years exp.</span>
+                      </div>
+                      {doctor.available_for_telehealth && (
+                        <div className="flex items-center">
+                          <Video className="h-3 w-3 mr-2 text-blue-600" />
+                          <span>Telehealth</span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm font-medium text-blue-600">
-                      {provider.role}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {provider.specialty}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      provider.status === "Active" ? "default" : "secondary"
-                    }
-                    className={
-                      provider.status === "Active"
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-200 text-slate-700"
-                    }
-                  >
-                    {provider.status}
-                  </Badge>
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-center text-xs text-slate-600">
-                    <Building2 className="h-3 w-3 mr-2 text-blue-600" />
-                    <span className="truncate">{provider.facility}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                    <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-2 text-blue-600" />
-                      <span>{provider.yearsWorking}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Star className="h-3 w-3 mr-2 text-blue-600 fill-current" />
-                      <span>{provider.rating}/5.0</span>
+                    {doctor.languages_spoken && (
+                      <div className="flex items-center text-xs text-slate-600">
+                        <Languages className="h-3 w-3 mr-2 text-blue-600" />
+                        <span className="truncate">
+                          {doctor.languages_spoken}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center text-xs text-slate-600">
+                      <Calendar className="h-3 w-3 mr-2 text-blue-600" />
+                      <span>Last login: {formatDate(doctor.last_login)}</span>
                     </div>
                   </div>
-                  <div className="flex items-center text-xs text-slate-600">
-                    <Calendar className="h-3 w-3 mr-2 text-blue-600" />
-                    <span>
-                      Last contact:{" "}
-                      {new Date(provider.lastContact).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                    >
-                      <Phone className="h-3 w-3 mr-1" />
-                      Call
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                    >
-                      <Mail className="h-3 w-3 mr-1" />
-                      Email
-                    </Button>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                        onClick={() => window.open(`mailto:${doctor.email}`)}
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        Email
+                      </Button>
+                      {doctor.available_for_telehealth && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                        >
+                          <Video className="h-3 w-3 mr-1" />
+                          Video
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-blue-100"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 hover:bg-blue-100"
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+
+                  {/* Biography section - collapsible */}
+                  {doctor.biography && (
+                    <div className="mt-3 pt-3 border-t border-slate-200">
+                      <p className="text-xs text-slate-600 line-clamp-2">
+                        {doctor.biography}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

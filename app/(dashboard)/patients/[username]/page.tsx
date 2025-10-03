@@ -1,7 +1,7 @@
 // app/patients/[username]/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
@@ -82,7 +82,7 @@ export default function PatientDetailPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isOrderMedOpen, setIsOrderMedOpen] = useState(false);
   const [isOrderLabOpen, setIsOrderLabOpen] = useState(false);
-  const [isNewNoteOpen, setIsNewNoteOpen] = useState(false); // Add this line
+  const [isNewNoteOpen, setIsNewNoteOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   // Dialog states for medication and lab orders
@@ -107,6 +107,22 @@ export default function PatientDetailPage() {
       dispatch(fetchPatientByUsername(username));
     }
   }, [dispatch, username, retryCount]);
+
+  // CRITICAL FIX: Memoize unifiedPatientData to prevent recreation on every render
+  const unifiedPatientData = useMemo(() => {
+    if (!selectedPatient) return null;
+
+    return {
+      ...selectedPatient,
+      ...patientData,
+      personalInfo: {
+        id: selectedPatient.user_id,
+        firstName: selectedPatient.first_name,
+        lastName: selectedPatient.last_name,
+        ...selectedPatient,
+      },
+    };
+  }, [selectedPatient]); // Only recreate when selectedPatient changes
 
   const handleRetry = () => {
     setRetryCount((prev) => prev + 1);
@@ -167,7 +183,7 @@ export default function PatientDetailPage() {
   }
 
   // Patient not found state
-  if (!selectedPatient) {
+  if (!selectedPatient || !unifiedPatientData) {
     console.log("No patient data found for username:", username);
     return (
       <MainLayout>
@@ -198,18 +214,6 @@ export default function PatientDetailPage() {
   }
 
   const renderActiveTab = () => {
-    // Create a unified patient data object for the tabs
-    const unifiedPatientData = {
-      ...selectedPatient,
-      ...patientData,
-      personalInfo: {
-        id: selectedPatient.user_id,
-        firstName: selectedPatient.first_name,
-        lastName: selectedPatient.last_name,
-        ...selectedPatient,
-      },
-    };
-
     switch (activeTab) {
       case "overview":
         return (
@@ -217,7 +221,7 @@ export default function PatientDetailPage() {
             patientData={unifiedPatientData}
             setIsOrderMedOpen={setIsOrderMedOpen}
             setIsOrderLabOpen={setIsOrderLabOpen}
-            setIsNewNoteOpen={setIsNewNoteOpen} // Add this line
+            setIsNewNoteOpen={setIsNewNoteOpen}
           />
         );
       case "notes":
@@ -254,7 +258,7 @@ export default function PatientDetailPage() {
   // Create banner data from selected patient
   const bannerData = {
     name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
-    avatar: "", // No avatar in the provided data
+    avatar: "",
     initials: `${selectedPatient.first_name?.[0] || ""}${
       selectedPatient.last_name?.[0] || ""
     }`,
@@ -276,12 +280,11 @@ export default function PatientDetailPage() {
         })
       : "N/A",
     primaryPhysician: selectedPatient.primary_care_physician,
-    dischargeDate: null, // Assuming patient is active
+    dischargeDate: null,
   };
 
   const handleOrderLab = () => {
     console.log("Ordering lab:", newLabOrder);
-    // TODO: Implement lab ordering functionality
     alert("Lab ordering functionality will be implemented soon.");
   };
 

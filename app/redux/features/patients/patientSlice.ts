@@ -8,6 +8,8 @@ import {
   fetchMyDoctors, // Import the new action
   DetailedPatient,
   Doctor, // Import the new type
+  assignPatientToDoctor,
+  getPatientDoctors,
 } from "./patientActions";
 
 interface Patient {
@@ -52,6 +54,7 @@ interface PatientState {
   detailedPatients: DetailedPatient[];
   selectedPatient: Patient | null;
   doctors: Doctor[]; // Add doctors to the state
+  patientDoctors: Doctor[];
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -62,6 +65,7 @@ const initialState: PatientState = {
   detailedPatients: [],
   selectedPatient: null,
   doctors: [], // Initialize doctors array
+  patientDoctors: [],
   loading: false,
   error: null,
   success: false,
@@ -156,6 +160,29 @@ const patientSlice = createSlice({
       .addCase(fetchMyDoctors.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(assignPatientToDoctor.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(assignPatientToDoctor.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(assignPatientToDoctor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to assign patient";
+      })
+      .addCase(getPatientDoctors.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPatientDoctors.fulfilled, (state, action) => {
+        state.loading = false;
+        state.patientDoctors = action.payload;
+      })
+      .addCase(getPatientDoctors.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to get patient doctors";
       });
   },
 });
