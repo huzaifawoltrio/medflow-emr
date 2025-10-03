@@ -109,8 +109,12 @@ interface CareTeamTabProps {
 
 export function CareTeamTab({ patientData }: CareTeamTabProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { patientDoctors, loading, error } = useSelector(
-    (state: RootState) => state.patient
+  const { patientDoctors, doctorsLoading, error } = useSelector(
+    (state: RootState) => ({
+      patientDoctors: state.patient.patientDoctors,
+      doctorsLoading: state.patient.doctorsLoading, // Use the new loading state
+      error: state.patient.error,
+    })
   );
 
   // Extract user_id to prevent unnecessary re-renders
@@ -171,7 +175,7 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
         </CardHeader>
         <CardContent>
           {/* Loading State */}
-          {loading && (
+          {doctorsLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
@@ -181,7 +185,7 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
           )}
 
           {/* Error State */}
-          {error && !loading && (
+          {error && !doctorsLoading && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center max-w-md">
                 <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
@@ -203,7 +207,7 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
           )}
 
           {/* Empty State */}
-          {!loading && !error && patientDoctors.length === 0 && (
+          {!doctorsLoading && !error && patientDoctors.length === 0 && (
             <div className="flex items-center justify-center py-12">
               <div className="text-center max-w-md">
                 <Stethoscope className="h-12 w-12 text-slate-300 mx-auto mb-3" />
@@ -219,7 +223,7 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
           )}
 
           {/* Doctors Grid */}
-          {!loading && !error && patientDoctors.length > 0 && (
+          {!doctorsLoading && !error && patientDoctors.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {patientDoctors.map((doctor, index) => (
                 <div
@@ -282,12 +286,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                         <Clock className="h-3 w-3 mr-2 text-blue-600" />
                         <span>{doctor.years_of_experience} years exp.</span>
                       </div>
-                      {doctor.available_for_telehealth && (
-                        <div className="flex items-center">
-                          <Video className="h-3 w-3 mr-2 text-blue-600" />
-                          <span>Telehealth</span>
-                        </div>
-                      )}
                     </div>
                     {doctor.languages_spoken && (
                       <div className="flex items-center text-xs text-slate-600">
@@ -314,16 +312,6 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                         <Mail className="h-3 w-3 mr-1" />
                         Email
                       </Button>
-                      {doctor.available_for_telehealth && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 text-xs border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                        >
-                          <Video className="h-3 w-3 mr-1" />
-                          Video
-                        </Button>
-                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
@@ -344,295 +332,10 @@ export function CareTeamTab({ patientData }: CareTeamTabProps) {
                   </div>
 
                   {/* Biography section - collapsible */}
-                  {doctor.biography && (
-                    <div className="mt-3 pt-3 border-t border-slate-200">
-                      <p className="text-xs text-slate-600 line-clamp-2">
-                        {doctor.biography}
-                      </p>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Recent Care Coordination */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <MessageSquare className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">
-                Recent Care Coordination
-              </CardTitle>
-              <p className="text-slate-600 text-sm">
-                Latest provider interactions and updates
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentInteractions.map((interaction, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg"
-              >
-                <div
-                  className={`p-2 rounded-lg ${
-                    interaction.status === "Completed"
-                      ? "bg-blue-600 text-white"
-                      : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {interaction.type === "Appointment" && (
-                    <Calendar className="h-4 w-4" />
-                  )}
-                  {interaction.type === "Care Coordination" && (
-                    <Users className="h-4 w-4" />
-                  )}
-                  {interaction.type === "Therapy Session" && (
-                    <Heart className="h-4 w-4" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-slate-800">
-                        {interaction.description}
-                      </h4>
-                      <p className="text-sm text-slate-600">
-                        with {interaction.provider}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-slate-700">
-                        {new Date(interaction.date).toLocaleDateString()}
-                      </p>
-                      <Badge
-                        variant={
-                          interaction.status === "Completed"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                          interaction.status === "Completed"
-                            ? "bg-blue-600 text-white"
-                            : "bg-amber-100 text-amber-800"
-                        }
-                      >
-                        {interaction.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Patient Support Network */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Shield className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">
-                  Patient Support Network
-                </CardTitle>
-                <p className="text-slate-600 text-sm">
-                  Family, emergency contacts, and support persons
-                </p>
-              </div>
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Contact
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Mobile Cards View */}
-          <div className="block lg:hidden space-y-4">
-            {patientRelationships.map((contact, index) => (
-              <div
-                key={contact.name}
-                className="p-4 bg-slate-50 rounded-lg space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={
-                        contact.type === "Family"
-                          ? "border-purple-200 text-purple-700 bg-purple-50"
-                          : contact.type === "Emergency Contact"
-                          ? "border-red-200 text-red-700 bg-red-50"
-                          : "border-blue-200 text-blue-700 bg-blue-50"
-                      }
-                    >
-                      {contact.type}
-                    </Badge>
-                    {contact.isPrimary && (
-                      <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-                        <Star className="h-3 w-3 mr-1" />
-                        Primary
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800">
-                    {contact.name}
-                  </h3>
-                  <p className="text-slate-600">{contact.relation}</p>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Phone className="h-3 w-3 mr-2 text-blue-600" />
-                    {contact.phone}
-                  </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Mail className="h-3 w-3 mr-2 text-blue-600" />
-                    {contact.email}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                  >
-                    <Phone className="h-3 w-3 mr-1" />
-                    Call
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                  >
-                    <Mail className="h-3 w-3 mr-1" />
-                    Email
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700">
-                    Type
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Name & Relation
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Contact
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Permissions
-                  </TableHead>
-                  <TableHead className="text-right font-semibold text-slate-700">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patientRelationships.map((contact, index) => (
-                  <TableRow key={contact.name} className="hover:bg-slate-50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={
-                            contact.type === "Family"
-                              ? "border-purple-200 text-purple-700 bg-purple-50"
-                              : contact.type === "Emergency Contact"
-                              ? "border-red-200 text-red-700 bg-red-50"
-                              : "border-blue-200 text-blue-700 bg-blue-50"
-                          }
-                        >
-                          {contact.type}
-                        </Badge>
-                        {contact.isPrimary && (
-                          <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-                            Primary
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-slate-800">
-                          {contact.name}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {contact.relation}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Phone className="h-3 w-3 mr-2 text-blue-600" />
-                          {contact.phone}
-                        </div>
-                        <div className="flex items-center text-sm text-slate-600">
-                          <Mail className="h-3 w-3 mr-2 text-blue-600" />
-                          {contact.email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {contact.canMakeDecisions && (
-                        <Badge className="bg-blue-600 text-white text-xs">
-                          <UserCheck className="h-3 w-3 mr-1" />
-                          Decision Maker
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 hover:bg-blue-100"
-                        >
-                          <Phone className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 hover:bg-blue-100"
-                        >
-                          <Mail className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 hover:bg-slate-100"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
         </CardContent>
       </Card>
     </div>

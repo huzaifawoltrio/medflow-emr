@@ -56,6 +56,7 @@ interface PatientState {
   doctors: Doctor[]; // Add doctors to the state
   patientDoctors: Doctor[];
   loading: boolean;
+  doctorsLoading: boolean;
   error: string | null;
   success: boolean;
 }
@@ -67,6 +68,7 @@ const initialState: PatientState = {
   doctors: [], // Initialize doctors array
   patientDoctors: [],
   loading: false,
+  doctorsLoading: false, // Initialize new state
   error: null,
   success: false,
 };
@@ -173,15 +175,15 @@ const patientSlice = createSlice({
         state.error = action.error.message || "Failed to assign patient";
       })
       .addCase(getPatientDoctors.pending, (state) => {
-        state.loading = true;
+        state.doctorsLoading = true;
         state.error = null;
       })
       .addCase(getPatientDoctors.fulfilled, (state, action) => {
-        state.loading = false;
+        state.doctorsLoading = false;
         state.patientDoctors = action.payload;
       })
       .addCase(getPatientDoctors.rejected, (state, action) => {
-        state.loading = false;
+        state.doctorsLoading = false;
         state.error = action.error.message || "Failed to get patient doctors";
       });
   },
