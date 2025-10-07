@@ -10,6 +10,7 @@ import {
   Doctor, // Import the new type
   assignPatientToDoctor,
   getPatientDoctors,
+  fetchPatientsWithoutNotes,
 } from "./patientActions";
 
 interface Patient {
@@ -59,6 +60,9 @@ interface PatientState {
   doctorsLoading: boolean;
   error: string | null;
   success: boolean;
+  patientsWithoutNotes: Patient[];
+  patientsWithoutNotesSummary: any;
+  loadingWithoutNotes: boolean;
 }
 
 const initialState: PatientState = {
@@ -71,6 +75,9 @@ const initialState: PatientState = {
   doctorsLoading: false, // Initialize new state
   error: null,
   success: false,
+  patientsWithoutNotes: [],
+  patientsWithoutNotesSummary: null,
+  loadingWithoutNotes: false,
 };
 
 const patientSlice = createSlice({
@@ -185,6 +192,19 @@ const patientSlice = createSlice({
       .addCase(getPatientDoctors.rejected, (state, action) => {
         state.doctorsLoading = false;
         state.error = action.error.message || "Failed to get patient doctors";
+      })
+      .addCase(fetchPatientsWithoutNotes.pending, (state) => {
+        state.loadingWithoutNotes = true;
+        state.error = null;
+      })
+      .addCase(fetchPatientsWithoutNotes.fulfilled, (state, action) => {
+        state.loadingWithoutNotes = false;
+        state.patientsWithoutNotes = action.payload.patients;
+        state.patientsWithoutNotesSummary = action.payload.summary;
+      })
+      .addCase(fetchPatientsWithoutNotes.rejected, (state, action) => {
+        state.loadingWithoutNotes = false;
+        state.error = action.payload as string;
       });
   },
 });

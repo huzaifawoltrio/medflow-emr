@@ -37,6 +37,8 @@ export interface Patient {
   current_pain_level: number;
   additional_notes: string;
   profile_picture_url?: string;
+  note_count?: number; // Add this optional field
+  created_at?: string; // Add this optional field
 }
 
 // Define the type for the doctor data
@@ -206,6 +208,26 @@ export const getPatientDoctors = createAsyncThunk(
     }
   }
 );
+
+/**
+ * Async thunk for fetching patients without clinical notes.
+ */
+export const fetchPatientsWithoutNotes = createAsyncThunk<
+  { patients: Patient[]; summary: any; pagination: any },
+  void,
+  { rejectValue: string }
+>("patient/fetchWithoutNotes", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("/patients/without-notes");
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data.message) {
+      return rejectWithValue(error.response.data.message);
+    } else {
+      return rejectWithValue(error.message);
+    }
+  }
+});
 
 // Export the DetailedPatient type for use in other files
 export type { DetailedPatient, Doctor };

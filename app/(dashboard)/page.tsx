@@ -6,7 +6,10 @@ import { AppDispatch, RootState } from "../redux/store";
 import { getUserDetails } from "../redux/features/auth/authActions";
 import { fetchTodaysAppointments } from "../../app/redux/features/appointments/appointmentActions";
 import { fetchPriorityMessages } from "../redux/features/chat/chatActions";
-import { fetchPatients } from "../redux/features/patients/patientActions";
+import {
+  fetchPatients,
+  fetchPatientsWithoutNotes,
+} from "../redux/features/patients/patientActions";
 import { Patient } from "../redux/features/patients/patientActions";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,37 +39,6 @@ import {
 import type { ComponentType } from "react";
 import Link from "next/link";
 
-// Mock data for pending notes
-const initialPendingNotes = [
-  {
-    id: 1,
-    patientName: "John Doe",
-    encounterId: "ENC001",
-    encounterDate: "2024-09-08",
-    encounterTime: "09:00 AM",
-    status: "No note created",
-    encounterType: "Follow-up",
-  },
-  {
-    id: 2,
-    patientName: "Sarah Johnson",
-    encounterId: "ENC002",
-    encounterDate: "2024-09-07",
-    encounterTime: "02:30 PM",
-    status: "Draft saved",
-    encounterType: "Initial Consult",
-  },
-  {
-    id: 3,
-    patientName: "Emma Davis",
-    encounterId: "ENC003",
-    encounterDate: "2024-09-06",
-    encounterTime: "11:15 AM",
-    status: "No note created",
-    encounterType: "Therapy Session",
-  },
-];
-
 // A helper component for Quick Action items
 const QuickActionButton = ({
   icon: Icon,
@@ -95,24 +67,6 @@ const formatTime = (dateString: string) => {
     minute: "2-digit",
     hour12: true,
   });
-};
-
-// Helper function to format relative time
-const formatRelativeTime = (dateString: string) => {
-  const now = new Date();
-  const messageTime = new Date(dateString);
-  const diffInMinutes = Math.floor(
-    (now.getTime() - messageTime.getTime()) / (1000 * 60)
-  );
-
-  if (diffInMinutes < 1) return "Just now";
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d ago`;
 };
 
 // Helper function to get status color
@@ -172,16 +126,30 @@ export default function Dashboard() {
     loading: { priorityMessages: priorityLoading },
     error: { priorityMessages: priorityError },
   } = useSelector((state: RootState) => state.chat);
-  const { patients } = useSelector((state: RootState) => state.patient);
+  const {
+    patients,
+    patientsWithoutNotes,
+    patientsWithoutNotesSummary,
+    loadingWithoutNotes,
+    error: withoutNotesError,
+  } = useSelector((state: RootState) => state.patient);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [patientSearch, setPatientSearch] = useState("");
   const [selectedPatientForDialog, setSelectedPatientForDialog] =
     useState<Patient | null>(null);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [pendingNotes, setPendingNotes] = useState(initialPendingNotes);
-  const filteredPendingNotes = pendingNotes.filter((note) =>
-    note.patientName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
+  // Filter pending notes based on search query
+  const filteredPendingNotes = useMemo(() => {
+    if (!patientsWithoutNotes) return [];
+
+    return patientsWithoutNotes.filter((patient) => {
+      const fullName =
+        `${patient.first_name} ${patient.last_name}`.toLowerCase();
+      return fullName.includes(searchQuery.toLowerCase());
+    });
+  }, [patientsWithoutNotes, searchQuery]);
 
   useEffect(() => {
     if (!user) {
@@ -192,6 +160,7 @@ export default function Dashboard() {
       fetchPriorityMessages({ page: 1, perPage: 3, includeRead: false })
     );
     dispatch(fetchPatients());
+    dispatch(fetchPatientsWithoutNotes());
   }, [dispatch, user]);
 
   const handlePatientSelect = (patient: Patient) => {
@@ -199,16 +168,13 @@ export default function Dashboard() {
     setIsAssignDialogOpen(true);
     setPatientSearch("");
   };
-  console.log("user is", user);
+
   const filteredPatients = useMemo(() => {
     if (!patientSearch || !user?.id) {
       return [];
     }
     return patients
       .filter((p: any) => {
-        // Using 'any' to access assumed 'doctors' property
-        // Assumption: The patient object includes an array of its assigned doctors.
-        // We filter out patients who have the current doctor in their assigned list.
         const isAlreadyAssigned = p.doctors?.some(
           (doctor: any) => doctor.user_id === user.id
         );
@@ -217,7 +183,6 @@ export default function Dashboard() {
           return false;
         }
 
-        // If not assigned, then apply the search criteria
         return (
           `${p.first_name} ${p.last_name}`
             .toLowerCase()
@@ -234,6 +199,8 @@ export default function Dashboard() {
     : "Doctor";
   const nextAppointment = getNextAppointment(dailyAppointments);
   const priorityMessageCount = priorityMessages?.length || 0;
+  const pendingNotesCount =
+    patientsWithoutNotesSummary?.patients_without_notes || 0;
 
   return (
     <MainLayout>
@@ -365,7 +332,11 @@ export default function Dashboard() {
                   Pending Notes
                 </CardTitle>
                 <div className="text-2xl md:text-3xl font-bold text-amber-900 mt-2">
-                  3
+                  {loadingWithoutNotes ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    pendingNotesCount
+                  )}
                 </div>
               </div>
               <div className="p-3 bg-amber-600 rounded-lg">
@@ -423,14 +394,18 @@ export default function Dashboard() {
                   <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
                   Pending Notes ({filteredPendingNotes.length})
                 </CardTitle>
-                {pendingNotes.length > 3 && (
-                  <Button variant="outline" size="sm">
-                    View All
-                  </Button>
+                {loadingWithoutNotes && (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                 )}
               </CardHeader>
               <CardContent className="space-y-3">
-                {filteredPendingNotes.length === 0 ? (
+                {withoutNotesError ? (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">
+                      Error loading pending notes: {withoutNotesError}
+                    </p>
+                  </div>
+                ) : filteredPendingNotes.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
                     <p className="font-medium">All caught up!</p>
@@ -439,8 +414,11 @@ export default function Dashboard() {
                 ) : (
                   filteredPendingNotes
                     .slice(0, 3)
-                    .map((note) => (
-                      <PendingNoteItem key={note.id} note={note} />
+                    .map((patient) => (
+                      <PendingNoteItem
+                        key={patient.user_id}
+                        patient={patient}
+                      />
                     ))
                 )}
               </CardContent>
