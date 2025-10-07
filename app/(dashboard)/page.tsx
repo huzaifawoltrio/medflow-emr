@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { getUserDetails } from "../redux/features/auth/authActions";
 import { fetchTodaysAppointments } from "../../app/redux/features/appointments/appointmentActions";
 import { fetchPriorityMessages } from "../redux/features/chat/chatActions";
+import { fetchPatients } from "../redux/features/patients/patientActions";
+import { Patient } from "../redux/features/patients/patientActions";
 import MainLayout from "@/components/layout/main-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { AssignPatientDialog } from "@/components/dashboard/AssignPatientDialog";
+import { PendingNoteItem } from "@/components/dashboard/PendingNoteItem";
 import {
   Calendar,
   MessageSquare,
@@ -26,9 +31,41 @@ import {
   MapPin,
   User,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import Link from "next/link";
+
+// Mock data for pending notes
+const initialPendingNotes = [
+  {
+    id: 1,
+    patientName: "John Doe",
+    encounterId: "ENC001",
+    encounterDate: "2024-09-08",
+    encounterTime: "09:00 AM",
+    status: "No note created",
+    encounterType: "Follow-up",
+  },
+  {
+    id: 2,
+    patientName: "Sarah Johnson",
+    encounterId: "ENC002",
+    encounterDate: "2024-09-07",
+    encounterTime: "02:30 PM",
+    status: "Draft saved",
+    encounterType: "Initial Consult",
+  },
+  {
+    id: 3,
+    patientName: "Emma Davis",
+    encounterId: "ENC003",
+    encounterDate: "2024-09-06",
+    encounterTime: "11:15 AM",
+    status: "No note created",
+    encounterType: "Therapy Session",
+  },
+];
 
 // A helper component for Quick Action items
 const QuickActionButton = ({
@@ -129,43 +166,78 @@ export default function Dashboard() {
     totalDailyAppointments,
     dailyLoading,
     error: appointmentError,
-    currentDate,
   } = useSelector((state: RootState) => state.appointment);
-
-  // Get priority messages from chat state
   const {
     priorityMessages,
     loading: { priorityMessages: priorityLoading },
     error: { priorityMessages: priorityError },
   } = useSelector((state: RootState) => state.chat);
+  const { patients } = useSelector((state: RootState) => state.patient);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [patientSearch, setPatientSearch] = useState("");
+  const [selectedPatientForDialog, setSelectedPatientForDialog] =
+    useState<Patient | null>(null);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [pendingNotes, setPendingNotes] = useState(initialPendingNotes);
+  const filteredPendingNotes = pendingNotes.filter((note) =>
+    note.patientName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
-    // Fetch user details if not already present
     if (!user) {
       dispatch(getUserDetails());
     }
-
-    // Always fetch today's appointments on component mount
     dispatch(fetchTodaysAppointments());
-
-    // Fetch priority messages (limit to first 3)
     dispatch(
       fetchPriorityMessages({ page: 1, perPage: 3, includeRead: false })
     );
+    dispatch(fetchPatients());
   }, [dispatch, user]);
+
+  const handlePatientSelect = (patient: Patient) => {
+    setSelectedPatientForDialog(patient);
+    setIsAssignDialogOpen(true);
+    setPatientSearch("");
+  };
+  console.log("user is", user);
+  const filteredPatients = useMemo(() => {
+    if (!patientSearch || !user?.id) {
+      return [];
+    }
+    return patients
+      .filter((p: any) => {
+        // Using 'any' to access assumed 'doctors' property
+        // Assumption: The patient object includes an array of its assigned doctors.
+        // We filter out patients who have the current doctor in their assigned list.
+        const isAlreadyAssigned = p.doctors?.some(
+          (doctor: any) => doctor.user_id === user.id
+        );
+
+        if (isAlreadyAssigned) {
+          return false;
+        }
+
+        // If not assigned, then apply the search criteria
+        return (
+          `${p.first_name} ${p.last_name}`
+            .toLowerCase()
+            .includes(patientSearch.toLowerCase()) ||
+          p.username.toLowerCase().includes(patientSearch.toLowerCase()) ||
+          p.email.toLowerCase().includes(patientSearch.toLowerCase())
+        );
+      })
+      .slice(0, 5);
+  }, [patients, patientSearch, user]);
 
   const doctorName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
     : "Doctor";
   const nextAppointment = getNextAppointment(dailyAppointments);
-
-  // Get total priority message count for the stat card
   const priorityMessageCount = priorityMessages?.length || 0;
 
   return (
     <MainLayout>
       <div className="space-y-6 md:space-y-8">
-        {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -185,17 +257,35 @@ export default function Dashboard() {
           <div className="flex items-center space-x-2 md:space-x-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search patients..."
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-800 w-full"
+              <Input
+                placeholder="Search & assign patients..."
+                className="pl-10 bg-white border-gray-200 w-full max-w-xs"
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
               />
+              {filteredPatients.length > 0 && patientSearch && (
+                <Card className="absolute top-full mt-2 w-full max-w-xs z-10">
+                  <CardContent className="p-2">
+                    <ul>
+                      {filteredPatients.map((patient) => (
+                        <li
+                          key={patient.user_id}
+                          onClick={() => handlePatientSelect(patient)}
+                          className="p-2 hover:bg-gray-100 rounded-md cursor-pointer text-sm"
+                        >
+                          {patient.first_name} {patient.last_name} (@
+                          {patient.username})
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Stat Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
           <Card className="bg-blue-50 border-none rounded-xl shadow-sm">
             <CardContent className="p-4 flex justify-between items-center">
               <div>
@@ -267,12 +357,26 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-amber-50 border-none rounded-xl shadow-sm">
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <CardTitle className="text-sm font-medium text-amber-800">
+                  Pending Notes
+                </CardTitle>
+                <div className="text-2xl md:text-3xl font-bold text-amber-900 mt-2">
+                  3
+                </div>
+              </div>
+              <div className="p-3 bg-amber-600 rounded-lg">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Quick Actions */}
             <Card className="rounded-xl shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg md:text-xl font-semibold">
@@ -313,7 +417,35 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
+            <Card className="rounded-xl shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg md:text-xl font-semibold flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mr-2" />
+                  Pending Notes ({filteredPendingNotes.length})
+                </CardTitle>
+                {pendingNotes.length > 3 && (
+                  <Button variant="outline" size="sm">
+                    View All
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {filteredPendingNotes.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                    <p className="font-medium">All caught up!</p>
+                    <p className="text-sm">No pending clinical notes.</p>
+                  </div>
+                ) : (
+                  filteredPendingNotes
+                    .slice(0, 3)
+                    .map((note) => (
+                      <PendingNoteItem key={note.id} note={note} />
+                    ))
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="rounded-xl shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg md:text-xl font-semibold">
@@ -362,7 +494,6 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-6 md:space-y-8">
-            {/* Today's Schedule */}
             <Card className="rounded-xl shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-lg md:text-xl font-semibold">
@@ -386,7 +517,7 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ) : (
-                  dailyAppointments.slice(0, 4).map((appointment, index) => (
+                  dailyAppointments.slice(0, 4).map((appointment) => (
                     <div
                       key={appointment.id}
                       className={`p-3 rounded-md border-l-4 ${
@@ -451,7 +582,6 @@ export default function Dashboard() {
               </div>
             </Card>
 
-            {/* Priority Messages */}
             <Card className="rounded-xl shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-lg md:text-xl font-semibold flex items-center space-x-2">
@@ -490,14 +620,12 @@ export default function Dashboard() {
                       }`}
                     >
                       <div className="flex items-center space-x-2 mb-2">
-                        <div className="flex items-center space-x-2">
-                          <Badge
-                            variant="destructive"
-                            className="bg-red-100 text-red-700 border-red-200 text-xs"
-                          >
-                            Priority
-                          </Badge>
-                        </div>
+                        <Badge
+                          variant="destructive"
+                          className="bg-red-100 text-red-700 border-red-200 text-xs"
+                        >
+                          Priority
+                        </Badge>
                       </div>
                       <div className="space-y-1">
                         <p className="font-semibold text-sm text-gray-900">
@@ -518,7 +646,7 @@ export default function Dashboard() {
                 )}
               </CardContent>
               <div className="p-4 border-t border-gray-100">
-                <Link href="/messages">
+                <Link href="/messaging">
                   <Button variant="outline" className="w-full bg-white">
                     View All Messages
                   </Button>
@@ -528,6 +656,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <AssignPatientDialog
+        isOpen={isAssignDialogOpen}
+        onOpenChange={setIsAssignDialogOpen}
+        patient={selectedPatientForDialog}
+      />
     </MainLayout>
   );
 }
